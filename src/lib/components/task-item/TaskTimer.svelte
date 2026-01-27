@@ -2,6 +2,7 @@
     import { Play, Pause } from "lucide-svelte";
     import type { TodoItem } from "$lib/stores/todo.svelte";
     import { getTodoStore } from "$lib/context";
+    import { PRIORITY_CONFIG } from "$lib/types";
 
     interface Props {
         todo: TodoItem;
@@ -15,14 +16,10 @@
     const hasTime = $derived(todo.currentTimeMs > 0);
     const timerDisplay = $derived(todo.timerDisplay);
 
-    const liquidColors = {
-        high: { solid: "#ef4444" },
-        medium: { solid: "#f59e0b" },
-        low: { solid: "#22c55e" },
-    };
-
-    const currentLiquidColor = $derived(
-        liquidColors[todo.priority || "low"] || liquidColors.low,
+    const currentPriority = $derived(todo.priority || "low");
+    const currentConfig = $derived(PRIORITY_CONFIG[currentPriority]);
+    const currentPriorityColor = $derived(
+        `var(--color-${currentConfig.color})`,
     );
 
     function handleToggleTimer(): void {
@@ -46,7 +43,7 @@
     "
     style="
         {isRunning
-        ? `background: ${currentLiquidColor.solid}; box-shadow: 0 4px 20px ${currentLiquidColor.solid}60;`
+        ? `background: ${currentPriorityColor}; box-shadow: 0 4px 20px var(--color-${currentConfig.color} / 0.4);`
         : ''}
     "
     onclick={(e) => {

@@ -321,19 +321,19 @@ export const UNDO_EXPIRY_MS = 30000; // 30 seconds
 
 export const PRIORITY_CONFIG = {
   high: {
-    label: 'High',
-    color: 'danger',
-    sortWeight: 0
+    label: "High",
+    color: "danger",
+    sortWeight: 0,
   },
   medium: {
-    label: 'Medium',
-    color: 'warning',
-    sortWeight: 1
+    label: "Medium",
+    color: "warning",
+    sortWeight: 1,
   },
   low: {
-    label: 'Low',
-    color: 'success',
-    sortWeight: 2
+    label: "Low",
+    color: "success",
+    sortWeight: 2,
   },
 } as const;
 

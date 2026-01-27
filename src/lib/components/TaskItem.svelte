@@ -13,6 +13,7 @@
     import { getTodoStore } from "$lib/context";
     import { uiStore } from "$lib/stores/ui.svelte";
     import { formatRelativeDate } from "$lib/utils/formatTime";
+    import { PRIORITY_CONFIG, TODO_TITLE_MAX_LENGTH } from "$lib/types";
 
     // Sub-components
     import TaskLiquid from "./task-item/TaskLiquid.svelte";
@@ -57,15 +58,10 @@
         todo.dueAt && new Date(todo.dueAt) < new Date() && !isCompleted,
     );
 
-    // Priority-based liquid colors (for the card border/shadow, not the fill which is inside TaskLiquid)
-    const liquidColors = {
-        high: { solid: "#ef4444" },
-        medium: { solid: "#f59e0b" },
-        low: { solid: "#22c55e" },
-    };
-
-    const currentLiquidColor = $derived(
-        liquidColors[todo.priority || "low"] || liquidColors.low,
+    const currentPriority = $derived(todo.priority || "low");
+    const currentConfig = $derived(PRIORITY_CONFIG[currentPriority]);
+    const currentPriorityColor = $derived(
+        `var(--color-${currentConfig.color})`,
     );
 
     function startEditing(): void {
@@ -203,20 +199,19 @@
         style="
             transform: translateX({isSwiping ? touchCurrentX : 0}px);
             {isRunning || isSelected || isFocused
-            ? `--tw-ring-color: ${currentLiquidColor.solid};`
+            ? `--tw-ring-color: ${currentPriorityColor};`
             : ''}
             {isRunning || isFocused
-            ? `box-shadow: 0 10px 40px -10px ${currentLiquidColor.solid}30;`
+            ? `box-shadow: 0 10px 40px -10px var(--color-${currentConfig.color} / 0.15);`
             : ''}
         "
     >
         <!-- Liquid Fill Background & Animation -->
         <TaskLiquid {todo} />
 
-        <!-- Priority indicator line -->
         <div
             class="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl z-20"
-            style="background: {currentLiquidColor.solid};"
+            style="background: {currentPriorityColor};"
         ></div>
 
         <div class="flex items-stretch relative z-10">
@@ -258,7 +253,7 @@
                                     onkeydown={handleKeydown}
                                     onblur={saveEdit}
                                     onclick={(e) => e.stopPropagation()}
-                                    maxlength={200}
+                                    maxlength={TODO_TITLE_MAX_LENGTH}
                                 />
                             {:else}
                                 <div

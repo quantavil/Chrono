@@ -12,7 +12,7 @@
   import CustomDatePicker from "$lib/components/CustomDatePicker.svelte";
   import { getTodoStore } from "$lib/context";
   import { uiStore } from "$lib/stores/ui.svelte";
-  import { TODO_TITLE_MAX_LENGTH } from "$lib/types";
+  import { TODO_TITLE_MAX_LENGTH, PRIORITY_CONFIG } from "$lib/types";
   import { fly, fade, scale, slide } from "svelte/transition";
 
   interface Props {
@@ -42,12 +42,6 @@
   );
 
   const canSubmit = $derived(inputValue.trim().length > 0);
-
-  const priorityConfig = {
-    high: { label: "High", color: "text-danger", bg: "bg-danger/10" },
-    medium: { label: "Medium", color: "text-warning", bg: "bg-warning/10" },
-    low: { label: "Low", color: "text-success", bg: "bg-success/10" },
-  };
 
   const dueDateConfig = {
     today: { label: "Today", value: () => new Date() },
@@ -154,14 +148,14 @@
         >
           <!-- Priority -->
           {#each ["high", "medium", "low"] as p}
-            {@const config = priorityConfig[p as keyof typeof priorityConfig]}
+            {@const config = PRIORITY_CONFIG[p as keyof typeof PRIORITY_CONFIG]}
             <button
               type="button"
               class="
                 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
                 border transition-all whitespace-nowrap
                 {selectedPriority === p
-                ? `${config.bg} ${config.color} border-current`
+                ? `text-${config.color} bg-${config.color}/10 border-current`
                 : 'border-base-300 text-neutral-light hover:border-neutral-muted'}
               "
               onclick={() => togglePriority(p as "high" | "medium" | "low")}
@@ -318,9 +312,7 @@
               class="
                 p-2 rounded-lg transition-colors
                 {selectedPriority
-                ? priorityConfig[selectedPriority].color +
-                  ' ' +
-                  priorityConfig[selectedPriority].bg
+                ? `text-${PRIORITY_CONFIG[selectedPriority].color} bg-${PRIORITY_CONFIG[selectedPriority].color}/10`
                 : 'text-neutral-muted hover:bg-base-200'}
               "
               onclick={() => (showQuickActions = !showQuickActions)}
@@ -402,14 +394,14 @@
                 <div class="flex flex-wrap gap-2">
                   {#each ["high", "medium", "low"] as p}
                     {@const config =
-                      priorityConfig[p as keyof typeof priorityConfig]}
+                      PRIORITY_CONFIG[p as keyof typeof PRIORITY_CONFIG]}
                     <button
                       type="button"
                       class="
                         group relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold
                         border transition-all duration-300
                         {selectedPriority === p
-                        ? `${config.bg} ${config.color} border-current shadow-sm`
+                        ? `text-${config.color} bg-${config.color}/10 border-current shadow-sm`
                         : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral hover:border-base-300'}
                       "
                       onclick={() =>

@@ -25,6 +25,7 @@
     import { uiStore } from "$lib/stores/ui.svelte";
     import TaskHeader from "$lib/components/editor/TaskHeader.svelte";
     import CustomDatePicker from "$lib/components/CustomDatePicker.svelte";
+    import { PRIORITY_CONFIG, TODO_TITLE_MAX_LENGTH } from "$lib/types";
 
     interface Props {
         task: TodoItem;
@@ -205,21 +206,6 @@
         { label: "S", value: 6 },
         { label: "S", value: 0 },
     ];
-
-    const priorityConfig = {
-        high: {
-            label: "High",
-            class: "bg-danger/10 text-danger border-danger",
-        },
-        medium: {
-            label: "Medium",
-            class: "bg-warning/10 text-warning border-warning",
-        },
-        low: {
-            label: "Low",
-            class: "bg-success/10 text-success border-success",
-        },
-    };
 </script>
 
 <div
@@ -263,6 +249,7 @@
                             {isCompleted ? 'line-through text-neutral/50' : ''}
                         "
                         placeholder="Task title..."
+                        maxlength={TODO_TITLE_MAX_LENGTH}
                     />
 
                     <!-- Quick Tags -->
@@ -389,12 +376,12 @@
                 <p class="text-xs font-medium text-neutral/50 mb-2">Priority</p>
                 <div class="flex gap-2">
                     {#each ["high", "medium", "low"] as const as p}
-                        {@const config = priorityConfig[p]}
+                        {@const config = PRIORITY_CONFIG[p]}
                         <button
                             class="
                                 flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all
                                 {task.priority === p
-                                ? `${config.class} border-opacity-100`
+                                ? `bg-${config.color}/10 text-${config.color} border-${config.color} border-opacity-100`
                                 : 'border-base-300 text-neutral/40 hover:border-neutral/30'}
                             "
                             onclick={() => handlePriorityChange(p)}

@@ -1,11 +1,12 @@
 <script lang="ts">
     import type { TodoItem } from "$lib/stores/todo.svelte";
+    import { PRIORITY_CONFIG } from "$lib/types";
 
     let { todo }: { todo: TodoItem } = $props();
 
     const isRunning = $derived(todo.isRunning);
     const hasTime = $derived(todo.currentTimeMs > 0);
-    
+
     // Calculate fill percentage based on time
     const fillPercentage = $derived(() => {
         if (todo.estimatedTime && todo.estimatedTime > 0) {
@@ -19,39 +20,23 @@
         return Math.min((todo.currentTimeMs / maxMs) * 100, 100);
     });
 
-    const liquidColors = {
-        high: {
-            fill: "rgba(239, 68, 68, 0.15)",
-            wave: "rgba(239, 68, 68, 0.25)",
-            solid: "#ef4444",
-        },
-        medium: {
-            fill: "rgba(245, 158, 11, 0.15)",
-            wave: "rgba(245, 158, 11, 0.25)",
-            solid: "#f59e0b",
-        },
-        low: {
-            fill: "rgba(34, 197, 94, 0.15)",
-            wave: "rgba(34, 197, 94, 0.25)",
-            solid: "#22c55e",
-        },
-    };
+    const currentPriority = $derived(todo.priority || "low");
+    const currentConfig = $derived(PRIORITY_CONFIG[currentPriority]);
 
-    const currentLiquidColor = $derived(
-        liquidColors[todo.priority || "low"] || liquidColors.low,
-    );
+    const fillStyle = $derived(`var(--color-${currentConfig.color} / 0.15)`);
+    const waveStyle = $derived(`var(--color-${currentConfig.color} / 0.25)`);
+    const solidStyle = $derived(`var(--color-${currentConfig.color})`);
 </script>
 
 <!-- Liquid Fill Background -->
 <div
-    class="absolute inset-0 pointer-events-none transition-all duration-700 ease-out z-0"
     style="
         width: {fillPercentage()}%;
         background: linear-gradient(
             90deg,
-            {currentLiquidColor.fill} 0%,
-            {currentLiquidColor.fill} 85%,
-            {currentLiquidColor.wave} 100%
+            {fillStyle} 0%,
+            {fillStyle} 85%,
+            {waveStyle} 100%
         );
     "
 >
@@ -69,7 +54,7 @@
             >
                 <path
                     d="M0,0 Q12,25 0,50 Q12,75 0,100 L20,100 L20,0 Z"
-                    fill={currentLiquidColor.wave}
+                    fill={waveStyle}
                 />
             </svg>
         </div>
@@ -80,15 +65,15 @@
         <div class="absolute inset-0 overflow-hidden">
             <div
                 class="bubble bubble-1"
-                style="background: {currentLiquidColor.solid};"
+                style="background: {solidStyle};"
             ></div>
             <div
                 class="bubble bubble-2"
-                style="background: {currentLiquidColor.solid};"
+                style="background: {solidStyle};"
             ></div>
             <div
                 class="bubble bubble-3"
-                style="background: {currentLiquidColor.solid};"
+                style="background: {solidStyle};"
             ></div>
         </div>
     {/if}
