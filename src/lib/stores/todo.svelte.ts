@@ -15,7 +15,7 @@ import {
   SYNC_DEBOUNCE_MS,
   LOCAL_STORAGE_VERSION,
 } from "../types";
-import { TodoModel } from "../models/Todo";
+import { TodoModel } from "../models/Todo.svelte";
 import { storageService } from "../services/storage.svelte";
 import { toastManager } from "./toast.svelte";
 import { isSupabaseConfigured } from "../utils/supabase";

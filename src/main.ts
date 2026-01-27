@@ -110,10 +110,41 @@ try {
   registerServiceWorker();
 } catch (e) {
   console.error("Critical initialization error", e);
-  document.body.innerHTML = `<div style="color:red; padding: 20px;">
-    <h1>Critical Error</h1>
-    <pre>${e instanceof Error ? e.message + "\n" + e.stack : e}</pre>
-  </div>`;
+  document.body.innerHTML = `
+    <div style="
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a1a;
+      color: #ff5555;
+      font-family: system-ui, sans-serif;
+      text-align: center;
+      padding: 20px;
+    ">
+      <h1 style="font-size: 24px; margin-bottom: 16px;">Something went wrong</h1>
+      <pre style="
+        background: #2a2a2a;
+        padding: 16px;
+        border-radius: 8px;
+        text-align: left;
+        max-width: 800px;
+        overflow: auto;
+        color: #e0e0e0;
+      ">${e instanceof Error ? e.message + "\n" + e.stack : e}</pre>
+      <button onclick="window.location.reload()" style="
+        margin-top: 24px;
+        padding: 12px 24px;
+        background: #333;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 500;
+      ">Reload Application</button>
+    </div>
+  `;
 }
 
 export default app;
