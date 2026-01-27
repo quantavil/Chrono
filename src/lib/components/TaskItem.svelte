@@ -423,21 +423,9 @@
                             class="p-2 rounded-lg text-neutral-muted hover:text-primary hover:bg-primary-muted transition-colors"
                             onclick={(e) => {
                                 e.stopPropagation();
-                                onEdit(todo.id, "content");
+                                onEdit(todo.id);
                             }}
-                            title="Open Notes"
-                        >
-                            <FileText class="w-4 h-4" strokeWidth={2} />
-                        </button>
-
-                        <button
-                            type="button"
-                            class="p-2 rounded-lg text-neutral-muted hover:text-primary hover:bg-primary-muted transition-colors"
-                            onclick={(e) => {
-                                e.stopPropagation();
-                                onEdit(todo.id, "settings");
-                            }}
-                            title="Task Settings"
+                            title="Task Details"
                         >
                             <ChevronRight class="w-4 h-4" strokeWidth={2} />
                         </button>

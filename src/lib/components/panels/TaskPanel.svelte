@@ -8,15 +8,10 @@
     interface Props {
         task: TodoItem;
         onClose: () => void;
-        mode?: "content" | "settings"; // Kept for compatibility, unused
         class?: string;
     }
 
-    let {
-        task,
-        onClose, // mode, // Unused
-        class: className = "",
-    }: Props = $props();
+    let { task, onClose, class: className = "" }: Props = $props();
 
     function handleDelete(): void {
         if (confirm("Delete this task?")) {

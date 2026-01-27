@@ -6,23 +6,17 @@
 
     interface Props {
         task: TodoItem | null;
-        mode?: "content" | "settings";
         onClose: () => void;
         class?: string;
     }
 
-    let {
-        task,
-        mode = "content",
-        onClose,
-        class: className = "",
-    }: Props = $props();
+    let { task, onClose, class: className = "" }: Props = $props();
 </script>
 
 <div class="h-full {className}">
     {#if task}
         <div class="h-full" in:fade={{ duration: 200 }}>
-            <TaskPanel {task} {mode} {onClose} />
+            <TaskPanel {task} {onClose} />
         </div>
     {:else}
         <div class="h-full" in:fade={{ duration: 200 }}>

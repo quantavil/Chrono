@@ -8,7 +8,7 @@
 
     interface Props {
         class?: string;
-        onEdit?: (id: string, mode?: "content" | "settings") => void;
+        onEdit?: (id: string) => void;
         selectedTaskId?: string | null;
     }
 
@@ -27,8 +27,8 @@
     let dragOverId = $state<string | null>(null);
     let dragStartIndex = $state<number>(-1);
 
-    function handleEdit(id: string, mode?: "content" | "settings") {
-        onEdit(id, mode);
+    function handleEdit(id: string) {
+        onEdit(id);
     }
 
     function handleDragStart(

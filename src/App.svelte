@@ -36,7 +36,6 @@
 
   // Selected task for right pane (desktop) or modal (mobile)
   let selectedTaskId = $state<string | null>(null);
-  let selectedTaskMode = $state<"content" | "settings">("content");
 
   // Mobile modal state
   let isMobileModalOpen = $state(false);
@@ -61,29 +60,19 @@
   // Handlers
   // -------------------------------------------------------------------------
 
-  function handleSelectTask(
-    id: string,
-    mode: "content" | "settings" = "content",
-  ): void {
+  function handleSelectTask(id: string): void {
     // On desktop: show in right pane
     // On mobile: open modal
     if (typeof window !== "undefined" && window.innerWidth >= 1024) {
       if (selectedTaskId === id) {
-        if (selectedTaskMode === mode) {
-          // Same task, same mode -> Close
-          selectedTaskId = null;
-        } else {
-          // Same task, different mode -> Switch mode
-          selectedTaskMode = mode;
-        }
+        // Same task -> Close
+        selectedTaskId = null;
       } else {
         // New task -> Open
         selectedTaskId = id;
-        selectedTaskMode = mode;
       }
     } else {
       selectedTaskId = id;
-      selectedTaskMode = mode; // Mobile might not use mode yet, but good to set
       isMobileModalOpen = true;
     }
   }
@@ -202,11 +191,7 @@
 
       <!-- RIGHT PANE (Desktop) -->
       {#snippet rightPane()}
-        <RightPane
-          task={selectedTask}
-          mode={selectedTaskMode}
-          onClose={handleCloseRightPane}
-        />
+        <RightPane task={selectedTask} onClose={handleCloseRightPane} />
       {/snippet}
 
       <!-- MOBILE CONTENT -->
@@ -214,10 +199,7 @@
         <div class="w-full px-4 sm:px-6 pt-6 pb-32">
           <Header class="mb-6" />
           <AddTaskBar variant="inline" class="mb-6" />
-          <TaskList
-            class="mb-6"
-            onEdit={(id) => handleSelectTask(id, "content")}
-          />
+          <TaskList class="mb-6" onEdit={(id) => handleSelectTask(id)} />
           <CompletedSection />
         </div>
 
