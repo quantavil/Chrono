@@ -6,9 +6,7 @@
 
   import {
     ChevronDown,
-    ChevronRight,
     Trash2,
-    RotateCcw,
     CheckCircle2,
     Clock,
     CheckSquare,
@@ -244,17 +242,25 @@
               "
               role="listitem"
             >
-              <!-- Completed Checkbox (visual only) -->
-              <div
+              <!-- Completed Checkbox (Interactive) -->
+              <button
+                type="button"
                 class="
-                  w-5 h-5 rounded-full
-                  bg-accent/20 text-accent
+                  w-5 h-5 rounded-lg
+                  bg-accent border-2 border-accent text-white
                   flex items-center justify-center
-                  flex-shrink-0
+                  flex-shrink-0 hover:bg-accent-dark hover:border-accent-dark
+                  transition-all active:scale-90
                 "
+                onclick={(e) => {
+                  e.stopPropagation();
+                  handleUncomplete(todo.id);
+                }}
+                aria-label="Restore task"
+                title="Restore task"
               >
                 <CheckCircle2 class="w-3.5 h-3.5" strokeWidth={3} />
-              </div>
+              </button>
 
               <!-- Title -->
               <span
@@ -286,23 +292,6 @@
                   transition-opacity duration-200
                 "
               >
-                <!-- Uncomplete -->
-                <button
-                  type="button"
-                  class="
-                    w-7 h-7 rounded-lg
-                    flex items-center justify-center
-                    text-neutral/30 hover:text-primary
-                    hover:bg-primary/10
-                    transition-colors
-                  "
-                  onclick={() => handleUncomplete(todo.id)}
-                  aria-label="Mark as incomplete"
-                  title="Restore task"
-                >
-                  <RotateCcw class="w-3.5 h-3.5" strokeWidth={2.5} />
-                </button>
-
                 <!-- Delete -->
                 <button
                   type="button"

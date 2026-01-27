@@ -18,8 +18,6 @@
         Heading1,
         Heading2,
         Heading3,
-        Undo,
-        Redo,
     } from "lucide-svelte";
 
     // -------------------------------------------------------------------------
@@ -182,14 +180,6 @@
             .run();
     }
 
-    function undo() {
-        editor?.chain().focus().undo().run();
-    }
-
-    function redo() {
-        editor?.chain().focus().redo().run();
-    }
-
     // -------------------------------------------------------------------------
     // Active state checks
     // -------------------------------------------------------------------------
@@ -335,31 +325,6 @@
                     title="Link (⌘K)"
                 >
                     <LinkIcon class="w-4 h-4" />
-                </button>
-            </div>
-
-            <!-- Spacer -->
-            <div class="flex-1"></div>
-
-            <!-- Undo/Redo -->
-            <div class="flex items-center gap-0.5">
-                <button
-                    type="button"
-                    onclick={undo}
-                    class="toolbar-btn"
-                    disabled={!editor?.can().undo()}
-                    title="Undo (⌘Z)"
-                >
-                    <Undo class="w-4 h-4" />
-                </button>
-                <button
-                    type="button"
-                    onclick={redo}
-                    class="toolbar-btn"
-                    disabled={!editor?.can().redo()}
-                    title="Redo (⌘⇧Z)"
-                >
-                    <Redo class="w-4 h-4" />
                 </button>
             </div>
         </div>
