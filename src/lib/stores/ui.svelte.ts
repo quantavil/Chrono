@@ -3,6 +3,7 @@ export class UIStore {
     isMobile = $state(false);
     isTablet = $state(false);
     focusedTaskId = $state<string | null>(null);
+    view = $state<'dashboard' | 'settings'>('dashboard');
 
     constructor() {
         if (typeof window !== 'undefined') {

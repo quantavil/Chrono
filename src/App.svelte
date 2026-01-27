@@ -15,6 +15,7 @@
   import TaskDetailModal from "$lib/components/TaskDetailModal.svelte";
   import Toast from "$lib/components/Toast.svelte";
   import KeyboardShortcuts from "$lib/components/KeyboardShortcuts.svelte";
+  import SettingsPage from "$lib/components/SettingsPage.svelte";
 
   // Stores
   import { themeManager } from "$lib/stores/theme.svelte";
@@ -53,6 +54,7 @@
   const isAuthenticated = $derived(authManager.isAuthenticated);
   const isAuthInitialized = $derived(authManager.isInitialized);
   const isLoading = $derived(todoList.loading);
+  const view = $derived(uiStore.view);
 
   // Get the selected task object
   const selectedTask = $derived(
@@ -136,6 +138,10 @@
         if (isMobileModalOpen) {
           isMobileModalOpen = false;
         }
+        // Also close settings if needed
+        if (uiStore.view === "settings") {
+          uiStore.view = "dashboard";
+        }
       }
 
       // Cmd/Ctrl + / to toggle shortcuts
@@ -216,33 +222,40 @@
 
 <div data-theme={themeManager.resolved}>
   {#if isInitialized}
-    <DualPaneLayout {isRightPaneOpen}>
-      <!-- LEFT PANE (Desktop) -->
-      {#snippet leftPane()}
-        <LeftPane {selectedTaskId} onSelectTask={handleSelectTask} />
-      {/snippet}
+    {#if uiStore.view === "settings"}
+      <SettingsPage />
+    {:else}
+      <DualPaneLayout {isRightPaneOpen}>
+        <!-- LEFT PANE (Desktop) -->
+        {#snippet leftPane()}
+          <LeftPane {selectedTaskId} onSelectTask={handleSelectTask} />
+        {/snippet}
 
-      <!-- RIGHT PANE (Desktop) -->
-      {#snippet rightPane()}
-        <RightPane task={selectedTask} onClose={handleCloseRightPane} />
-      {/snippet}
+        <!-- RIGHT PANE (Desktop) -->
+        {#snippet rightPane()}
+          <RightPane task={selectedTask} onClose={handleCloseRightPane} />
+        {/snippet}
 
-      <!-- MOBILE CONTENT -->
-      {#snippet mobileContent()}
-        <div class="w-full px-4 sm:px-6 pt-6 pb-32">
-          <Header class="mb-6" />
-          <AddTaskBar variant="inline" class="mb-6" />
-          <TaskList class="mb-6" onEdit={(id) => handleSelectTask(id)} />
-          <CompletedSection />
-        </div>
+        <!-- MOBILE CONTENT -->
+        {#snippet mobileContent()}
+          <div class="w-full px-4 sm:px-6 pt-6 pb-32">
+            <Header class="mb-6" />
+            <AddTaskBar variant="inline" class="mb-6" />
+            <TaskList class="mb-6" onEdit={(id) => handleSelectTask(id)} />
+            <CompletedSection />
+          </div>
 
-        <!-- Mobile Fixed Bottom Add Bar -->
-        <AddTaskBar variant="fixed" />
+          <!-- Mobile Fixed Bottom Add Bar -->
+          <AddTaskBar variant="fixed" />
 
-        <!-- Mobile Task Detail Modal -->
-        <TaskDetailModal bind:isOpen={isMobileModalOpen} todo={selectedTask} />
-      {/snippet}
-    </DualPaneLayout>
+          <!-- Mobile Task Detail Modal -->
+          <TaskDetailModal
+            bind:isOpen={isMobileModalOpen}
+            todo={selectedTask}
+          />
+        {/snippet}
+      </DualPaneLayout>
+    {/if}
   {:else}
     <!-- Loading State -->
     <div class="min-h-screen bg-base-200 flex items-center justify-center">
@@ -272,17 +285,19 @@
   {/if}
 
   <!-- Background Decoration -->
-  <div
-    class="fixed inset-0 pointer-events-none overflow-hidden opacity-30 dark:opacity-10"
-    aria-hidden="true"
-  >
+  {#if uiStore.view !== "settings"}
     <div
-      class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 blur-3xl"
-    ></div>
-    <div
-      class="absolute -bottom-48 -left-48 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-accent/20 to-primary/20 blur-3xl"
-    ></div>
-  </div>
+      class="fixed inset-0 pointer-events-none overflow-hidden opacity-30 dark:opacity-10"
+      aria-hidden="true"
+    >
+      <div
+        class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 blur-3xl"
+      ></div>
+      <div
+        class="absolute -bottom-48 -left-48 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-accent/20 to-primary/20 blur-3xl"
+      ></div>
+    </div>
+  {/if}
 
   <!-- Keyboard Shortcuts Modal -->
   <KeyboardShortcuts bind:isOpen={isShortcutsOpen} />

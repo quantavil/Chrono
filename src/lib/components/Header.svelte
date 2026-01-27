@@ -17,9 +17,9 @@
     import { themeManager } from "$lib/stores/theme.svelte";
     import { getTodoStore, getAuthStore } from "$lib/context";
     import { formatDateHeader, formatTimeCompact } from "$lib/utils/formatTime";
+    import { uiStore } from "$lib/stores/ui.svelte";
     import UserMenu from "./UserMenu.svelte";
     import LoginForm from "./LoginForm.svelte";
-    import SettingsModal from "./SettingsModal.svelte";
 
     // -------------------------------------------------------------------------
     // Props
@@ -38,7 +38,6 @@
     const authManager = getAuthStore();
 
     let showLoginModal = $state(false);
-    let isSettingsOpen = $state(false);
 
     // -------------------------------------------------------------------------
     // Derived State
@@ -135,7 +134,7 @@
                 <button
                     type="button"
                     class="relative w-8 h-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center transition-all duration-200 text-neutral/60 hover:text-neutral"
-                    onclick={() => (isSettingsOpen = true)}
+                    onclick={() => (uiStore.view = "settings")}
                     title="Settings"
                 >
                     <Settings class="w-4 h-4" strokeWidth={2} />
@@ -208,7 +207,7 @@
                 <button
                     type="button"
                     class="w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
-                    onclick={() => (isSettingsOpen = true)}
+                    onclick={() => (uiStore.view = "settings")}
                     aria-label="Settings"
                 >
                     <Settings
@@ -271,6 +270,3 @@
 
 <!-- Login Modal -->
 <LoginForm bind:isOpen={showLoginModal} />
-
-<!-- Settings Modal -->
-<SettingsModal bind:isOpen={isSettingsOpen} />

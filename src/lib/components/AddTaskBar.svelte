@@ -35,7 +35,11 @@
   let selectedPriority = $state<"high" | "medium" | "low" | null>(null);
   let selectedDueDate = $state<"today" | "tomorrow" | "week" | null>(null);
   let customDueDate = $state<string | null>(null);
-  let selectedDuration = $state<number | null>(null);
+  let selectedDuration = $state<number | null>(
+    todoList.preferences.defaultTaskDurationMs
+      ? Math.round(todoList.preferences.defaultTaskDurationMs / 60000)
+      : null,
+  );
 
   const canSubmit = $derived(inputValue.trim().length > 0);
 
@@ -187,6 +191,26 @@
               {config.label}
             </button>
           {/each}
+          <div class="w-px h-5 bg-base-300"></div>
+
+          <!-- Duration -->
+          {#each [15, 30, 45, 60] as mins}
+            <button
+              type="button"
+              class="
+                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
+                border transition-all whitespace-nowrap
+                {selectedDuration === mins
+                ? 'bg-secondary/10 text-secondary border-secondary'
+                : 'border-base-300 text-neutral-light hover:border-neutral-muted'}
+              "
+              onclick={() =>
+                (selectedDuration = selectedDuration === mins ? null : mins)}
+            >
+              <Clock class="w-3 h-3" />
+              {mins}m
+            </button>
+          {/each}
         </div>
       {/if}
 
@@ -303,6 +327,23 @@
               title="Set priority"
             >
               <Flag class="w-4 h-4" />
+            </button>
+          </div>
+
+          <!-- Duration Toggle -->
+          <div class="relative">
+            <button
+              type="button"
+              class="
+                p-2 rounded-lg transition-colors
+                {selectedDuration
+                ? 'text-secondary bg-secondary/10'
+                : 'text-neutral-muted hover:bg-base-200'}
+              "
+              onclick={() => (showQuickActions = !showQuickActions)}
+              title="Set duration"
+            >
+              <Clock class="w-4 h-4" />
             </button>
           </div>
 
