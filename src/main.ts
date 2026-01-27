@@ -101,9 +101,19 @@ async function registerServiceWorker(): Promise<void> {
 // Initialize
 // ============================================================================
 
-setupGlobalErrorHandlers();
-setupVisibilityHandler();
-const app = initializeApp();
-registerServiceWorker();
+let app;
+
+try {
+  setupGlobalErrorHandlers();
+  setupVisibilityHandler();
+  app = initializeApp();
+  registerServiceWorker();
+} catch (e) {
+  console.error("Critical initialization error", e);
+  document.body.innerHTML = `<div style="color:red; padding: 20px;">
+    <h1>Critical Error</h1>
+    <pre>${e instanceof Error ? e.message + "\n" + e.stack : e}</pre>
+  </div>`;
+}
 
 export default app;

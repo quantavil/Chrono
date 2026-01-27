@@ -14,12 +14,14 @@
   import CompletedSection from "$lib/components/CompletedSection.svelte";
   import TaskDetailModal from "$lib/components/TaskDetailModal.svelte";
   import Toast from "$lib/components/Toast.svelte";
+  import FocusMode from "$lib/components/focus/FocusMode.svelte";
 
   // Stores
   import { todoList } from "$lib/stores/todo.svelte";
   import { themeManager } from "$lib/stores/theme.svelte";
   import { toastManager } from "$lib/stores/toast.svelte";
   import { authManager } from "$lib/stores/auth.svelte";
+  import { uiStore } from "$lib/stores/ui.svelte";
   import { isSupabaseConfigured } from "$lib/utils/supabase";
 
   // Icons
@@ -141,6 +143,12 @@
           isMobileModalOpen = false;
         }
       }
+
+      // Shift + F to toggle Focus Mode
+      if (event.shiftKey && event.code === "KeyF") {
+        event.preventDefault();
+        uiStore.toggleFocusMode();
+      }
     };
 
     window.addEventListener("keydown", handleKeydown);
@@ -260,6 +268,11 @@
       class="absolute -bottom-48 -left-48 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-accent/20 to-primary/20 blur-3xl"
     ></div>
   </div>
+
+  <!-- Focus Mode Overlay -->
+  {#if uiStore.isFocusModeOpen}
+    <FocusMode onClose={() => uiStore.setFocusMode(false)} />
+  {/if}
 </div>
 
 <style>
