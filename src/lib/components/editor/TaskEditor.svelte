@@ -19,13 +19,16 @@
     } from "lucide-svelte";
     import { getTodoStore } from "$lib/context";
     import type { TodoItem } from "$lib/stores/todo.svelte";
-    import { formatRelativeDate } from "$lib/utils/formatTime";
+    import { PRIORITY_CONFIG, TODO_TITLE_MAX_LENGTH } from "$lib/types";
+    import {
+        getDatePresetISO,
+        formatRelativeDate,
+    } from "$lib/utils/formatTime";
     import TiptapEditor from "$lib/components/editor/TiptapEditor.svelte";
     import type { Priority, RecurrenceConfig } from "$lib/types";
     import { uiStore } from "$lib/stores/ui.svelte";
     import TaskHeader from "$lib/components/editor/TaskHeader.svelte";
     import CustomDatePicker from "$lib/components/CustomDatePicker.svelte";
-    import { PRIORITY_CONFIG, TODO_TITLE_MAX_LENGTH } from "$lib/types";
 
     interface Props {
         task: TodoItem;
@@ -78,7 +81,7 @@
     function updateTitle(e: Event) {
         const value = (e.target as HTMLInputElement).value;
         if (value !== task.title) {
-            todoList.updateTitle(task.id, value);
+            todoList.updateTask(task.id, { title: value });
         }
     }
 
@@ -98,16 +101,15 @@
     function addTag() {
         const trimmed = tagsInput.trim().toLowerCase();
         if (trimmed && !task.tags.includes(trimmed)) {
-            todoList.updateTags(task.id, [...task.tags, trimmed]);
+            todoList.updateTask(task.id, { tags: [...task.tags, trimmed] });
         }
         tagsInput = "";
     }
 
     function removeTag(tag: string) {
-        todoList.updateTags(
-            task.id,
-            task.tags.filter((t) => t !== tag),
-        );
+        todoList.updateTask(task.id, {
+            tags: task.tags.filter((t) => t !== tag),
+        });
     }
 
     function handleTagKeydown(e: KeyboardEvent) {
@@ -178,19 +180,10 @@
     }
 
     function setDueDate(type: "today" | "tomorrow" | "week" | "clear") {
-        const d = new Date();
-        d.setHours(0, 0, 0, 0);
-
-        if (type === "today") {
-            task.applyUpdate({ dueAt: d.toISOString() });
-        } else if (type === "tomorrow") {
-            d.setDate(d.getDate() + 1);
-            task.applyUpdate({ dueAt: d.toISOString() });
-        } else if (type === "week") {
-            d.setDate(d.getDate() + 7);
-            task.applyUpdate({ dueAt: d.toISOString() });
-        } else {
+        if (type === "clear") {
             task.applyUpdate({ dueAt: null });
+        } else {
+            task.applyUpdate({ dueAt: getDatePresetISO(type) });
         }
     }
 

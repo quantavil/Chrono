@@ -74,7 +74,7 @@
     function saveEdit(): void {
         const trimmed = editValue.trim();
         if (trimmed && trimmed !== todo.title) {
-            todoList.updateTitle(todo.id, trimmed);
+            todoList.updateTask(todo.id, { title: trimmed });
         }
         isEditing = false;
     }

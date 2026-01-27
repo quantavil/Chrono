@@ -14,6 +14,7 @@
   import { uiStore } from "$lib/stores/ui.svelte";
   import { TODO_TITLE_MAX_LENGTH, PRIORITY_CONFIG } from "$lib/types";
   import { fly, fade, scale, slide } from "svelte/transition";
+  import { getDatePreset } from "$lib/utils/formatTime";
 
   interface Props {
     class?: string;
@@ -44,22 +45,14 @@
   const canSubmit = $derived(inputValue.trim().length > 0);
 
   const dueDateConfig = {
-    today: { label: "Today", value: () => new Date() },
+    today: { label: "Today", value: () => getDatePreset("today") },
     tomorrow: {
       label: "Tomorrow",
-      value: () => {
-        const d = new Date();
-        d.setDate(d.getDate() + 1);
-        return d;
-      },
+      value: () => getDatePreset("tomorrow"),
     },
     week: {
       label: "Next Week",
-      value: () => {
-        const d = new Date();
-        d.setDate(d.getDate() + 7);
-        return d;
-      },
+      value: () => getDatePreset("week"),
     },
   };
 

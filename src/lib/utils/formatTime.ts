@@ -52,6 +52,28 @@ export function nowTimestamp(): string {
   return new Date().toISOString();
 }
 
+export const getDatePreset = (type: "today" | "tomorrow" | "week"): Date => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+
+  switch (type) {
+    case "today":
+      return d;
+    case "tomorrow":
+      d.setDate(d.getDate() + 1);
+      return d;
+    case "week":
+      d.setDate(d.getDate() + 7);
+      return d;
+    default:
+      return d;
+  }
+};
+
+export const getDatePresetISO = (type: "today" | "tomorrow" | "week"): string => {
+  return getDatePreset(type).toISOString();
+};
+
 // ============================================================================
 // Date Formatting
 // ============================================================================

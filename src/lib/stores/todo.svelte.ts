@@ -247,28 +247,19 @@ export class TodoList {
     this._save();
   }
 
-  updateTitle(id: string, title: string) {
-    this.getById(id)?.updateTitle(title);
-    this._save();
-  }
+  updateTask(id: string, fields: Partial<TodoModel> | Record<string, any>) {
+    const item = this.getById(id);
+    if (!item) return;
 
-  updatePriority(id: string, priority: Priority) {
-    this.getById(id)?.applyUpdate({ priority });
-    this._save();
-  }
-
-  updateDueDate(id: string, dueAt: string | null) {
-    this.getById(id)?.applyUpdate({ dueAt });
-    this._save();
-  }
-
-  updateSubtasks(id: string, subtasks: Subtask[]) {
-    this.getById(id)?.applyUpdate({ subtasks });
-    this._save();
-  }
-
-  updateTags(id: string, tags: string[]) {
-    this.getById(id)?.applyUpdate({ tags });
+    if ('title' in fields && typeof fields.title === 'string') {
+      item.updateTitle(fields.title);
+      const { title, ...rest } = fields;
+      if (Object.keys(rest).length > 0) {
+        item.applyUpdate(rest);
+      }
+    } else {
+      item.applyUpdate(fields);
+    }
     this._save();
   }
 

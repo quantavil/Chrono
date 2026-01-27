@@ -10,10 +10,7 @@
     // Calculate fill percentage based on time
     const fillPercentage = $derived(() => {
         if (todo.estimatedTime && todo.estimatedTime > 0) {
-            return Math.min(
-                (todo.currentTimeMs / todo.estimatedTime) * 100,
-                100,
-            );
+            return todo.progress;
         }
         // If no estimate, use a logarithmic scale capped at 2 hours for 100%
         const maxMs = 2 * 60 * 60 * 1000; // 2 hours

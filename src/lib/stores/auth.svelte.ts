@@ -114,7 +114,6 @@ export class AuthManager {
 
       if (session?.user) {
         this.currentUser = this.mapSessionUser(session);
-        this.currentUser = this.mapSessionUser(session);
         await this.todoList.setUser(session.user.id);
       }
 
@@ -146,14 +145,12 @@ export class AuthManager {
       case 'SIGNED_IN':
         if (session?.user) {
           this.currentUser = this.mapSessionUser(session);
-          this.currentUser = this.mapSessionUser(session);
           await this.todoList.setUser(session.user.id);
           toastManager.success(`Welcome back, ${this.displayName}!`);
         }
         break;
 
       case 'SIGNED_OUT':
-        this.currentUser = null;
         this.currentUser = null;
         await this.todoList.setUser(null);
         toastManager.info('You have been signed out');
