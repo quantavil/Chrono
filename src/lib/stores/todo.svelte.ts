@@ -64,6 +64,7 @@ export class TodoItem {
   // Core fields
   title = $state<string>('');
   description = $state<string | null>(null);
+  notes = $state<string | null>(null);
   isCompleted = $state<boolean>(false);
   priority = $state<Priority>(null);
   dueAt = $state<string | null>(null);
@@ -111,6 +112,7 @@ export class TodoItem {
     this.id = data.id;
     this.title = data.title;
     this.description = data.description;
+    this.notes = data.notes;
     this.isCompleted = data.is_completed;
     this.priority = data.priority;
     this.dueAt = data.due_at;
@@ -277,6 +279,7 @@ export class TodoItem {
     return {
       title: this.title,
       description: this.description,
+      notes: this.notes,
       priority: this.priority,
       recurrence: this.recurrence,
       tags: [...this.tags],
@@ -335,6 +338,7 @@ export class TodoItem {
   applyUpdate(updates: Partial<Todo>): void {
     if (updates.title !== undefined) this.title = updates.title;
     if (updates.description !== undefined) this.description = updates.description;
+    if (updates.notes !== undefined) this.notes = updates.notes;
     if (updates.is_completed !== undefined) this.isCompleted = updates.is_completed;
     if (updates.priority !== undefined) this.priority = updates.priority;
     if (updates.due_at !== undefined) this.dueAt = updates.due_at;
@@ -387,6 +391,7 @@ export class TodoItem {
       user_id: this.userId,
       title: this.title,
       description: this.description,
+      notes: this.notes,
       is_completed: this.isCompleted,
       priority: this.priority,
       due_at: this.dueAt,
@@ -683,6 +688,7 @@ export class TodoList {
       user_id: this._userId,
       title: input.title.trim().slice(0, TODO_TITLE_MAX_LENGTH),
       description: input.description ?? null,
+      notes: input.notes ?? null,
       is_completed: false,
       priority: input.priority ?? null,
       due_at: input.due_at ?? null,

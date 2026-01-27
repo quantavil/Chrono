@@ -75,6 +75,7 @@ export interface Todo {
   user_id: string | null;
   title: string;
   description: string | null;
+  notes: string | null;
   is_completed: boolean;
   priority: Priority;
   due_at: string | null; // ISO timestamp
@@ -102,6 +103,7 @@ export interface TodoLocal extends Todo {
 export interface TodoCreateInput {
   title: string;
   description?: string | null;
+  notes?: string | null;
   priority?: Priority;
   due_at?: string | null;
   estimated_time?: number | null;
@@ -116,6 +118,7 @@ export interface TodoCreateInput {
 export interface TodoUpdateInput {
   title?: string;
   description?: string | null;
+  notes?: string | null;
   is_completed?: boolean;
   priority?: Priority;
   due_at?: string | null;

@@ -23,7 +23,7 @@
   import { isSupabaseConfigured } from "$lib/utils/supabase";
 
   // Icons
-  import { Wifi, WifiOff, Cloud, CloudOff } from "lucide-svelte";
+  import { WifiOff } from "lucide-svelte";
 
   // -------------------------------------------------------------------------
   // State
@@ -32,12 +32,12 @@
   let isOnline = $state(true);
   let isInitialized = $state(false);
 
-  // Right pane context
+  // Selected task for right pane (desktop) or modal (mobile)
   let selectedTaskId = $state<string | null>(null);
+  let selectedTaskMode = $state<"content" | "settings">("content");
 
-  // Mobile modal (only used on mobile)
+  // Mobile modal state
   let isMobileModalOpen = $state(false);
-  let mobileModalTaskId = $state<string | null>(null);
 
   // -------------------------------------------------------------------------
   // Derived State
@@ -48,44 +48,52 @@
   const isAuthInitialized = $derived(authManager.isInitialized);
   const isLoading = $derived(todoList.loading);
 
-  // Get the currently running timer task (if any)
-  const activeTimerTask = $derived(todoList.runningTodo);
-
   // Get the selected task object
   const selectedTask = $derived(
     selectedTaskId ? (todoList.getById(selectedTaskId) ?? null) : null,
   );
 
-  // Determine right pane mode
-  type PaneMode = "stats" | "details" | "focus";
-  const rightPaneMode = $derived.by((): PaneMode => {
-    if (activeTimerTask) return "focus";
-    if (selectedTaskId && selectedTask) return "details";
-    return "stats";
-  });
+  const isRightPaneOpen = $derived(!!selectedTask);
 
   // -------------------------------------------------------------------------
   // Handlers
   // -------------------------------------------------------------------------
 
-  function handleSelectTask(id: string): void {
+  function handleSelectTask(
+    id: string,
+    mode: "content" | "settings" = "content",
+  ): void {
     // On desktop: show in right pane
     // On mobile: open modal
-    if (window.innerWidth >= 1024) {
-      selectedTaskId = selectedTaskId === id ? null : id;
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      if (selectedTaskId === id) {
+        if (selectedTaskMode === mode) {
+          // Same task, same mode -> Close
+          selectedTaskId = null;
+        } else {
+          // Same task, different mode -> Switch mode
+          selectedTaskMode = mode;
+        }
+      } else {
+        // New task -> Open
+        selectedTaskId = id;
+        selectedTaskMode = mode;
+      }
     } else {
-      mobileModalTaskId = id;
+      selectedTaskId = id;
+      selectedTaskMode = mode; // Mobile might not use mode yet, but good to set
       isMobileModalOpen = true;
     }
   }
 
-  function handleCloseDetails(): void {
+  function handleCloseRightPane(): void {
     selectedTaskId = null;
   }
 
   function handleCloseMobileModal(): void {
     isMobileModalOpen = false;
-    mobileModalTaskId = null;
+    // Keep selectedTaskId for potential reopen, or clear it:
+    // selectedTaskId = null;
   }
 
   // -------------------------------------------------------------------------
@@ -125,8 +133,13 @@
       }
 
       // Escape to close right panel
-      if (event.key === "Escape" && selectedTaskId) {
-        selectedTaskId = null;
+      if (event.key === "Escape") {
+        if (selectedTaskId) {
+          selectedTaskId = null;
+        }
+        if (isMobileModalOpen) {
+          isMobileModalOpen = false;
+        }
       }
     };
 
@@ -137,7 +150,6 @@
       isInitialized = true;
     }, 500);
 
-    // Check if already ready
     if (isAuthInitialized && !isLoading) {
       isInitialized = true;
     }
@@ -174,7 +186,7 @@
 
 <div data-theme={themeManager.resolved}>
   {#if isInitialized}
-    <DualPaneLayout>
+    <DualPaneLayout {isRightPaneOpen}>
       <!-- LEFT PANE (Desktop) -->
       {#snippet leftPane()}
         <LeftPane {selectedTaskId} onSelectTask={handleSelectTask} />
@@ -183,25 +195,21 @@
       <!-- RIGHT PANE (Desktop) -->
       {#snippet rightPane()}
         <RightPane
-          mode={rightPaneMode}
-          {selectedTask}
-          timerTask={activeTimerTask}
-          onClose={handleCloseDetails}
-          onSelectTask={handleSelectTask}
+          task={selectedTask}
+          mode={selectedTaskMode}
+          onClose={handleCloseRightPane}
         />
       {/snippet}
 
       <!-- MOBILE CONTENT -->
       {#snippet mobileContent()}
-        <div
-          class="
-            w-full px-4 sm:px-6
-            pt-6 pb-32
-          "
-        >
+        <div class="w-full px-4 sm:px-6 pt-6 pb-32">
           <Header class="mb-6" />
           <AddTaskBar variant="inline" class="mb-6" />
-          <TaskList class="mb-6" onEdit={handleSelectTask} />
+          <TaskList
+            class="mb-6"
+            onEdit={(id) => handleSelectTask(id, "content")}
+          />
           <CompletedSection />
         </div>
 
@@ -209,12 +217,7 @@
         <AddTaskBar variant="fixed" />
 
         <!-- Mobile Task Detail Modal -->
-        <TaskDetailModal
-          bind:isOpen={isMobileModalOpen}
-          todo={mobileModalTaskId
-            ? (todoList.getById(mobileModalTaskId) ?? null)
-            : null}
-        />
+        <TaskDetailModal bind:isOpen={isMobileModalOpen} todo={selectedTask} />
       {/snippet}
     </DualPaneLayout>
   {:else}
@@ -235,13 +238,7 @@
   <!-- Offline Banner (Mobile) -->
   {#if !isOnline}
     <div
-      class="
-        fixed top-0 left-0 right-0 z-50
-        lg:hidden
-        bg-amber-500 text-white
-        text-center text-xs font-semibold
-        py-1.5 px-4
-      "
+      class="fixed top-0 left-0 right-0 z-50 lg:hidden bg-amber-500 text-white text-center text-xs font-semibold py-1.5 px-4"
       transition:fade={{ duration: 150 }}
     >
       <div class="flex items-center justify-center gap-2">

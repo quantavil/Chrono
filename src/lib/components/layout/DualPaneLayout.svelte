@@ -6,6 +6,7 @@
         leftPane: Snippet;
         rightPane: Snippet;
         mobileContent: Snippet;
+        isRightPaneOpen?: boolean;
         class?: string;
     }
 
@@ -13,6 +14,7 @@
         leftPane,
         rightPane,
         mobileContent,
+        isRightPaneOpen = true,
         class: className = "",
     }: Props = $props();
 </script>
@@ -29,27 +31,38 @@
         <div
             class="
         flex-1 overflow-y-auto
-        border-r border-base-300/50
+        {isRightPaneOpen ? 'border-r border-base-300/50' : ''}
         scrollbar-hide
+        transition-all duration-300 ease-in-out
       "
         >
-            <div class="max-w-2xl mx-auto px-6 xl:px-8 py-8">
+            <div
+                class="
+            mx-auto px-6 xl:px-8 py-8
+            transition-all duration-300 ease-in-out
+            max-w-4xl
+        "
+            >
                 {@render leftPane()}
             </div>
         </div>
 
         <!-- Right Pane: Sticky Contextual Panel -->
-
-        <div
-            class="
-        w-[400px] xl:w-[460px] 2xl:w-[520px]
-        flex-shrink-0
-        bg-base-100
-        overflow-y-auto
-        scrollbar-hide
-      "
-        >
-            {@render rightPane()}
-        </div>
+        {#if isRightPaneOpen}
+            <div
+                class="
+            w-[400px] xl:w-[480px] 2xl:w-[560px]
+            flex-shrink-0
+            bg-base-100
+            overflow-y-auto
+            scrollbar-hide
+            border-l border-base-200
+            transition-all duration-300 ease-in-out
+          "
+                transition:fade={{ duration: 200 }}
+            >
+                {@render rightPane()}
+            </div>
+        {/if}
     </div>
 </div>

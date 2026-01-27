@@ -6,7 +6,7 @@
 
     interface Props {
         selectedTaskId: string | null;
-        onSelectTask: (id: string) => void;
+        onSelectTask: (id: string, mode?: "content" | "settings") => void;
         class?: string;
     }
 
