@@ -2,7 +2,7 @@
   import { Plus, Calendar, Flag, X, ChevronDown } from "lucide-svelte";
   import { todoList } from "$lib/stores/todo.svelte";
   import { TODO_TITLE_MAX_LENGTH } from "$lib/types";
-  import { fly, fade, scale } from "svelte/transition";
+  import { fly, fade, scale, slide } from "svelte/transition";
 
   interface Props {
     class?: string;
@@ -226,6 +226,12 @@
   <div class="hidden md:block w-full {className}">
     <form
       onsubmit={handleSubmit}
+      onfocusout={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+          isFocused = false;
+          showQuickActions = false;
+        }
+      }}
       class="
         relative bg-base-100 rounded-2xl
         shadow-sm border border-base-300/50
@@ -243,11 +249,6 @@
           maxlength={TODO_TITLE_MAX_LENGTH}
           onkeydown={handleKeydown}
           onfocus={handleFocus}
-          onblur={() =>
-            setTimeout(() => {
-              isFocused = false;
-              showQuickActions = false;
-            }, 200)}
           autocomplete="off"
         />
 
@@ -305,18 +306,18 @@
         </button>
       </div>
 
-      <!-- Quick Actions Dropdown -->
-      {#if showQuickActions && isFocused}
+      <!-- Quick Actions - Now Inline and Sliding -->
+      {#if showQuickActions}
         <div
-          class="absolute top-full left-0 right-0 mt-2 p-4 bg-base-100 rounded-2xl shadow-lg border border-base-300 z-10"
-          transition:scale={{ duration: 150, start: 0.95 }}
+          class="px-5 pb-5 pt-2 border-t border-base-200/50"
+          transition:slide={{ duration: 300 }}
         >
-          <div class="grid grid-cols-2 gap-4">
-            <!-- Priority -->
-            <div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <!-- Priority Selector -->
+            <div class="space-y-3">
               <span
-                class="text-xs font-semibold text-neutral-muted uppercase tracking-wide mb-2 block"
-                >Priority</span
+                class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
+                >Priority Level</span
               >
               <div class="flex flex-wrap gap-2">
                 {#each ["high", "medium", "low"] as p}
@@ -325,26 +326,31 @@
                   <button
                     type="button"
                     class="
-                      px-3 py-1.5 rounded-lg text-xs font-medium
-                      border transition-all
+                      group relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold
+                      border transition-all duration-300
                       {selectedPriority === p
-                      ? `${config.bg} ${config.color} border-current`
-                      : 'border-base-300 hover:border-neutral-muted'}
+                      ? `${config.bg} ${config.color} border-current shadow-sm`
+                      : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral hover:border-base-300'}
                     "
                     onclick={() =>
                       togglePriority(p as "high" | "medium" | "low")}
                   >
+                    <div
+                      class="w-1.5 h-1.5 rounded-full {selectedPriority === p
+                        ? 'bg-current'
+                        : 'bg-neutral/20 group-hover:bg-neutral/40'} transition-colors"
+                    ></div>
                     {config.label}
                   </button>
                 {/each}
               </div>
             </div>
 
-            <!-- Due Date -->
-            <div>
+            <!-- Due Date Selector -->
+            <div class="space-y-3">
               <span
-                class="text-xs font-semibold text-neutral-muted uppercase tracking-wide mb-2 block"
-                >Due Date</span
+                class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
+                >Timeline</span
               >
               <div class="flex flex-wrap gap-2">
                 {#each ["today", "tomorrow", "week"] as d}
@@ -353,15 +359,20 @@
                   <button
                     type="button"
                     class="
-                      px-3 py-1.5 rounded-lg text-xs font-medium
-                      border transition-all
+                      group flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold
+                      border transition-all duration-300
                       {selectedDueDate === d
-                      ? 'bg-primary-muted text-primary border-primary'
-                      : 'border-base-300 hover:border-neutral-muted'}
+                      ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
+                      : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral hover:border-base-300'}
                     "
                     onclick={() =>
                       toggleDueDate(d as "today" | "tomorrow" | "week")}
                   >
+                    <Calendar
+                      class="w-3.5 h-3.5 {selectedDueDate === d
+                        ? 'text-primary'
+                        : 'text-neutral/40 group-hover:text-neutral/60'}"
+                    />
                     {config.label}
                   </button>
                 {/each}
