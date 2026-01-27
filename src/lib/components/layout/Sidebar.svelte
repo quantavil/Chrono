@@ -10,6 +10,7 @@
         ListTodo,
         Focus,
         Users,
+        Settings,
     } from "lucide-svelte";
     import { themeManager } from "$lib/stores/theme.svelte";
     import { todoList } from "$lib/stores/todo.svelte";
@@ -17,6 +18,7 @@
     import { formatTimeCompact } from "$lib/utils/formatTime";
     import UserMenu from "$lib/components/UserMenu.svelte";
     import LoginForm from "$lib/components/LoginForm.svelte";
+    import SettingsModal from "$lib/components/SettingsModal.svelte";
     import { uiStore } from "$lib/stores/ui.svelte";
 
     interface Props {
@@ -29,6 +31,7 @@
     // Local State
     // -------------------------------------------------------------------------
     let showLoginModal = $state(false);
+    let isSettingsOpen = $state(false);
 
     // -------------------------------------------------------------------------
     // Derived State
@@ -106,20 +109,26 @@
             </div>
         </div>
 
-        <div
-            class="pt-2 border-t border-base-300/50 flex items-center gap-2 text-xs"
-        >
-            <Clock class="w-3.5 h-3.5 text-primary" />
-            <span
-                class="font-mono font-medium text-neutral/70"
-                class:animate-pulse={hasRunningTimer}
-            >
-                {totalTimeFormatted} tracked
-            </span>
+        <div class="pt-2 border-t border-base-300/50 flex flex-col gap-2">
+            <div class="flex items-center gap-2 text-xs">
+                <Clock class="w-3.5 h-3.5 text-primary" />
+                <span
+                    class="font-mono font-medium text-neutral/70"
+                    class:animate-pulse={hasRunningTimer}
+                >
+                    {totalTimeFormatted} tracked
+                </span>
+            </div>
+            <div class="flex items-center justify-between text-xs">
+                <span class="text-neutral/50">Estimated</span>
+                <span class="font-mono font-medium text-neutral/70">
+                    {formatTimeCompact(stats.estimatedTimeMs)}
+                </span>
+            </div>
         </div>
     </div>
 
-    <!-- Navigation (Placeholder for now, can expand later) -->
+    <!-- Navigation -->
     <nav class="flex-1 space-y-1">
         <button
             class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary/10 text-primary font-bold text-sm"
@@ -135,10 +144,17 @@
             <span>Focus Mode</span>
         </button>
         <button
-            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral/60 hover:bg-base-200 hover:text-neutral font-medium text-sm transition-colors"
+            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral/40 cursor-not-allowed font-medium text-sm transition-colors"
+            disabled
+            title="Coming soon"
         >
             <Users class="w-4.5 h-4.5" />
             <span>Teams</span>
+            <span
+                class="ml-auto text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
+            >
+                Soon
+            </span>
         </button>
     </nav>
 
@@ -157,10 +173,23 @@
             </div>
         </button>
 
+        <!-- Settings -->
+        <button
+            class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-base-200 transition-colors group"
+            onclick={() => (isSettingsOpen = true)}
+        >
+            <div
+                class="flex items-center gap-3 text-sm font-medium text-neutral/80 group-hover:text-neutral"
+            >
+                <Settings class="w-4.5 h-4.5" />
+                <span>Settings</span>
+            </div>
+        </button>
+
         <!-- Auth -->
         {#if isAuthenticated}
             <div class="px-1 pt-1">
-                <UserMenu />
+                <UserMenu onOpenSettings={() => (isSettingsOpen = true)} />
             </div>
         {:else if !isAuthLoading}
             <button
@@ -175,3 +204,4 @@
 </div>
 
 <LoginForm bind:isOpen={showLoginModal} />
+<SettingsModal bind:isOpen={isSettingsOpen} />

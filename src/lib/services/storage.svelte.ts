@@ -1,5 +1,5 @@
-import type { TodoLocal, Todo, TodoCreateInput, FilterState } from "../types";
-import { LOCAL_STORAGE_KEYS, DEFAULT_FILTERS } from "../types";
+import type { TodoLocal, Todo, TodoCreateInput, FilterState, UserPreferences } from "../types";
+import { LOCAL_STORAGE_KEYS, DEFAULT_FILTERS, DEFAULT_PREFERENCES } from "../types";
 import {
     fetchTodos,
     createTodo,
@@ -64,6 +64,24 @@ class StorageService {
             localStorage.setItem(LOCAL_STORAGE_KEYS.FILTERS, JSON.stringify(filters));
         } catch (e) {
             console.error("Failed to save filters", e);
+        }
+    }
+
+    loadPreferences(): UserPreferences {
+        try {
+            const json = localStorage.getItem(LOCAL_STORAGE_KEYS.PREFERENCES);
+            if (!json) return { ...DEFAULT_PREFERENCES };
+            return { ...DEFAULT_PREFERENCES, ...JSON.parse(json) };
+        } catch (e) {
+            return { ...DEFAULT_PREFERENCES };
+        }
+    }
+
+    savePreferences(prefs: UserPreferences): void {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEYS.PREFERENCES, JSON.stringify(prefs));
+        } catch (e) {
+            console.error("Failed to save preferences", e);
         }
     }
 

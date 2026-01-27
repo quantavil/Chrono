@@ -3,8 +3,9 @@
     import { X, Trash2 } from "lucide-svelte";
     import type { TodoItem } from "$lib/stores/todo.svelte";
     import { todoList } from "$lib/stores/todo.svelte";
-    import { onMount } from "svelte";
+    import { uiStore } from "$lib/stores/ui.svelte";
     import TaskEditor from "$lib/components/editor/TaskEditor.svelte";
+    import TaskHeader from "$lib/components/editor/TaskHeader.svelte";
 
     interface Props {
         isOpen: boolean;
@@ -13,29 +14,10 @@
 
     let { isOpen = $bindable(false), todo }: Props = $props();
 
-    let isMobile = $state(false);
-
-    function updateMedia() {
-        if (typeof window !== "undefined") {
-            isMobile = window.innerWidth < 768;
-        }
-    }
-
-    onMount(() => {
-        updateMedia();
-        window.addEventListener("resize", updateMedia);
-        return () => window.removeEventListener("resize", updateMedia);
-    });
+    const isMobile = $derived(uiStore.isMobile);
 
     function close() {
         isOpen = false;
-    }
-
-    function handleDelete(): void {
-        if (todo && confirm("Delete this task?")) {
-            todoList.remove(todo.id);
-            close();
-        }
     }
 
     // Transition params generator
@@ -87,27 +69,7 @@
             <div class="w-12 h-1.5 rounded-full bg-neutral/20"></div>
         </div>
 
-        <!-- Header -->
-        <div
-            class="flex items-center justify-between p-6 border-b border-base-200"
-        >
-            <h2 class="text-lg font-bold text-neutral">Task Details</h2>
-            <div class="flex items-center gap-1">
-                <button
-                    onclick={handleDelete}
-                    class="p-2 hover:bg-red-50 text-neutral/40 hover:text-red-500 rounded-xl transition-colors"
-                    title="Delete Task"
-                >
-                    <Trash2 class="w-5 h-5" />
-                </button>
-                <button
-                    onclick={close}
-                    class="p-2 hover:bg-base-200 rounded-xl transition-colors"
-                >
-                    <X class="w-5 h-5 text-neutral/60" />
-                </button>
-            </div>
-        </div>
+        <TaskHeader task={todo} onClose={close} variant="modal" />
 
         <!-- Content -->
         <div class="flex-1 overflow-hidden relative">

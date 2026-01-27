@@ -12,6 +12,7 @@
         ArrowLeft,
     } from "lucide-svelte";
     import { onMount } from "svelte";
+    import { PRIORITY_CONFIG } from "$lib/types";
 
     interface Props {
         onClose: () => void;
@@ -22,6 +23,7 @@
     // Derived State
     const currentTask = $derived(todoList.runningTodo);
     const hasActiveTask = $derived(!!currentTask);
+    const activeTasks = $derived(todoList.activeTodos);
 
     // Local State
     let isMinimized = $state(false);
@@ -185,19 +187,74 @@
                 </div>
             </div>
         {:else}
-            <!-- Empty State -->
-            <div class="text-center space-y-4" in:fade>
-                <h2 class="text-3xl font-bold text-neutral/50">
-                    No active task
-                </h2>
-                <p class="text-neutral/40">
-                    Select a task from your list to start focusing.
-                </p>
+            <!-- Empty State Improved -->
+            <div class="text-center space-y-10 max-w-xl mx-auto w-full" in:fade>
+                <div class="space-y-4">
+                    <h2
+                        class="text-4xl md:text-5xl font-bold text-neutral tracking-tight"
+                    >
+                        Ready to Focus?
+                    </h2>
+                    <p class="text-neutral/40 text-lg md:text-xl font-medium">
+                        Select a task to start your deep work session.
+                    </p>
+                </div>
+
+                <div
+                    class="grid gap-3 w-full max-h-[50vh] overflow-y-auto px-2 scrollbar-hide"
+                >
+                    {#each activeTasks as task}
+                        <button
+                            class="
+                                flex items-center justify-between p-6
+                                bg-base-200/50 hover:bg-base-200
+                                rounded-[2rem] transition-all group
+                                hover:translate-x-1 active:scale-[0.98]
+                            "
+                            onclick={() => todoList.startTimer(task.id)}
+                        >
+                            <div class="flex items-center gap-5 text-left">
+                                <div
+                                    class="w-3 h-3 rounded-full
+                                    {task.priority === 'high'
+                                        ? 'bg-danger shadow-[0_0_12px_rgba(var(--color-danger),0.4)]'
+                                        : task.priority === 'medium'
+                                          ? 'bg-warning'
+                                          : 'bg-success'}"
+                                ></div>
+                                <span
+                                    class="font-bold text-xl text-neutral group-hover:text-primary transition-colors"
+                                >
+                                    {task.title}
+                                </span>
+                            </div>
+                            <div
+                                class="p-3 rounded-2xl bg-base-100 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <Play
+                                    class="w-6 h-6 text-primary fill-primary"
+                                />
+                            </div>
+                        </button>
+                    {/each}
+
+                    {#if activeTasks.length === 0}
+                        <div
+                            class="py-12 px-6 rounded-[2.5rem] border-2 border-dashed border-base-300"
+                        >
+                            <p class="text-neutral/30 font-medium">
+                                Your task list is empty.<br />Add a task to
+                                start focusing.
+                            </p>
+                        </div>
+                    {/if}
+                </div>
+
                 <button
-                    class="px-6 py-3 bg-primary text-white rounded-xl font-bold shadow-lg hover:bg-primary-dark transition-all"
+                    class="text-neutral/30 hover:text-neutral font-bold uppercase tracking-widest text-sm transition-colors py-4 px-8"
                     onclick={onClose}
                 >
-                    Go back to tasks
+                    Maybe Later
                 </button>
             </div>
         {/if}

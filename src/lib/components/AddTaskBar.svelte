@@ -26,7 +26,7 @@
   const priorityConfig = {
     high: { label: "High", color: "text-danger", bg: "bg-danger/10" },
     medium: { label: "Medium", color: "text-warning", bg: "bg-warning/10" },
-    low: { label: "Low", color: "text-info", bg: "bg-info/10" },
+    low: { label: "Low", color: "text-success", bg: "bg-success/10" },
   };
 
   const dueDateConfig = {

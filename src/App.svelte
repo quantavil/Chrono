@@ -15,6 +15,7 @@
   import TaskDetailModal from "$lib/components/TaskDetailModal.svelte";
   import Toast from "$lib/components/Toast.svelte";
   import FocusMode from "$lib/components/focus/FocusMode.svelte";
+  import KeyboardShortcuts from "$lib/components/KeyboardShortcuts.svelte";
 
   // Stores
   import { todoList } from "$lib/stores/todo.svelte";
@@ -40,6 +41,9 @@
   // Mobile modal state
   let isMobileModalOpen = $state(false);
 
+  // Shortcuts modal state
+  let isShortcutsOpen = $state(false);
+
   // -------------------------------------------------------------------------
   // Derived State
   // -------------------------------------------------------------------------
@@ -63,7 +67,7 @@
   function handleSelectTask(id: string): void {
     // On desktop: show in right pane
     // On mobile: open modal
-    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+    if (!uiStore.isTablet) {
       if (selectedTaskId === id) {
         // Same task -> Close
         selectedTaskId = null;
@@ -137,6 +141,40 @@
       if (event.shiftKey && event.code === "KeyF") {
         event.preventDefault();
         uiStore.toggleFocusMode();
+      }
+
+      // Cmd/Ctrl + / to toggle shortcuts
+      if ((event.metaKey || event.ctrlKey) && event.key === "/") {
+        event.preventDefault();
+        isShortcutsOpen = !isShortcutsOpen;
+      }
+
+      // Keyboard Navigation
+      const activeElement = document.activeElement;
+      const isInputFocused =
+        activeElement instanceof HTMLInputElement ||
+        activeElement instanceof HTMLTextAreaElement ||
+        activeElement?.getAttribute("contenteditable") === "true";
+
+      if (!isInputFocused) {
+        if (event.key === "ArrowDown") {
+          event.preventDefault();
+          uiStore.focusNext(todoList.activeTodos.map((t) => t.id));
+        }
+        if (event.key === "ArrowUp") {
+          event.preventDefault();
+          uiStore.focusPrev(todoList.activeTodos.map((t) => t.id));
+        }
+        if (event.key === " " || event.code === "Space") {
+          if (uiStore.focusedTaskId) {
+            event.preventDefault();
+            todoList.toggleTimer(uiStore.focusedTaskId);
+          }
+        }
+        if (event.key === "Enter" && uiStore.focusedTaskId) {
+          event.preventDefault();
+          handleSelectTask(uiStore.focusedTaskId);
+        }
       }
     };
 
@@ -255,6 +293,9 @@
   {#if uiStore.isFocusModeOpen}
     <FocusMode onClose={() => uiStore.setFocusMode(false)} />
   {/if}
+
+  <!-- Keyboard Shortcuts Modal -->
+  <KeyboardShortcuts bind:isOpen={isShortcutsOpen} />
 </div>
 
 <style>

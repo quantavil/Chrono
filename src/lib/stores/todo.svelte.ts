@@ -5,6 +5,7 @@ import type {
   FilterState,
   UndoAction,
   DailyStats,
+  UserPreferences,
 } from "../types";
 import {
   DEFAULT_FILTERS,
@@ -34,6 +35,7 @@ export class TodoList {
   private _isLoading = $state(true);
   private _filters = $state<FilterState>({ ...DEFAULT_FILTERS });
   private _undoStack = $state<UndoAction[]>([]);
+  private _preferences = $state<UserPreferences>(storageService.loadPreferences());
 
   private _tickInterval: any;
   private _syncInterval: any;
@@ -162,10 +164,13 @@ export class TodoList {
     return this._filters;
   }
 
+  get preferences() {
+    return this._preferences;
+  }
+
   get hasActiveFilters(): boolean {
     const f = this._filters;
     return (
-      f.search.length > 0 ||
       f.priority !== "all" ||
       f.status !== "all" ||
       f.tags.length > 0 ||
@@ -198,7 +203,7 @@ export class TodoList {
       tags: input.tags ?? [],
       recurrence: input.recurrence ?? null,
       due_at: input.due_at ?? null,
-      estimated_time: input.estimated_time ?? null,
+      estimated_time: input.estimated_time ?? this._preferences.defaultTaskDurationMs,
       subtasks: input.subtasks ?? [],
       position: input.position ?? maxPos + 1,
       is_completed: false,
@@ -281,7 +286,7 @@ export class TodoList {
   }
 
   updateDueDate(id: string, dueAt: string | null) {
-    this.getById(id)?.applyUpdate({ due_at: dueAt });
+    this.getById(id)?.applyUpdate({ dueAt });
     this._save();
   }
 
@@ -409,18 +414,15 @@ export class TodoList {
     storageService.saveFilters(this._filters);
   }
 
+  updatePreference<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
+    this._preferences[key] = value;
+    storageService.savePreferences(this._preferences);
+  }
+
   private _applyFilters(items: TodoModel[]): TodoModel[] {
     // Reuse logic from previous implementation
     const f = this._filters;
     let result = items;
-
-    if (f.search) {
-      const lower = f.search.toLowerCase();
-      result = result.filter(t =>
-        t.title.toLowerCase().includes(lower) ||
-        t.notes?.toLowerCase().includes(lower)
-      );
-    }
 
     if (f.priority !== 'all') {
       result = result.filter(t => t.priority === f.priority);

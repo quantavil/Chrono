@@ -18,6 +18,8 @@
     import { formatRelativeDate } from "$lib/utils/formatTime";
     import TiptapEditor from "$lib/components/editor/TiptapEditor.svelte";
     import type { Priority, RecurrenceConfig } from "$lib/types";
+    import { uiStore } from "$lib/stores/ui.svelte";
+    import TaskHeader from "$lib/components/editor/TaskHeader.svelte";
 
     interface Props {
         task: TodoItem;
@@ -43,17 +45,9 @@
     const subtaskProgress = $derived(task.subtaskProgress);
 
     // -------------------------------------------------------------------------
-    // Mobile Check
+    // Responsive State
     // -------------------------------------------------------------------------
-    let isMobile = $state(false);
-    $effect(() => {
-        if (typeof window !== "undefined") {
-            const check = () => (isMobile = window.innerWidth < 768);
-            check();
-            window.addEventListener("resize", check);
-            return () => window.removeEventListener("resize", check);
-        }
-    });
+    const isMobile = $derived(uiStore.isMobile);
 
     // -------------------------------------------------------------------------
     // Sync Reactivity
@@ -172,17 +166,17 @@
     function updateTime(type: "start" | "end", value: string) {
         if (!value) {
             task.applyUpdate(
-                type === "start" ? { start_at: null } : { end_at: null },
+                type === "start" ? { startAt: null } : { endAt: null },
             );
             return;
         }
         const [h, m] = value.split(":").map(Number);
-        const date = new Date(); // Today
-        date.setHours(h, m, 0, 0);
+        const baseDate = task.dueAt ? new Date(task.dueAt) : new Date();
+        baseDate.setHours(h, m, 0, 0);
         task.applyUpdate(
             type === "start"
-                ? { start_at: date.toISOString() }
-                : { end_at: date.toISOString() },
+                ? { startAt: baseDate.toISOString() }
+                : { endAt: baseDate.toISOString() },
         );
     }
 
@@ -210,7 +204,7 @@
         },
         low: {
             label: "Low",
-            class: "bg-info/10 text-info border-info",
+            class: "bg-success/10 text-success border-success",
         },
     };
 </script>
@@ -415,7 +409,7 @@
                     onchange={(e) => {
                         const dateStr = (e.target as HTMLInputElement).value;
                         task.applyUpdate({
-                            due_at: dateStr
+                            dueAt: dateStr
                                 ? new Date(dateStr).toISOString()
                                 : null,
                         });
@@ -463,6 +457,56 @@
                             )}
                         class="w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
                     />
+                </div>
+            </div>
+
+            <!-- Estimated Duration -->
+            <div>
+                <p
+                    class="text-xs font-medium text-neutral/50 mb-2 flex items-center gap-1.5"
+                >
+                    <Clock class="w-3.5 h-3.5" /> Estimated Duration
+                </p>
+                <div class="grid grid-cols-4 gap-2 mb-3">
+                    {#each [15, 30, 60, 120] as mins}
+                        <button
+                            class="
+                                py-2 rounded-xl text-xs font-semibold transition-all
+                                {Math.round(
+                                (task.estimatedTime || 0) / 60000,
+                            ) === mins
+                                ? 'bg-primary text-white'
+                                : 'bg-base-200 text-neutral/60 hover:bg-base-300'}
+                            "
+                            onclick={() =>
+                                task.applyUpdate({
+                                    estimatedTime: mins * 60 * 1000,
+                                })}
+                        >
+                            {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
+                        </button>
+                    {/each}
+                </div>
+                <div
+                    class="flex items-center gap-3 bg-base-200/50 rounded-xl p-3"
+                >
+                    <input
+                        type="number"
+                        min="1"
+                        max="480"
+                        value={Math.round((task.estimatedTime || 0) / 60000)}
+                        onchange={(e) => {
+                            const mins =
+                                parseInt(
+                                    (e.target as HTMLInputElement).value,
+                                ) || 30;
+                            task.applyUpdate({
+                                estimatedTime: mins * 60 * 1000,
+                            });
+                        }}
+                        class="w-20 bg-transparent text-center text-sm font-bold outline-none text-neutral"
+                    />
+                    <span class="text-sm text-neutral/50">minutes</span>
                 </div>
             </div>
 

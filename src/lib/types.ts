@@ -183,7 +183,6 @@ export type SortField = 'created' | 'due' | 'priority' | 'title' | 'position';
 export type SortOrder = 'asc' | 'desc';
 
 export interface FilterState {
-  search: string;
   priority: Priority | 'all';
   status: 'all' | 'active' | 'completed' | 'overdue';
   tags: string[];
@@ -193,7 +192,6 @@ export interface FilterState {
 }
 
 export const DEFAULT_FILTERS: FilterState = {
-  search: '',
   priority: 'all',
   status: 'all',
   tags: [],
@@ -255,6 +253,18 @@ export interface ModalState {
 }
 
 // ============================================================================
+// User Preferences
+// ============================================================================
+
+export interface UserPreferences {
+  defaultTaskDurationMs: number;
+}
+
+export const DEFAULT_PREFERENCES: UserPreferences = {
+  defaultTaskDurationMs: 60 * 60 * 1000, // 1 hour
+};
+
+// ============================================================================
 // Supabase Response Types
 // ============================================================================
 
@@ -283,6 +293,7 @@ export const LOCAL_STORAGE_KEYS = {
   LAST_SYNC: 'chronos_last_sync',
   VERSION: 'chronos_version',
   UNDO_STACK: 'chronos_undo',
+  PREFERENCES: 'chronos_preferences_v2',
 } as const;
 
 // ============================================================================
@@ -325,7 +336,7 @@ export const PRIORITY_CONFIG = {
   },
   low: {
     label: 'Low',
-    color: 'info',
+    color: 'success',
     sortWeight: 2
   },
 } as const;

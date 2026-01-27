@@ -12,6 +12,7 @@
         Clock,
         Sparkles,
         LogIn,
+        Settings,
     } from "lucide-svelte";
     import { themeManager } from "$lib/stores/theme.svelte";
     import { todoList } from "$lib/stores/todo.svelte";
@@ -19,6 +20,7 @@
     import { formatDateHeader, formatTimeCompact } from "$lib/utils/formatTime";
     import UserMenu from "./UserMenu.svelte";
     import LoginForm from "./LoginForm.svelte";
+    import SettingsModal from "./SettingsModal.svelte";
 
     // -------------------------------------------------------------------------
     // Props
@@ -35,6 +37,7 @@
     // -------------------------------------------------------------------------
 
     let showLoginModal = $state(false);
+    let isSettingsOpen = $state(false);
 
     // -------------------------------------------------------------------------
     // Derived State
@@ -155,9 +158,22 @@
                 />
             </button>
 
+            <!-- Settings Button -->
+            <button
+                type="button"
+                class="relative w-10 h-10 rounded-2xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 group"
+                onclick={() => (isSettingsOpen = true)}
+                title="Settings"
+            >
+                <Settings
+                    class="w-5 h-5 text-neutral/70 group-hover:text-neutral transition-colors"
+                    strokeWidth={2}
+                />
+            </button>
+
             <!-- Auth: User Menu or Sign In -->
             {#if isAuthenticated}
-                <UserMenu />
+                <UserMenu onOpenSettings={() => (isSettingsOpen = true)} />
             {:else if !isAuthLoading}
                 <button
                     type="button"
@@ -210,9 +226,22 @@
                     />
                 </button>
 
+                <!-- Settings Button -->
+                <button
+                    type="button"
+                    class="w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
+                    onclick={() => (isSettingsOpen = true)}
+                    aria-label="Settings"
+                >
+                    <Settings
+                        class="w-4.5 h-4.5 text-neutral/70"
+                        strokeWidth={2}
+                    />
+                </button>
+
                 <!-- Auth -->
                 {#if isAuthenticated}
-                    <UserMenu />
+                    <UserMenu onOpenSettings={() => (isSettingsOpen = true)} />
                 {:else if !isAuthLoading}
                     <button
                         type="button"
@@ -264,3 +293,6 @@
 
 <!-- Login Modal -->
 <LoginForm bind:isOpen={showLoginModal} />
+
+<!-- Settings Modal -->
+<SettingsModal bind:isOpen={isSettingsOpen} />

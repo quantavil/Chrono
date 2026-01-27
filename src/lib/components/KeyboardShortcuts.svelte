@@ -11,7 +11,6 @@
     const shortcuts = [
         { keys: ["⌘", "K"], action: "Focus add task" },
         { keys: ["⌘", "/"], action: "Show shortcuts" },
-        { keys: ["⌘", "F"], action: "Search tasks" },
         { keys: ["Esc"], action: "Close modal / Clear" },
         { keys: ["Enter"], action: "Add task / Save" },
         { keys: ["Space"], action: "Toggle timer (when focused)" },

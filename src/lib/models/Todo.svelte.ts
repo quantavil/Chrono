@@ -208,13 +208,27 @@ export class TodoModel {
 
     // --- Updates ---
 
-    applyUpdate(fields: Partial<Todo>): void {
+    applyUpdate(fields: Partial<Todo> | Record<string, any>): void {
         let changed = false;
-        const entries = Object.entries(fields) as [keyof Todo, any][];
 
-        for (const [key, value] of entries) {
-            if (key in this && (this as any)[key] !== value) {
-                (this as any)[key] = value;
+        const keyMap: Record<string, string> = {
+            due_at: "dueAt",
+            estimated_time: "estimatedTime",
+            last_start_time: "lastStartTime",
+            accumulated_time: "accumulatedTime",
+            start_at: "startAt",
+            end_at: "endAt",
+            is_completed: "isCompleted",
+            user_id: "userId",
+            completed_at: "completedAt",
+            created_at: "createdAt",
+            updated_at: "updatedAt",
+        };
+
+        for (const [key, value] of Object.entries(fields)) {
+            const mappedKey = (keyMap[key] || key) as keyof this;
+            if (mappedKey in this && (this as any)[mappedKey] !== value) {
+                (this as any)[mappedKey] = value;
                 changed = true;
             }
         }
