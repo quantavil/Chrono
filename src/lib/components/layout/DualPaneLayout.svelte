@@ -44,9 +44,8 @@
             >
                 <div
                     class="
-                        mx-auto px-6 xl:px-10 py-8
+                         mx-auto
                         transition-all duration-300 ease-in-out
-                        max-w-3xl
                     "
                 >
                     {@render leftPane()}

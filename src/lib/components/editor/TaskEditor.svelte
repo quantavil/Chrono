@@ -216,7 +216,6 @@
     };
 </script>
 
-```
 <div
     class="flex flex-col h-full bg-base-100 {className} overflow-y-auto scrollbar-hide"
 >

@@ -4,9 +4,7 @@
     import StarterKit from "@tiptap/starter-kit";
     import Placeholder from "@tiptap/extension-placeholder";
     import Link from "@tiptap/extension-link";
-    import Typography from "@tiptap/extension-typography";
-    import TaskList from "@tiptap/extension-task-list";
-    import TaskItem from "@tiptap/extension-task-item";
+
     import {
         Bold,
         Italic,
@@ -14,7 +12,6 @@
         Code,
         List,
         ListOrdered,
-        CheckSquare,
         Quote,
         Minus,
         Link as LinkIcon,
@@ -90,11 +87,6 @@
                         class: "text-primary underline hover:text-primary-dark cursor-pointer",
                     },
                 }),
-                Typography,
-                TaskList,
-                TaskItem.configure({
-                    nested: true,
-                }),
             ],
             content: content || "",
             editable,
@@ -161,10 +153,6 @@
 
     function toggleOrderedList() {
         editor?.chain().focus().toggleOrderedList().run();
-    }
-
-    function toggleTaskList() {
-        editor?.chain().focus().toggleTaskList().run();
     }
 
     function toggleBlockquote() {
@@ -317,14 +305,6 @@
                     title="Numbered List"
                 >
                     <ListOrdered class="w-4 h-4" />
-                </button>
-                <button
-                    type="button"
-                    onclick={toggleTaskList}
-                    class="toolbar-btn {isActive('taskList') ? 'active' : ''}"
-                    title="Task List"
-                >
-                    <CheckSquare class="w-4 h-4" />
                 </button>
             </div>
 
@@ -522,49 +502,6 @@
 
     :global(.tiptap-editor .ProseMirror li p) {
         margin: 0;
-    }
-
-    /* Task list styles */
-    :global(.tiptap-editor .ProseMirror ul[data-type="taskList"]) {
-        list-style: none;
-        padding-left: 0;
-    }
-
-    :global(.tiptap-editor .ProseMirror ul[data-type="taskList"] li) {
-        display: flex;
-        align-items: flex-start;
-        gap: 0.5rem;
-    }
-
-    :global(.tiptap-editor .ProseMirror ul[data-type="taskList"] li label) {
-        display: flex;
-        align-items: center;
-        margin-top: 0.25rem;
-    }
-
-    :global(
-            .tiptap-editor
-                .ProseMirror
-                ul[data-type="taskList"]
-                li
-                input[type="checkbox"]
-        ) {
-        width: 16px;
-        height: 16px;
-        border-radius: 4px;
-        border: 2px solid var(--color-neutral-muted);
-        cursor: pointer;
-        accent-color: var(--color-accent);
-    }
-
-    :global(
-            .tiptap-editor
-                .ProseMirror
-                ul[data-type="taskList"]
-                li[data-checked="true"]
-        ) {
-        text-decoration: line-through;
-        opacity: 0.6;
     }
 
     :global(.tiptap-editor .ProseMirror hr) {

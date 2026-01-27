@@ -14,7 +14,6 @@
   import CompletedSection from "$lib/components/CompletedSection.svelte";
   import TaskDetailModal from "$lib/components/TaskDetailModal.svelte";
   import Toast from "$lib/components/Toast.svelte";
-  import FocusMode from "$lib/components/focus/FocusMode.svelte";
   import KeyboardShortcuts from "$lib/components/KeyboardShortcuts.svelte";
 
   // Stores
@@ -137,12 +136,6 @@
         if (isMobileModalOpen) {
           isMobileModalOpen = false;
         }
-      }
-
-      // Shift + F to toggle Focus Mode
-      if (event.shiftKey && event.code === "KeyF") {
-        event.preventDefault();
-        uiStore.toggleFocusMode();
       }
 
       // Cmd/Ctrl + / to toggle shortcuts
@@ -290,11 +283,6 @@
       class="absolute -bottom-48 -left-48 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-accent/20 to-primary/20 blur-3xl"
     ></div>
   </div>
-
-  <!-- Focus Mode Overlay -->
-  {#if uiStore.isFocusModeOpen}
-    <FocusMode onClose={() => uiStore.setFocusMode(false)} />
-  {/if}
 
   <!-- Keyboard Shortcuts Modal -->
   <KeyboardShortcuts bind:isOpen={isShortcutsOpen} />

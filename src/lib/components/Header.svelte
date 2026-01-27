@@ -83,59 +83,47 @@
     }
 </script>
 
-<header class="w-full {className}">
-    <!-- Desktop Layout (Unified Ribbon) -->
+<header
+    class="sticky top-0 z-30 w-full border-b border-base-200/50 bg-base-100/80 backdrop-blur-md {className}"
+>
     <div
-        class="hidden md:flex items-center justify-between sticky top-0 z-30 py-4 bg-base-100/80 backdrop-blur-md -mx-6 px-6 mb-6 border-b border-base-200/50"
+        class="hidden md:flex items-center justify-between h-14 w-full px-6 xl:px-10"
     >
         <!-- Page Title (Replaces LeftPane title) -->
-        <div>
-            <h1
-                class="text-2xl lg:text-3xl font-bold font-display text-neutral tracking-tight transition-all"
-            >
-                Today
-            </h1>
-            <p
-                class="text-xs lg:text-sm text-neutral/50 font-medium transition-all"
-            >
-                {dateInfo.fullDate}
-            </p>
-        </div>
+        <!-- Page Title (Removed) -->
+        <div></div>
 
-        <!-- Stats, Theme & Auth (The Ribbon) - Visible on Tablet, Hidden on Desktop (Sidebar handles it) -->
-        <div
-            class="flex items-center gap-2 p-1.5 bg-base-200/50 rounded-2xl border border-base-200 shadow-sm backdrop-blur-sm lg:hidden"
-        >
-            <!-- Stats -->
+        <!-- Right Side Controls (The Ribbon) -->
+        <div class="flex items-center gap-2">
+            <!-- Stats (Compact) -->
             {#if stats.totalTasks > 0}
                 <div
-                    class="flex items-center gap-3 px-3 border-r border-base-300/50"
+                    class="hidden lg:flex items-center gap-3 px-3 py-1 bg-base-200/50 rounded-lg border border-base-200/50 mr-2"
                 >
                     <div
-                        class="flex items-center gap-1.5"
+                        class="flex items-center gap-2"
                         title="{stats.completedTasks} of {stats.totalTasks} tasks completed"
                     >
                         <div
-                            class="radial-progress text-accent text-[10px]"
+                            class="radial-progress text-primary text-[10px]"
                             style="--value:{stats.totalTasks > 0
                                 ? (stats.completedTasks / stats.totalTasks) *
                                   100
-                                : 0}; --size:1.2rem; --thickness: 2px;"
+                                : 0}; --size:1rem; --thickness: 2px;"
                             role="progressbar"
-                        >
-                            {Math.round(
-                                (stats.completedTasks / stats.totalTasks) * 100,
-                            )}%
-                        </div>
+                        ></div>
+                        <span class="text-xs font-medium text-neutral/70">
+                            {stats.completedTasks}/{stats.totalTasks}
+                        </span>
                     </div>
                 </div>
             {/if}
 
-            <div class="flex items-center gap-1">
+            <div class="flex items-center gap-0.5 p-0.5">
                 <!-- Theme Toggle -->
                 <button
                     type="button"
-                    class="relative w-8 h-8 rounded-xl hover:bg-base-100 flex items-center justify-center transition-all duration-200 text-neutral/60 hover:text-neutral hover:shadow-sm"
+                    class="relative w-8 h-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center transition-all duration-200 text-neutral/60 hover:text-neutral"
                     onclick={cycleTheme}
                     aria-label={getThemeLabel()}
                     title={getThemeLabel()}
@@ -146,7 +134,7 @@
                 <!-- Settings Button -->
                 <button
                     type="button"
-                    class="relative w-8 h-8 rounded-xl hover:bg-base-100 flex items-center justify-center transition-all duration-200 text-neutral/60 hover:text-neutral hover:shadow-sm"
+                    class="relative w-8 h-8 rounded-lg hover:bg-black/5 dark:hover:bg-white/10 flex items-center justify-center transition-all duration-200 text-neutral/60 hover:text-neutral"
                     onclick={() => (isSettingsOpen = true)}
                     title="Settings"
                 >
@@ -155,29 +143,31 @@
 
                 <!-- Auth -->
                 {#if isAuthenticated}
-                    <div class="pl-1">
+                    <div class="pl-1 ml-1 border-l border-base-200">
                         <UserMenu
                             onOpenSettings={() => (isSettingsOpen = true)}
                         />
                     </div>
                 {:else if !isAuthLoading}
-                    <button
-                        type="button"
-                        class="
-                flex items-center gap-2
-                px-3 py-1.5 rounded-xl
-                bg-primary text-white
-                font-medium text-xs
-                hover:bg-primary-dark
-                active:scale-95
-                transition-all
-                ml-1
-              "
-                        onclick={openLogin}
-                    >
-                        <LogIn class="w-3.5 h-3.5" strokeWidth={2} />
-                        Sign in
-                    </button>
+                    <div class="pl-1 ml-1 border-l border-base-200">
+                        <button
+                            type="button"
+                            class="
+                    flex items-center gap-2
+                    px-3 py-1.5 rounded-lg
+                    bg-primary text-white
+                    font-medium text-xs
+                    hover:bg-primary-dark
+                    hover:shadow-md hover:shadow-primary/20
+                    active:scale-95
+                    transition-all
+                  "
+                            onclick={openLogin}
+                        >
+                            <LogIn class="w-3.5 h-3.5" strokeWidth={2} />
+                            Sign in
+                        </button>
+                    </div>
                 {/if}
             </div>
         </div>

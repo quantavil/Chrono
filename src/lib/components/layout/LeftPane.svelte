@@ -20,16 +20,19 @@
     const today = new Date();
 </script>
 
-<div class="space-y-6 {className}">
-    <!-- Header Ribbon -->
+<div class={className}>
+    <!-- Header Ribbon (Sticky) -->
     <Header />
 
-    <!-- Add Task Bar -->
-    <AddTaskBar variant="inline" />
+    <!-- Main Content Area -->
+    <div class="px-6 xl:px-10 py-6 mx-auto max-w-3xl space-y-6">
+        <!-- Add Task Bar -->
+        <AddTaskBar variant="inline" />
 
-    <!-- Active Tasks -->
-    <TaskList onEdit={onSelectTask} {selectedTaskId} />
+        <!-- Active Tasks -->
+        <TaskList onEdit={onSelectTask} {selectedTaskId} />
 
-    <!-- Completed Tasks -->
-    <CompletedSection />
+        <!-- Completed Tasks -->
+        <CompletedSection />
+    </div>
 </div>

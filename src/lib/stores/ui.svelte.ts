@@ -1,5 +1,4 @@
 export class UIStore {
-    isFocusModeOpen = $state(false);
     isSidebarOpen = $state(true);
     isMobile = $state(false);
     isTablet = $state(false);
@@ -15,14 +14,6 @@ export class UIStore {
     private updateMedia() {
         this.isMobile = window.innerWidth < 768;
         this.isTablet = window.innerWidth < 1024;
-    }
-
-    toggleFocusMode() {
-        this.isFocusModeOpen = !this.isFocusModeOpen;
-    }
-
-    setFocusMode(value: boolean) {
-        this.isFocusModeOpen = value;
     }
 
     focusNext(ids: string[]) {
