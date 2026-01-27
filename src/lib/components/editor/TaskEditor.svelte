@@ -142,15 +142,38 @@
         } else {
             newDays.push(day);
         }
-        recurrenceDays = newDays;
+        applyRecurrence(newDays);
+    }
 
+    function applyRecurrence(days: number[]) {
+        recurrenceDays = days;
         let recurrence: RecurrenceConfig | null = null;
-        if (newDays.length === 7) {
+        if (days.length === 7) {
             recurrence = { type: "daily" };
-        } else if (newDays.length > 0) {
-            recurrence = { type: "weekly", days: newDays };
+        } else if (days.length > 0) {
+            recurrence = { type: "weekly", days: days };
         }
         task.applyUpdate({ recurrence });
+    }
+
+    function setRecurrencePreset(type: "daily" | "weekdays") {
+        const isDaily = task.recurrence?.type === "daily";
+        const isWeekdays =
+            task.recurrence?.type === "weekly" &&
+            task.recurrence.days?.length === 5 &&
+            task.recurrence.days.every((d) => [1, 2, 3, 4, 5].includes(d));
+
+        if (type === "daily" && isDaily) {
+            task.applyUpdate({ recurrence: null });
+            recurrenceDays = [];
+        } else if (type === "weekdays" && isWeekdays) {
+            task.applyUpdate({ recurrence: null });
+            recurrenceDays = [];
+        } else if (type === "daily") {
+            applyRecurrence([0, 1, 2, 3, 4, 5, 6]);
+        } else if (type === "weekdays") {
+            applyRecurrence([1, 2, 3, 4, 5]);
+        }
     }
 
     function setDueDate(type: "today" | "tomorrow" | "week" | "clear") {
@@ -465,11 +488,27 @@
 
             <!-- Recurrence -->
             <div>
-                <p
-                    class="text-xs font-medium text-neutral/50 mb-2 flex items-center gap-1.5"
-                >
-                    <Repeat class="w-3.5 h-3.5" /> Recurrence
-                </p>
+                <div class="flex items-center justify-between mb-2">
+                    <p
+                        class="text-xs font-medium text-neutral/50 flex items-center gap-1.5"
+                    >
+                        <Repeat class="w-3.5 h-3.5" /> Recurrence
+                    </p>
+                    <div class="flex gap-2">
+                        <button
+                            class="text-[10px] font-bold text-primary hover:bg-primary/10 px-2 py-1 rounded transition-colors uppercase tracking-wider"
+                            onclick={() => setRecurrencePreset("daily")}
+                        >
+                            Daily
+                        </button>
+                        <button
+                            class="text-[10px] font-bold text-primary hover:bg-primary/10 px-2 py-1 rounded transition-colors uppercase tracking-wider"
+                            onclick={() => setRecurrencePreset("weekdays")}
+                        >
+                            Weekdays
+                        </button>
+                    </div>
+                </div>
                 <div
                     class="flex justify-between bg-base-200/50 rounded-xl p-1.5"
                 >

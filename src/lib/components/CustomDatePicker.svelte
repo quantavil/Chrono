@@ -7,12 +7,19 @@
     import { fade, slide } from "svelte/transition";
     import { onMount } from "svelte";
 
+    import { type Snippet } from "svelte";
+
     interface Props {
         value?: string | null;
         class?: string;
+        trigger?: Snippet;
     }
 
-    let { value = $bindable(null), class: className = "" }: Props = $props();
+    let {
+        value = $bindable(null),
+        class: className = "",
+        trigger,
+    }: Props = $props();
 
     let isOpen = $state(false);
     let pickerRef = $state<HTMLDivElement | null>(null);
@@ -102,19 +109,8 @@
     }
 
     function selectDate(date: Date) {
-        // Adjust for timezone offset to ensure the ISO string represents the selected local date
-        // Just kidding, let's keep it simple: set hours to 0 to represent "start of day" roughly.
-        // Actually, best practice for dates is usually to store midnight UTC or local.
-        // The existing app seems to use ISO strings.
         const d = new Date(date);
-        d.setHours(0, 0, 0, 0); // Normalize time
-        // We need to account for timezone offset so that when it converts to ISO it doesn't shift day
-        // Or simply use local ISO format YYYY-MM-DDT...
-        // Let's use helpful utils if available, or just standard approach:
-        // Set to noon to avoid timezone shift issues when just talking about "Dates" usually works safely
-        // But app uses `new Date(string)` mostly.
-
-        // Let's just use the date object directly.
+        d.setHours(0, 0, 0, 0);
         value = d.toISOString();
         isOpen = false;
     }
@@ -155,30 +151,41 @@
 </script>
 
 <div class="relative {className}" bind:this={pickerRef}>
-    <!-- Trigger Button -->
-    <button
-        class="
-            w-full py-3 px-4 rounded-xl text-sm font-medium transition-all border-2
-            flex items-center justify-center gap-2
-            {value
-            ? 'border-primary/20 bg-primary/5 text-primary'
-            : 'border-base-200 bg-base-100 text-neutral/40 hover:border-base-300 hover:bg-base-200/30'}
-        "
+    <!-- Trigger -->
+    <div
         onclick={() => (isOpen = !isOpen)}
+        role="button"
+        tabindex="0"
+        onkeydown={(e) => e.key === "Enter" && (isOpen = !isOpen)}
+        class="w-full"
     >
-        {#if value}
-            <span class="text-lg font-bold">
-                {new Date(value).toLocaleDateString("en-US", {
-                    weekday: "short",
-                    month: "short",
-                    day: "numeric",
-                })}
-            </span>
+        {#if trigger}
+            {@render trigger()}
         {:else}
-            <CalendarIcon class="w-4 h-4 opacity-50" />
-            <span>Pick a date...</span>
+            <button
+                class="
+                    w-full py-3 px-4 rounded-xl text-sm font-medium transition-all border-2
+                    flex items-center justify-center gap-2
+                    {value
+                    ? 'border-primary/20 bg-primary/5 text-primary'
+                    : 'border-base-200 bg-base-100 text-neutral/40 hover:border-base-300 hover:bg-base-200/30'}
+                "
+            >
+                {#if value}
+                    <span class="text-lg font-bold">
+                        {new Date(value).toLocaleDateString("en-US", {
+                            weekday: "short",
+                            month: "short",
+                            day: "numeric",
+                        })}
+                    </span>
+                {:else}
+                    <CalendarIcon class="w-4 h-4 opacity-50" />
+                    <span>Pick a date...</span>
+                {/if}
+            </button>
         {/if}
-    </button>
+    </div>
 
     <!-- Popover -->
     {#if isOpen}

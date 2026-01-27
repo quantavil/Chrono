@@ -1,5 +1,15 @@
 <script lang="ts">
-  import { Plus, Calendar, Tag, Loader2, Clock, X, Flag } from "lucide-svelte";
+  import {
+    Plus,
+    Calendar,
+    Tag,
+    Loader2,
+    Clock,
+    X,
+    Flag,
+    Check,
+  } from "lucide-svelte";
+  import CustomDatePicker from "$lib/components/CustomDatePicker.svelte";
   import { getTodoStore } from "$lib/context";
   import { uiStore } from "$lib/stores/ui.svelte";
   import { TODO_TITLE_MAX_LENGTH } from "$lib/types";
@@ -21,8 +31,11 @@
 
   // Quick action states
   let showQuickActions = $state(false);
+
   let selectedPriority = $state<"high" | "medium" | "low" | null>(null);
   let selectedDueDate = $state<"today" | "tomorrow" | "week" | null>(null);
+  let customDueDate = $state<string | null>(null);
+  let selectedDuration = $state<number | null>(null);
 
   const canSubmit = $derived(inputValue.trim().length > 0);
 
@@ -64,8 +77,13 @@
       todoList.add({
         title,
         priority: selectedPriority,
-        due_at: selectedDueDate
-          ? dueDateConfig[selectedDueDate].value().toISOString()
+        due_at: customDueDate
+          ? customDueDate
+          : selectedDueDate
+            ? dueDateConfig[selectedDueDate].value().toISOString()
+            : undefined,
+        estimated_time: selectedDuration
+          ? selectedDuration * 60 * 1000
           : undefined,
       });
 
@@ -96,8 +114,20 @@
   }
 
   function toggleDueDate(d: "today" | "tomorrow" | "week") {
-    selectedDueDate = selectedDueDate === d ? null : d;
+    if (selectedDueDate === d) {
+      selectedDueDate = null;
+    } else {
+      selectedDueDate = d;
+      customDueDate = null; // Clear custom if preset selected
+    }
   }
+
+  $effect(() => {
+    // If custom date is set, clear prompt presets
+    if (customDueDate) {
+      selectedDueDate = null;
+    }
+  });
 
   function handleFocus() {
     isFocused = true;
@@ -276,19 +306,23 @@
             </button>
           </div>
 
-          <!-- Due Date -->
-          <button
-            type="button"
-            class="
-              p-2 rounded-lg transition-colors
-              {selectedDueDate
-              ? 'text-primary bg-primary-muted'
-              : 'text-neutral-muted hover:bg-base-200'}
-            "
-            title="Set due date"
-          >
-            <Calendar class="w-4 h-4" />
-          </button>
+          <!-- Custom Date Picker Trigger -->
+          <CustomDatePicker bind:value={customDueDate} class="!w-auto">
+            {#snippet trigger()}
+              <button
+                type="button"
+                title="Set due date"
+                class="
+                  p-2 rounded-lg transition-colors
+                  {selectedDueDate || customDueDate
+                  ? 'text-primary bg-primary-muted'
+                  : 'text-neutral-muted hover:bg-base-200'}
+                "
+              >
+                <Calendar class="w-4 h-4" />
+              </button>
+            {/snippet}
+          </CustomDatePicker>
         </div>
 
         <button
@@ -316,69 +350,96 @@
           transition:slide={{ duration: 300 }}
         >
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <!-- Priority Selector -->
-            <div class="space-y-3">
-              <span
-                class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
-                >Priority Level</span
-              >
-              <div class="flex flex-wrap gap-2">
-                {#each ["high", "medium", "low"] as p}
-                  {@const config =
-                    priorityConfig[p as keyof typeof priorityConfig]}
-                  <button
-                    type="button"
-                    class="
-                      group relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold
-                      border transition-all duration-300
-                      {selectedPriority === p
-                      ? `${config.bg} ${config.color} border-current shadow-sm`
-                      : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral hover:border-base-300'}
-                    "
-                    onclick={() =>
-                      togglePriority(p as "high" | "medium" | "low")}
-                  >
-                    <div
-                      class="w-1.5 h-1.5 rounded-full {selectedPriority === p
-                        ? 'bg-current'
-                        : 'bg-neutral/20 group-hover:bg-neutral/40'} transition-colors"
-                    ></div>
-                    {config.label}
-                  </button>
-                {/each}
+            <!-- Left Column: Priority & Duration -->
+            <div class="space-y-6">
+              <!-- Priority Selector -->
+              <div class="space-y-3">
+                <span
+                  class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
+                  >Priority Level</span
+                >
+                <div class="flex flex-wrap gap-2">
+                  {#each ["high", "medium", "low"] as p}
+                    {@const config =
+                      priorityConfig[p as keyof typeof priorityConfig]}
+                    <button
+                      type="button"
+                      class="
+                        group relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold
+                        border transition-all duration-300
+                        {selectedPriority === p
+                        ? `${config.bg} ${config.color} border-current shadow-sm`
+                        : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral hover:border-base-300'}
+                      "
+                      onclick={() =>
+                        togglePriority(p as "high" | "medium" | "low")}
+                    >
+                      <div
+                        class="w-1.5 h-1.5 rounded-full {selectedPriority === p
+                          ? 'bg-current'
+                          : 'bg-neutral/20 group-hover:bg-neutral/40'} transition-colors"
+                      ></div>
+                      {config.label}
+                    </button>
+                  {/each}
+                </div>
+              </div>
+
+              <!-- Duration (Compact) -->
+              <div class="space-y-3">
+                <span
+                  class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
+                  >Est. Duration</span
+                >
+                <div class="flex flex-wrap gap-1.5">
+                  {#each [15, 30, 45, 60, 90] as mins}
+                    <button
+                      type="button"
+                      class="
+                           px-2.5 py-1.5 rounded-lg text-[11px] font-medium
+                           border transition-all
+                           {selectedDuration === mins
+                        ? 'bg-secondary/10 text-secondary border-secondary/30'
+                        : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral'}
+                         "
+                      onclick={() =>
+                        (selectedDuration =
+                          selectedDuration === mins ? null : mins)}
+                    >
+                      {mins}m
+                    </button>
+                  {/each}
+                </div>
               </div>
             </div>
 
-            <!-- Due Date Selector -->
+            <!-- Right Column: Timeline -->
             <div class="space-y-3">
               <span
                 class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
                 >Timeline</span
               >
-              <div class="flex flex-wrap gap-2">
-                {#each ["today", "tomorrow", "week"] as d}
-                  {@const config =
-                    dueDateConfig[d as keyof typeof dueDateConfig]}
-                  <button
-                    type="button"
-                    class="
-                      group flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold
-                      border transition-all duration-300
-                      {selectedDueDate === d
-                      ? 'bg-primary/10 text-primary border-primary/30 shadow-sm'
-                      : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral hover:border-base-300'}
-                    "
-                    onclick={() =>
-                      toggleDueDate(d as "today" | "tomorrow" | "week")}
-                  >
-                    <Calendar
-                      class="w-3.5 h-3.5 {selectedDueDate === d
-                        ? 'text-primary'
-                        : 'text-neutral/40 group-hover:text-neutral/60'}"
-                    />
-                    {config.label}
-                  </button>
-                {/each}
+              <div class="flex flex-col gap-2">
+                <div class="flex flex-wrap gap-2">
+                  {#each ["today", "tomorrow", "week"] as d}
+                    {@const config =
+                      dueDateConfig[d as keyof typeof dueDateConfig]}
+                    <button
+                      type="button"
+                      class="
+                          px-3 py-2 rounded-xl text-xs font-semibold
+                          border transition-all w-full sm:w-auto text-center
+                          {selectedDueDate === d
+                        ? 'bg-primary/10 text-primary border-primary/30'
+                        : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral'}
+                        "
+                      onclick={() =>
+                        toggleDueDate(d as "today" | "tomorrow" | "week")}
+                    >
+                      {config.label}
+                    </button>
+                  {/each}
+                </div>
               </div>
             </div>
           </div>

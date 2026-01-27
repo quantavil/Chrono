@@ -259,9 +259,29 @@
                                         class="inline-flex items-center gap-1 text-xs font-bold text-secondary/70"
                                     >
                                         <Repeat class="w-3 h-3" />
-                                        {todo.recurrence.type === "daily"
-                                            ? "Daily"
-                                            : "Weekly"}
+                                        {#if todo.recurrence.type === "daily"}
+                                            Daily
+                                        {:else if todo.recurrence.type === "weekly" && todo.recurrence.days}
+                                            {@const days = todo.recurrence.days}
+                                            {#if days.length === 5 && days.every( (d) => [1, 2, 3, 4, 5].includes(d), )}
+                                                Weekdays
+                                            {:else}
+                                                {days
+                                                    .map(
+                                                        (d) =>
+                                                            [
+                                                                "S",
+                                                                "M",
+                                                                "T",
+                                                                "W",
+                                                                "T",
+                                                                "F",
+                                                                "S",
+                                                            ][d],
+                                                    )
+                                                    .join(" ")}
+                                            {/if}
+                                        {/if}
                                     </p>
                                 {/if}
 
