@@ -18,12 +18,11 @@
   import KeyboardShortcuts from "$lib/components/KeyboardShortcuts.svelte";
 
   // Stores
-  import { todoList } from "$lib/stores/todo.svelte";
   import { themeManager } from "$lib/stores/theme.svelte";
   import { toastManager } from "$lib/stores/toast.svelte";
-  import { authManager } from "$lib/stores/auth.svelte";
   import { uiStore } from "$lib/stores/ui.svelte";
   import { isSupabaseConfigured } from "$lib/utils/supabase";
+  import { initStores } from "$lib/context";
 
   // Icons
   import { WifiOff } from "lucide-svelte";
@@ -31,6 +30,9 @@
   // -------------------------------------------------------------------------
   // State
   // -------------------------------------------------------------------------
+
+  // Initialize Stores (Context)
+  const { todoStore: todoList, authStore: authManager } = initStores();
 
   let isOnline = $state(true);
   let isInitialized = $state(false);

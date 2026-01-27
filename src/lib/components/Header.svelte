@@ -15,8 +15,7 @@
         Settings,
     } from "lucide-svelte";
     import { themeManager } from "$lib/stores/theme.svelte";
-    import { todoList } from "$lib/stores/todo.svelte";
-    import { authManager } from "$lib/stores/auth.svelte";
+    import { getTodoStore, getAuthStore } from "$lib/context";
     import { formatDateHeader, formatTimeCompact } from "$lib/utils/formatTime";
     import UserMenu from "./UserMenu.svelte";
     import LoginForm from "./LoginForm.svelte";
@@ -35,6 +34,8 @@
     // -------------------------------------------------------------------------
     // Local State
     // -------------------------------------------------------------------------
+    const todoList = getTodoStore();
+    const authManager = getAuthStore();
 
     let showLoginModal = $state(false);
     let isSettingsOpen = $state(false);
@@ -83,115 +84,102 @@
 </script>
 
 <header class="w-full {className}">
-    <!-- Desktop Layout -->
-    <div class="hidden md:flex items-center justify-between gap-4">
-        <!-- Logo & Date -->
-        <div class="flex items-center gap-4">
-            <div class="flex items-center gap-2">
-                <div
-                    class="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-soft"
-                >
-                    <Sparkles class="w-5 h-5 text-white" strokeWidth={2.5} />
-                </div>
-                <div>
-                    <h1
-                        class="text-xl font-bold font-display text-neutral tracking-tight"
-                    >
-                        Chronos
-                    </h1>
-                    <p class="text-xs text-neutral/50 font-medium">
-                        {dateInfo.fullDate}
-                    </p>
-                </div>
-            </div>
+    <!-- Desktop Layout (Unified Ribbon) -->
+    <div
+        class="hidden md:flex items-center justify-between sticky top-0 z-30 py-4 bg-base-100/80 backdrop-blur-md -mx-6 px-6 mb-6 border-b border-base-200/50"
+    >
+        <!-- Page Title (Replaces LeftPane title) -->
+        <div>
+            <h1
+                class="text-2xl lg:text-3xl font-bold font-display text-neutral tracking-tight transition-all"
+            >
+                Today
+            </h1>
+            <p
+                class="text-xs lg:text-sm text-neutral/50 font-medium transition-all"
+            >
+                {dateInfo.fullDate}
+            </p>
         </div>
 
-        <!-- Stats, Theme & Auth -->
-        <div class="flex items-center gap-3">
-            <!-- Stats Pills -->
+        <!-- Stats, Theme & Auth (The Ribbon) - Visible on Tablet, Hidden on Desktop (Sidebar handles it) -->
+        <div
+            class="flex items-center gap-2 p-1.5 bg-base-200/50 rounded-2xl border border-base-200 shadow-sm backdrop-blur-sm lg:hidden"
+        >
+            <!-- Stats -->
             {#if stats.totalTasks > 0}
-                <div class="flex items-center gap-2">
-                    <!-- Task Count -->
+                <div
+                    class="flex items-center gap-3 px-3 border-r border-base-300/50"
+                >
                     <div
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-base-200/80 text-neutral/70"
+                        class="flex items-center gap-1.5"
                         title="{stats.completedTasks} of {stats.totalTasks} tasks completed"
                     >
-                        <CheckCircle2
-                            class="w-3.5 h-3.5 text-accent"
-                            strokeWidth={2.5}
-                        />
-                        <span class="text-xs font-semibold tabular-nums">
-                            {stats.completedTasks}/{stats.totalTasks}
-                        </span>
-                    </div>
-
-                    <!-- Total Time -->
-                    <div
-                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-base-200/80 text-neutral/70"
-                        class:animate-pulse={hasRunningTimer}
-                        title="Total time tracked"
-                    >
-                        <Clock
-                            class="w-3.5 h-3.5 text-primary"
-                            strokeWidth={2.5}
-                        />
-                        <span
-                            class="text-xs font-semibold font-mono tabular-nums"
+                        <div
+                            class="radial-progress text-accent text-[10px]"
+                            style="--value:{stats.totalTasks > 0
+                                ? (stats.completedTasks / stats.totalTasks) *
+                                  100
+                                : 0}; --size:1.2rem; --thickness: 2px;"
+                            role="progressbar"
                         >
-                            {totalTimeFormatted}
-                        </span>
+                            {Math.round(
+                                (stats.completedTasks / stats.totalTasks) * 100,
+                            )}%
+                        </div>
                     </div>
                 </div>
             {/if}
 
-            <!-- Theme Toggle -->
-            <button
-                type="button"
-                class="relative w-10 h-10 rounded-2xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 group"
-                onclick={cycleTheme}
-                aria-label={getThemeLabel()}
-                title={getThemeLabel()}
-            >
-                <ThemeIcon
-                    class="w-5 h-5 text-neutral/70 group-hover:text-neutral transition-colors"
-                    strokeWidth={2}
-                />
-            </button>
-
-            <!-- Settings Button -->
-            <button
-                type="button"
-                class="relative w-10 h-10 rounded-2xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 group"
-                onclick={() => (isSettingsOpen = true)}
-                title="Settings"
-            >
-                <Settings
-                    class="w-5 h-5 text-neutral/70 group-hover:text-neutral transition-colors"
-                    strokeWidth={2}
-                />
-            </button>
-
-            <!-- Auth: User Menu or Sign In -->
-            {#if isAuthenticated}
-                <UserMenu onOpenSettings={() => (isSettingsOpen = true)} />
-            {:else if !isAuthLoading}
+            <div class="flex items-center gap-1">
+                <!-- Theme Toggle -->
                 <button
                     type="button"
-                    class="
-            flex items-center gap-2
-            px-4 py-2 rounded-full
-            bg-primary text-white
-            font-medium text-sm
-            hover:bg-primary-dark
-            active:scale-95
-            transition-all
-          "
-                    onclick={openLogin}
+                    class="relative w-8 h-8 rounded-xl hover:bg-base-100 flex items-center justify-center transition-all duration-200 text-neutral/60 hover:text-neutral hover:shadow-sm"
+                    onclick={cycleTheme}
+                    aria-label={getThemeLabel()}
+                    title={getThemeLabel()}
                 >
-                    <LogIn class="w-4 h-4" strokeWidth={2} />
-                    Sign in
+                    <ThemeIcon class="w-4 h-4" strokeWidth={2} />
                 </button>
-            {/if}
+
+                <!-- Settings Button -->
+                <button
+                    type="button"
+                    class="relative w-8 h-8 rounded-xl hover:bg-base-100 flex items-center justify-center transition-all duration-200 text-neutral/60 hover:text-neutral hover:shadow-sm"
+                    onclick={() => (isSettingsOpen = true)}
+                    title="Settings"
+                >
+                    <Settings class="w-4 h-4" strokeWidth={2} />
+                </button>
+
+                <!-- Auth -->
+                {#if isAuthenticated}
+                    <div class="pl-1">
+                        <UserMenu
+                            onOpenSettings={() => (isSettingsOpen = true)}
+                        />
+                    </div>
+                {:else if !isAuthLoading}
+                    <button
+                        type="button"
+                        class="
+                flex items-center gap-2
+                px-3 py-1.5 rounded-xl
+                bg-primary text-white
+                font-medium text-xs
+                hover:bg-primary-dark
+                active:scale-95
+                transition-all
+                ml-1
+              "
+                        onclick={openLogin}
+                    >
+                        <LogIn class="w-3.5 h-3.5" strokeWidth={2} />
+                        Sign in
+                    </button>
+                {/if}
+            </div>
         </div>
     </div>
 

@@ -1,6 +1,7 @@
 <script lang="ts">
-  import { Plus, Calendar, Flag, X, ChevronDown } from "lucide-svelte";
-  import { todoList } from "$lib/stores/todo.svelte";
+  import { Plus, Calendar, Tag, Loader2, Clock, X, Flag } from "lucide-svelte";
+  import { getTodoStore } from "$lib/context";
+  import { uiStore } from "$lib/stores/ui.svelte";
   import { TODO_TITLE_MAX_LENGTH } from "$lib/types";
   import { fly, fade, scale, slide } from "svelte/transition";
 
@@ -9,7 +10,9 @@
     variant?: "inline" | "fixed";
   }
 
-  let { class: className = "", variant = "inline" }: Props = $props();
+  let { variant = "inline", class: className = "" }: Props = $props();
+
+  const todoList = getTodoStore();
 
   let inputValue = $state("");
   let inputRef = $state<HTMLInputElement | null>(null);

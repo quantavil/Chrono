@@ -8,18 +8,15 @@ import type {
   UserPreferences,
 } from "../types";
 import {
-  DEFAULT_FILTERS,
-  PRIORITY_CONFIG,
-  UNDO_STACK_MAX_SIZE,
-  UNDO_EXPIRY_MS,
   TIMER_UPDATE_INTERVAL_MS,
+  UNDO_STACK_MAX_SIZE,
   SYNC_DEBOUNCE_MS,
   LOCAL_STORAGE_VERSION,
 } from "../types";
 import { TodoModel } from "../models/Todo.svelte";
 import { storageService } from "../services/storage.svelte";
 import { toastManager } from "./toast.svelte";
-import { isSupabaseConfigured } from "../utils/supabase";
+import { isSupabaseConfigured, subscribeTodoChanges } from "../utils/supabase";
 
 /**
  * TodoList Store
@@ -33,12 +30,11 @@ export class TodoList {
   private _items = $state<TodoModel[]>([]);
   private _userId = $state<string | null>(null);
   private _isLoading = $state(true);
-  private _filters = $state<FilterState>({ ...DEFAULT_FILTERS });
   private _undoStack = $state<UndoAction[]>([]);
   private _preferences = $state<UserPreferences>(storageService.loadPreferences());
 
   private _tickInterval: any;
-  private _syncInterval: any;
+  private _unsubscribeRealtime: (() => void) | null = null;
 
   // derived getters for external consumption
   // We re-export TodoModel as TodoItem for compatibility if needed, 
@@ -52,14 +48,10 @@ export class TodoList {
     // Load initial data
     const localTodos = storageService.loadLocalTodos();
     this._items = localTodos.map((t) => new TodoModel(t));
-    this._filters = storageService.loadFilters();
     this._isLoading = false;
 
     // Start Timer Loop
     this._startTimerLoop();
-
-    // Start Sync Loop (or use effect)
-    this._startSyncLoop();
   }
 
   // =========================================================================
@@ -98,10 +90,6 @@ export class TodoList {
 
   get all(): TodoModel[] {
     return this._items.filter(t => !t._deleted);
-  }
-
-  get todos(): TodoModel[] {
-    return this._applyFilters(this.all);
   }
 
   get activeTodos(): TodoModel[] {
@@ -160,22 +148,8 @@ export class TodoList {
     };
   }
 
-  get filters() {
-    return this._filters;
-  }
-
   get preferences() {
     return this._preferences;
-  }
-
-  get hasActiveFilters(): boolean {
-    const f = this._filters;
-    return (
-      f.priority !== "all" ||
-      f.status !== "all" ||
-      f.tags.length > 0 ||
-      f.hasDueDate !== null
-    );
   }
 
   get loading() { return this._isLoading; }
@@ -399,64 +373,9 @@ export class TodoList {
   // Filters
   // =========================================================================
 
-  setFilter<K extends keyof FilterState>(key: K, value: FilterState[K]) {
-    this._filters = { ...this._filters, [key]: value };
-    storageService.saveFilters(this._filters);
-  }
-
-  setFilters(filters: Partial<FilterState>) {
-    this._filters = { ...this._filters, ...filters };
-    storageService.saveFilters(this._filters);
-  }
-
-  clearFilters() {
-    this._filters = { ...DEFAULT_FILTERS };
-    storageService.saveFilters(this._filters);
-  }
-
   updatePreference<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
     this._preferences[key] = value;
     storageService.savePreferences(this._preferences);
-  }
-
-  private _applyFilters(items: TodoModel[]): TodoModel[] {
-    // Reuse logic from previous implementation
-    const f = this._filters;
-    let result = items;
-
-    if (f.priority !== 'all') {
-      result = result.filter(t => t.priority === f.priority);
-    }
-
-    if (f.status !== 'all') {
-      if (f.status === 'active') result = result.filter(t => !t.isCompleted);
-      if (f.status === 'completed') result = result.filter(t => t.isCompleted);
-      if (f.status === 'overdue') result = result.filter(t => t.isOverdue);
-    }
-
-    if (f.tags.length > 0) {
-      result = result.filter(t => f.tags.some(tag => t.tags.includes(tag)));
-    }
-
-    // Sort
-    result.sort((a, b) => {
-      // simplified sort mapping
-      const getVal = (t: TodoModel) => {
-        if (f.sortBy === 'title') return t.title;
-        if (f.sortBy === 'priority') return PRIORITY_CONFIG[t.priority || 'low']?.sortWeight ?? 99;
-        if (f.sortBy === 'due') return t.dueAt || '9999';
-        return t.position;
-      };
-
-      const valA = getVal(a);
-      const valB = getVal(b);
-
-      if (valA < valB) return f.sortOrder === 'asc' ? -1 : 1;
-      if (valA > valB) return f.sortOrder === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return result;
   }
 
   // =========================================================================
@@ -478,17 +397,6 @@ export class TodoList {
       const running = this.runningTodo;
       if (running) running.tick();
     }, TIMER_UPDATE_INTERVAL_MS);
-  }
-
-  private _startSyncLoop() {
-    this._syncInterval = setInterval(() => {
-      if (this._userId && isSupabaseConfigured() && !storageService.isSyncing) {
-        // Determine if we need to sync?
-        // storageService.sync checks for dirty items.
-        // We should pass the items.
-        this._performSync();
-      }
-    }, 5000);
   }
 
   private async _performSync() {
@@ -555,11 +463,77 @@ export class TodoList {
     }
   }
 
+  // Handle Realtime Updates
+  private _handleRealtimeChange(payload: { eventType: string; old: any; new: any }) {
+    const { eventType, new: newRec, old: oldRec } = payload;
+
+    // Safety check: ignore updates from ourselves if we could detect it, 
+    // but here we just check if state matches.
+
+    if (eventType === 'INSERT' && newRec) {
+      // Check if we already have it (optimistic creation or duplicate event)
+      const existing = this.getById(newRec.id);
+      if (!existing) {
+        // Incoming from another device
+        this._items.push(new TodoModel(newRec));
+        // Need to save to local?
+        this._save();
+      } else {
+        // We have it. If it was dirty/new, this confirms it's saved?
+        if (existing._new) {
+          existing._new = false;
+          existing._dirty = false;
+          existing._syncError = null;
+          this._save();
+        }
+      }
+    } else if (eventType === 'UPDATE' && newRec) {
+      const existing = this.getById(newRec.id);
+      if (existing) {
+        // We have it.
+        if (existing._dirty) {
+          // Conflict: Local changes vs Remote changes. 
+          // Currently we prioritize local changes until next sync push?
+          // Or we warn?
+          // For now, let's NOT overwrite local dirty state to prevent losing user work.
+        } else {
+          // Apply remote update
+          existing.applyUpdate(newRec);
+          this._save();
+        }
+      }
+    } else if (eventType === 'DELETE' && oldRec) {
+      // Remote delete
+      const existing = this.getById(oldRec.id);
+      if (existing) {
+        if (existing._dirty) {
+          // Local edit vs Remote delete.
+          // Assume remote delete wins for consistency (or resurrect?)
+          // Let's delete it.
+        }
+        this._items = this._items.filter(t => t.id !== oldRec.id);
+        this._save();
+      }
+    }
+  }
+
   async setUser(userId: string | null) {
     this._userId = userId;
     this._items.forEach(t => t.userId = userId);
     this._save();
-    if (userId) this._performSync();
+
+    if (userId) {
+      this._performSync();
+
+      // Setup Realtime
+      if (this._unsubscribeRealtime) this._unsubscribeRealtime();
+      this._unsubscribeRealtime = subscribeTodoChanges(userId, (p) => this._handleRealtimeChange(p));
+    } else {
+      if (this._unsubscribeRealtime) {
+        this._unsubscribeRealtime();
+        this._unsubscribeRealtime = null;
+      }
+    }
   }
 
   // Undo
@@ -581,11 +555,10 @@ export class TodoList {
 
   destroy(): void {
     if (this._tickInterval) clearInterval(this._tickInterval);
-    if (this._syncInterval) clearInterval(this._syncInterval);
+    if (this._unsubscribeRealtime) this._unsubscribeRealtime();
     if (this._saveTimeout) clearTimeout(this._saveTimeout);
   }
 }
 
-export const todoList = new TodoList();
 // Re-export alias if needed for components
 export { TodoModel as TodoItem };

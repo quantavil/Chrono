@@ -23,7 +23,7 @@
     <div
         class="fixed inset-0 z-50 bg-neutral/40 backdrop-blur-sm flex items-center justify-center p-4"
         transition:fade={{ duration: 150 }}
-        onclick={() => (isOpen = false)}
+        onclick={(e) => e.target === e.currentTarget && (isOpen = false)}
         onkeydown={(e) => e.key === "Escape" && (isOpen = false)}
         role="dialog"
         tabindex="-1"
@@ -31,7 +31,6 @@
         <div
             class="bg-base-100 rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
             transition:scale={{ duration: 200, start: 0.95 }}
-            onclick={(e) => e.stopPropagation()}
             role="document"
         >
             <div

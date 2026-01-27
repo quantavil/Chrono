@@ -3,13 +3,21 @@
    * CompletedSection Component
    * Collapsible section displaying completed todos with bulk actions
    */
-  
-  import { ChevronDown, ChevronUp, Trash2, RotateCcw, CheckCircle2, Clock } from 'lucide-svelte';
-  import { flip } from 'svelte/animate';
-  import { slide, fade } from 'svelte/transition';
-  import { quintOut } from 'svelte/easing';
-  import { todoList } from '$lib/stores/todo.svelte';
-  import { formatTimeCompact } from '$lib/utils/formatTime';
+
+  import {
+    ChevronDown,
+    ChevronRight,
+    Trash2,
+    RotateCcw,
+    CheckCircle2,
+    Clock,
+    CheckSquare,
+  } from "lucide-svelte";
+  import { flip } from "svelte/animate";
+  import { slide, fade } from "svelte/transition";
+  import { quintOut } from "svelte/easing";
+  import { getTodoStore } from "$lib/context";
+  import { formatRelativeDate, formatTimeCompact } from "$lib/utils/formatTime";
 
   // -------------------------------------------------------------------------
   // Props
@@ -19,7 +27,7 @@
     class?: string;
   }
 
-  let { class: className = '' }: Props = $props();
+  let { class: className = "" }: Props = $props();
 
   // -------------------------------------------------------------------------
   // Local State
@@ -31,12 +39,13 @@
   // -------------------------------------------------------------------------
   // Derived State
   // -------------------------------------------------------------------------
+  const todoList = getTodoStore();
 
   const completedTodos = $derived(todoList.completedTodos);
   const hasCompleted = $derived(completedTodos.length > 0);
   const completedCount = $derived(completedTodos.length);
   const totalCompletedTime = $derived(
-    completedTodos.reduce((sum, t) => sum + t.currentTimeMs, 0)
+    completedTodos.reduce((sum, t) => sum + t.currentTimeMs, 0),
   );
 
   // -------------------------------------------------------------------------
@@ -78,10 +87,7 @@
 </script>
 
 {#if hasCompleted}
-  <section 
-    class="w-full {className}"
-    aria-label="Completed tasks"
-  >
+  <section class="w-full {className}" aria-label="Completed tasks">
     <!-- Header / Toggle Button -->
     <button
       type="button"
@@ -99,7 +105,7 @@
     >
       <div class="flex items-center gap-3">
         <!-- Icon -->
-        <div 
+        <div
           class="
             w-8 h-8 rounded-xl
             bg-accent/10 text-accent
@@ -111,13 +117,11 @@
 
         <!-- Title & Count -->
         <div class="text-left">
-          <span class="text-sm font-semibold text-neutral">
-            Completed
-          </span>
-          <span 
+          <span class="text-sm font-semibold text-neutral"> Completed </span>
+          <span
             class="
-              ml-2 px-2 py-0.5 
-              rounded-full bg-accent/10 
+              ml-2 px-2 py-0.5
+              rounded-full bg-accent/10
               text-xs font-bold text-accent tabular-nums
             "
           >
@@ -129,7 +133,7 @@
       <div class="flex items-center gap-3">
         <!-- Total Time -->
         {#if totalCompletedTime > 0}
-          <div 
+          <div
             class="
               hidden sm:flex items-center gap-1.5
               text-xs text-neutral/40 font-mono tabular-nums
@@ -141,7 +145,7 @@
         {/if}
 
         <!-- Chevron -->
-        <div 
+        <div
           class="
             w-6 h-6 rounded-lg
             flex items-center justify-center
@@ -157,13 +161,13 @@
 
     <!-- Expanded Content -->
     {#if isExpanded}
-      <div 
+      <div
         id="completed-list"
         class="mt-3"
         transition:slide={{ duration: 250, easing: quintOut }}
       >
         <!-- Bulk Actions -->
-        <div 
+        <div
           class="
             flex items-center justify-between
             px-4 py-2 mb-3
@@ -171,17 +175,13 @@
           "
         >
           <span class="text-xs text-neutral/50 font-medium">
-            {completedCount} {completedCount === 1 ? 'task' : 'tasks'} completed
+            {completedCount}
+            {completedCount === 1 ? "task" : "tasks"} completed
           </span>
 
           {#if showClearConfirm}
-            <div 
-              class="flex items-center gap-2"
-              in:fade={{ duration: 150 }}
-            >
-              <span class="text-xs text-red-400 font-medium">
-                Clear all?
-              </span>
+            <div class="flex items-center gap-2" in:fade={{ duration: 150 }}>
+              <span class="text-xs text-red-400 font-medium"> Clear all? </span>
               <button
                 type="button"
                 class="
@@ -231,10 +231,7 @@
         </div>
 
         <!-- Completed Items List -->
-        <div 
-          class="flex flex-col gap-2"
-          role="list"
-        >
+        <div class="flex flex-col gap-2" role="list">
           {#each completedTodos as todo (todo.id)}
             <div
               animate:flip={{ duration: 200, easing: quintOut }}
@@ -248,7 +245,7 @@
               role="listitem"
             >
               <!-- Completed Checkbox (visual only) -->
-              <div 
+              <div
                 class="
                   w-5 h-5 rounded-full
                   bg-accent/20 text-accent
@@ -260,7 +257,7 @@
               </div>
 
               <!-- Title -->
-              <span 
+              <span
                 class="
                   flex-1 text-sm text-neutral/50
                   line-through truncate
@@ -271,7 +268,7 @@
 
               <!-- Time -->
               {#if todo.currentTimeMs > 0}
-                <span 
+                <span
                   class="
                     text-xs font-mono tabular-nums text-neutral/30
                     flex-shrink-0
@@ -282,7 +279,7 @@
               {/if}
 
               <!-- Actions (show on hover) -->
-              <div 
+              <div
                 class="
                   flex items-center gap-1
                   opacity-0 group-hover:opacity-100

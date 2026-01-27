@@ -12,22 +12,25 @@ import {
   signOut as apiSignOut,
   isSupabaseConfigured,
 } from '../utils/supabase';
-import { todoList } from './todo.svelte';
 import { toastManager } from './toast.svelte';
+import type { TodoList } from './todo.svelte';
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 
 // ============================================================================
 // Auth Manager Class
 // ============================================================================
 
-class AuthManager {
+export class AuthManager {
   private currentUser = $state<User | null>(null);
   private loading = $state<boolean>(true);
   private authError = $state<string | null>(null);
   private initialized = $state<boolean>(false);
   private unsubscribeAuth: (() => void) | null = null;
 
-  constructor() {
+  private todoList: TodoList;
+
+  constructor(todoList: TodoList) {
+    this.todoList = todoList;
     if (typeof window !== 'undefined') {
       this.initialize();
     }
@@ -71,7 +74,7 @@ class AuthManager {
 
   get userInitials(): string {
     if (!this.currentUser) return '?';
-    
+
     const name = this.currentUser.full_name || this.currentUser.email;
     if (!name) return '?';
 
@@ -108,10 +111,11 @@ class AuthManager {
     try {
       // Get initial session
       const { data: { session } } = await client.auth.getSession();
-      
+
       if (session?.user) {
         this.currentUser = this.mapSessionUser(session);
-        await todoList.setUser(session.user.id);
+        this.currentUser = this.mapSessionUser(session);
+        await this.todoList.setUser(session.user.id);
       }
 
       // Listen for auth changes
@@ -142,14 +146,16 @@ class AuthManager {
       case 'SIGNED_IN':
         if (session?.user) {
           this.currentUser = this.mapSessionUser(session);
-          await todoList.setUser(session.user.id);
+          this.currentUser = this.mapSessionUser(session);
+          await this.todoList.setUser(session.user.id);
           toastManager.success(`Welcome back, ${this.displayName}!`);
         }
         break;
 
       case 'SIGNED_OUT':
         this.currentUser = null;
-        await todoList.setUser(null);
+        this.currentUser = null;
+        await this.todoList.setUser(null);
         toastManager.info('You have been signed out');
         break;
 
@@ -318,28 +324,4 @@ class AuthManager {
 // Singleton Instance
 // ============================================================================
 
-export const authManager = new AuthManager();
-
-// ============================================================================
-// Convenience Exports
-// ============================================================================
-
-export function getUser(): User | null {
-  return authManager.user;
-}
-
-export function isAuthenticated(): boolean {
-  return authManager.isAuthenticated;
-}
-
-export async function signInWithEmail(email: string): Promise<{ success: boolean; error?: string }> {
-  return authManager.signInWithEmail(email);
-}
-
-export async function signInWithGitHub(): Promise<{ success: boolean; error?: string }> {
-  return authManager.signInWithGitHub();
-}
-
-export async function signOut(): Promise<{ success: boolean; error?: string }> {
-  return authManager.signOut();
-}
+// Singleton removed in favor of Context

@@ -1,7 +1,7 @@
 <script lang="ts">
     import { X, Trash2 } from "lucide-svelte";
+    import { getTodoStore } from "$lib/context";
     import type { TodoItem } from "$lib/stores/todo.svelte";
-    import { todoList } from "$lib/stores/todo.svelte";
 
     interface Props {
         task: TodoItem;
@@ -16,6 +16,8 @@
         variant = "panel",
         class: className = "",
     }: Props = $props();
+
+    const todoList = getTodoStore();
 
     function handleDelete(): void {
         // No confirm dialog, rely on Undo toast

@@ -1,8 +1,8 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
     import { X, Trash2 } from "lucide-svelte";
+    import { getTodoStore } from "$lib/context";
     import type { TodoItem } from "$lib/stores/todo.svelte";
-    import { todoList } from "$lib/stores/todo.svelte";
     import { uiStore } from "$lib/stores/ui.svelte";
     import TaskEditor from "$lib/components/editor/TaskEditor.svelte";
     import TaskHeader from "$lib/components/editor/TaskHeader.svelte";
@@ -13,6 +13,8 @@
     }
 
     let { isOpen = $bindable(false), todo }: Props = $props();
+
+    const todoList = getTodoStore();
 
     const isMobile = $derived(uiStore.isMobile);
 

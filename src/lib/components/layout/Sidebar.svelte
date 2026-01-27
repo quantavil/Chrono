@@ -9,13 +9,13 @@
         LogIn,
         ListTodo,
         Focus,
-        Users,
         Settings,
+        Flame,
+        Zap,
     } from "lucide-svelte";
     import { themeManager } from "$lib/stores/theme.svelte";
-    import { todoList } from "$lib/stores/todo.svelte";
-    import { authManager } from "$lib/stores/auth.svelte";
     import { formatTimeCompact } from "$lib/utils/formatTime";
+    import { getTodoStore, getAuthStore } from "$lib/context";
     import UserMenu from "$lib/components/UserMenu.svelte";
     import LoginForm from "$lib/components/LoginForm.svelte";
     import SettingsModal from "$lib/components/SettingsModal.svelte";
@@ -24,6 +24,10 @@
     interface Props {
         class?: string;
     }
+
+    // State
+    const todoList = getTodoStore();
+    const authManager = getAuthStore();
 
     let { class: className = "" }: Props = $props();
 
@@ -83,46 +87,91 @@
         </h1>
     </div>
 
-    <!-- Stats Card -->
-    <div class="bg-base-200/50 rounded-2xl p-4 mb-6 space-y-3">
+    <!-- Stats Card (Momentum) -->
+    <div
+        class="bg-base-200/50 rounded-2xl p-4 mb-6 space-y-3 relative overflow-hidden group"
+    >
+        {#if stats.completedTasks > 0 && stats.totalTasks > 0}
+            <div
+                class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"
+            >
+                <Sparkles class="w-12 h-12 text-current" />
+            </div>
+        {/if}
+
         <div
-            class="flex items-center justify-between text-xs text-neutral/50 font-medium uppercase tracking-wider"
+            class="flex items-center justify-between text-xs font-bold uppercase tracking-wider"
         >
-            <span>Daily Progress</span>
+            <span class="text-neutral/50">Daily Goal</span>
+            {#if stats.totalTasks > 0}
+                {@const percent =
+                    (stats.completedTasks / stats.totalTasks) * 100}
+                {#if percent >= 80}
+                    <div
+                        class="flex items-center gap-1 text-warning animate-pulse-slow"
+                    >
+                        <Flame class="w-3.5 h-3.5 fill-current" />
+                        <span>On Fire!</span>
+                    </div>
+                {:else if percent >= 50}
+                    <div class="flex items-center gap-1 text-primary">
+                        <Zap class="w-3.5 h-3.5 fill-current" />
+                        <span>Focused</span>
+                    </div>
+                {/if}
+            {/if}
         </div>
 
-        <div class="space-y-1">
+        <div class="space-y-2">
             <div class="flex items-end justify-between">
-                <span class="text-2xl font-bold text-neutral tabular-nums"
-                    >{stats.completedTasks}/{stats.totalTasks}</span
+                <span
+                    class="text-3xl font-bold text-neutral tabular-nums tracking-tight"
+                    >{Math.round(
+                        stats.totalTasks > 0
+                            ? (stats.completedTasks / stats.totalTasks) * 100
+                            : 0,
+                    )}%</span
                 >
-                <span class="text-xs text-neutral/50 mb-1">tasks</span>
+                <div class="text-right">
+                    <span class="text-xs text-neutral/50 block">completed</span>
+                    <span class="text-xs font-bold text-neutral/70"
+                        >{stats.completedTasks}/{stats.totalTasks} tasks</span
+                    >
+                </div>
             </div>
+
             <!-- Progress Bar -->
-            <div class="h-1.5 w-full bg-base-300 rounded-full overflow-hidden">
+            <div
+                class="h-2 w-full bg-base-300 rounded-full overflow-hidden shadow-inner"
+            >
                 <div
-                    class="h-full bg-accent transition-all duration-500"
-                    style="width: {stats.totalTasks > 0
+                    class="h-full transition-all duration-700 ease-out relative"
+                    style="
+                        width: {stats.totalTasks > 0
                         ? (stats.completedTasks / stats.totalTasks) * 100
-                        : 0}%"
-                ></div>
+                        : 0}%;
+                        background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+                     "
+                >
+                    <div
+                        class="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"
+                    ></div>
+                </div>
             </div>
         </div>
 
-        <div class="pt-2 border-t border-base-300/50 flex flex-col gap-2">
-            <div class="flex items-center gap-2 text-xs">
-                <Clock class="w-3.5 h-3.5 text-primary" />
+        <div class="pt-3 border-t border-base-300/50 flex flex-col gap-2">
+            <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-1.5 text-neutral/60">
+                    <Clock class="w-3.5 h-3.5" />
+                    <span>Tracked</span>
+                </div>
                 <span
-                    class="font-mono font-medium text-neutral/70"
+                    class="font-mono font-bold text-neutral/80"
+                    class:text-primary={hasRunningTimer}
                     class:animate-pulse={hasRunningTimer}
                 >
-                    {totalTimeFormatted} tracked
-                </span>
-            </div>
-            <div class="flex items-center justify-between text-xs">
-                <span class="text-neutral/50">Estimated</span>
-                <span class="font-mono font-medium text-neutral/70">
-                    {formatTimeCompact(stats.estimatedTimeMs)}
+                    {totalTimeFormatted}
                 </span>
             </div>
         </div>
@@ -142,19 +191,6 @@
         >
             <Focus class="w-4.5 h-4.5" />
             <span>Focus Mode</span>
-        </button>
-        <button
-            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-neutral/40 cursor-not-allowed font-medium text-sm transition-colors"
-            disabled
-            title="Coming soon"
-        >
-            <Users class="w-4.5 h-4.5" />
-            <span>Teams</span>
-            <span
-                class="ml-auto text-[10px] bg-secondary/10 text-secondary px-2 py-0.5 rounded-full font-bold uppercase tracking-wider"
-            >
-                Soon
-            </span>
         </button>
     </nav>
 

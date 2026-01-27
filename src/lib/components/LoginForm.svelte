@@ -18,7 +18,7 @@
         Cloud,
         Shield,
     } from "lucide-svelte";
-    import { authManager } from "$lib/stores/auth.svelte";
+    import { getAuthStore } from "$lib/context";
 
     // -------------------------------------------------------------------------
     // Props
@@ -35,6 +35,8 @@
         onClose,
         class: className = "",
     }: Props = $props();
+
+    const authManager = getAuthStore();
 
     // -------------------------------------------------------------------------
     // Local State
@@ -492,11 +494,6 @@
                                     {emailError}
                                 </div>
                             {/if}
-
-                            <!-- More providers note -->
-                            <p class="text-center text-xs text-neutral/40 pt-2">
-                                More providers coming soon
-                            </p>
                         </div>
                     {/if}
                 </div>

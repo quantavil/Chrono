@@ -4,7 +4,7 @@
     import { quintOut } from "svelte/easing";
     import TaskItem from "./TaskItem.svelte";
     import EmptyState from "./EmptyState.svelte";
-    import { todoList } from "$lib/stores/todo.svelte";
+    import { getTodoStore } from "$lib/context";
 
     interface Props {
         class?: string;
@@ -17,6 +17,8 @@
         onEdit = () => {},
         selectedTaskId = null,
     }: Props = $props();
+
+    const todoList = getTodoStore();
 
     const activeTodos = $derived(todoList.activeTodos);
     const hasActiveTodos = $derived(activeTodos.length > 0);

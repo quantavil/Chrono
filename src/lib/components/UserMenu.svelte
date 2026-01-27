@@ -14,8 +14,7 @@
     Cloud,
     CheckCircle,
   } from "lucide-svelte";
-  import { authManager } from "$lib/stores/auth.svelte";
-  import { todoList } from "$lib/stores/todo.svelte";
+  import { getAuthStore, getTodoStore } from "$lib/context";
   import { formatTimeCompact } from "$lib/utils/formatTime";
 
   // -------------------------------------------------------------------------
@@ -32,6 +31,9 @@
   // -------------------------------------------------------------------------
   // Local State
   // -------------------------------------------------------------------------
+
+  const authManager = getAuthStore();
+  const todoList = getTodoStore();
 
   let isOpen = $state(false);
   let menuRef = $state<HTMLDivElement | null>(null);

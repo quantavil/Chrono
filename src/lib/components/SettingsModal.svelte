@@ -1,16 +1,19 @@
 <script lang="ts">
-    import { fade, fly } from "svelte/transition";
-    import { X, Clock, Save, Check } from "lucide-svelte";
-    import { todoList } from "$lib/stores/todo.svelte";
-    import { onMount } from "svelte";
-
+    import { fade, blur, fly } from "svelte/transition";
+    import { getTodoStore } from "$lib/context";
+    import { formatTimeCompact } from "$lib/utils/formatTime";
+    import { X, Trash2, Clock, Check, Save } from "lucide-svelte";
+    import type { TodoItem } from "$lib/stores/todo.svelte";
     import { uiStore } from "$lib/stores/ui.svelte";
 
     interface Props {
-        isOpen: boolean;
+        isOpen?: boolean;
+        onClose?: () => void;
     }
 
-    let { isOpen = $bindable(false) }: Props = $props();
+    let { isOpen = $bindable(false), onClose }: Props = $props();
+
+    const todoList = getTodoStore();
 
     const isMobile = $derived(uiStore.isMobile);
     let selectedDuration = $state(todoList.preferences.defaultTaskDurationMs);

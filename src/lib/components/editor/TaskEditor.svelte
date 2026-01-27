@@ -1,20 +1,24 @@
 <script lang="ts">
-    import { slide, fade } from "svelte/transition";
+    import { fade, slide } from "svelte/transition";
     import {
         Calendar,
         Tag,
         Clock,
+        Type,
+        AlignLeft,
+        MoreVertical,
+        Trash2,
+        CheckSquare,
         AlertCircle,
         Repeat,
         CheckCircle2,
         Plus,
         X,
-        Trash2,
         ChevronRight,
         ChevronDown,
     } from "lucide-svelte";
+    import { getTodoStore } from "$lib/context";
     import type { TodoItem } from "$lib/stores/todo.svelte";
-    import { todoList } from "$lib/stores/todo.svelte";
     import { formatRelativeDate } from "$lib/utils/formatTime";
     import TiptapEditor from "$lib/components/editor/TiptapEditor.svelte";
     import type { Priority, RecurrenceConfig } from "$lib/types";
@@ -28,6 +32,9 @@
 
     let { task, class: className = "" }: Props = $props();
 
+    const todoList = getTodoStore();
+
+    let titleRef = $state<HTMLTextAreaElement | null>(null);
     // -------------------------------------------------------------------------
     // Local State
     // -------------------------------------------------------------------------
@@ -209,6 +216,7 @@
     };
 </script>
 
+```
 <div
     class="flex flex-col h-full bg-base-100 {className} overflow-y-auto scrollbar-hide"
 >

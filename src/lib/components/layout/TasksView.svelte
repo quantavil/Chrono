@@ -3,7 +3,6 @@
     import TaskList from "$lib/components/TaskList.svelte";
     import CompletedSection from "$lib/components/CompletedSection.svelte";
     import { formatDateHeader } from "$lib/utils/formatTime";
-    import { todoList } from "$lib/stores/todo.svelte";
 
     interface Props {
         selectedTaskId: string | null;
