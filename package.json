@@ -20,14 +20,12 @@
         "vite": "^5.0.0"
     },
     "dependencies": {
-        "@internationalized/date": "^3.10.1",
         "@supabase/supabase-js": "^2.48.0",
         "@tiptap/core": "^3.17.1",
         "@tiptap/extension-link": "^3.17.1",
         "@tiptap/extension-placeholder": "^3.17.1",
         "@tiptap/pm": "^3.17.1",
         "@tiptap/starter-kit": "^3.17.1",
-        "bits-ui": "^2.15.4",
         "clsx": "^2.1.0",
         "lucide-svelte": "^0.470.0",
         "tailwind-merge": "^2.6.0"

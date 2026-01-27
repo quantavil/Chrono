@@ -24,6 +24,7 @@
     import type { Priority, RecurrenceConfig } from "$lib/types";
     import { uiStore } from "$lib/stores/ui.svelte";
     import TaskHeader from "$lib/components/editor/TaskHeader.svelte";
+    import CustomDatePicker from "$lib/components/CustomDatePicker.svelte";
 
     interface Props {
         task: TodoItem;
@@ -389,16 +390,6 @@
                     >
                         <Calendar class="w-3.5 h-3.5" /> Due Date
                     </p>
-
-                    {#if task.dueAt}
-                        <button
-                            class="text-[10px] font-bold text-danger hover:bg-danger/10 px-2 py-1 rounded transition-colors uppercase tracking-wider flex items-center gap-1"
-                            title="Clear due date"
-                            onclick={() => setDueDate("clear")}
-                        >
-                            <X class="w-3 h-3" /> Clear
-                        </button>
-                    {/if}
                 </div>
 
                 <!-- Presets Row -->
@@ -423,55 +414,19 @@
                     </button>
                 </div>
 
-                <!-- Big Visual Picker -->
-                <div class="relative group">
-                    <!-- Visual State -->
-                    <button
-                        class="
-                        w-full py-3 px-4 rounded-xl text-sm font-medium transition-all border-2
-                        flex items-center justify-center gap-2
-                        {task.dueAt
-                            ? 'border-primary/20 bg-primary/5 text-primary'
-                            : 'border-base-200 bg-base-100 text-neutral/40 hover:border-base-300 hover:bg-base-200/30'}
-                        "
-                        onclick={() => datePickerRef?.showPicker()}
-                    >
-                        {#if task.dueAt}
-                            <span class="text-lg font-bold">
-                                {new Date(task.dueAt).toLocaleDateString(
-                                    "en-US",
-                                    {
-                                        weekday: "short",
-                                        month: "short",
-                                        day: "numeric",
-                                    },
-                                )}
-                            </span>
-                        {:else}
-                            <Calendar class="w-4 h-4 opacity-50" />
-                            <span>Pick a date...</span>
-                        {/if}
-                    </button>
+                <!-- Custom Picker & Clear Button -->
+                <div class="flex items-center gap-2">
+                    <CustomDatePicker bind:value={task.dueAt} class="flex-1" />
 
-                    <!-- Hidden Input Trigger -->
-                    <input
-                        bind:this={datePickerRef}
-                        type="date"
-                        value={task.dueAt
-                            ? new Date(task.dueAt).toISOString().split("T")[0]
-                            : ""}
-                        onchange={(e) => {
-                            const dateStr = (e.target as HTMLInputElement)
-                                .value;
-                            task.applyUpdate({
-                                dueAt: dateStr
-                                    ? new Date(dateStr).toISOString()
-                                    : null,
-                            });
-                        }}
-                        class="sr-only"
-                        aria-label="Select due date"
-                    />
+                    {#if task.dueAt}
+                        <button
+                            class="h-full px-3 rounded-xl border-2 border-dashed border-danger/30 text-danger/50 hover:text-danger hover:border-danger hover:bg-danger/5 transition-all flex items-center justify-center aspect-square"
+                            title="Clear due date"
+                            onclick={() => setDueDate("clear")}
+                        >
+                            <X class="w-5 h-5" />
+                        </button>
+                    {/if}
                 </div>
             </div>
 
