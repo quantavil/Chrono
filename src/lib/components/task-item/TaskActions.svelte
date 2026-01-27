@@ -13,6 +13,8 @@
     import type { TodoItem } from "$lib/stores/todo.svelte";
     import { getTodoStore } from "$lib/context";
 
+    import { uiStore } from "$lib/stores/ui.svelte";
+
     interface Props {
         todo: TodoItem;
         isSubtasksOpen: boolean;
@@ -41,7 +43,9 @@
 </script>
 
 <div
-    class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+    class="flex items-center gap-1 transition-opacity {uiStore.isMobile
+        ? 'opacity-100'
+        : 'opacity-0 group-hover:opacity-100'}"
 >
     {#if hasSubtasks}
         <button

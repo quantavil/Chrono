@@ -13,6 +13,7 @@
         Sparkles,
         LogIn,
         Settings,
+        Menu,
     } from "lucide-svelte";
     import { themeManager } from "$lib/stores/theme.svelte";
     import { getTodoStore, getAuthStore } from "$lib/context";
@@ -105,10 +106,7 @@
                     >
                         <div
                             class="radial-progress text-primary text-[10px]"
-                            style="--value:{stats.totalTasks > 0
-                                ? (stats.completedTasks / stats.totalTasks) *
-                                  100
-                                : 0}; --size:1rem; --thickness: 2px;"
+                            style="--value:{stats.completionRate}; --size:1rem; --thickness: 2px;"
                             role="progressbar"
                         ></div>
                         <span class="text-xs font-medium text-neutral/70">
@@ -177,6 +175,15 @@
         <!-- Top Row: Logo, Theme & Auth -->
         <div class="flex items-center justify-between">
             <div class="flex items-center gap-2.5">
+                <button
+                    type="button"
+                    class="w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
+                    onclick={() => (uiStore.isMobileSidebarOpen = true)}
+                    aria-label="Open menu"
+                >
+                    <Menu class="w-5 h-5 text-neutral/70" strokeWidth={2} />
+                </button>
+
                 <div
                     class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-soft"
                 >

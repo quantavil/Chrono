@@ -23,6 +23,7 @@
     import {
         getDatePresetISO,
         formatRelativeDate,
+        formatDuration,
     } from "$lib/utils/formatTime";
     import TiptapEditor from "$lib/components/editor/TiptapEditor.svelte";
     import type { Priority, RecurrenceConfig } from "$lib/types";
@@ -458,9 +459,7 @@
                                     estimatedTime: mins * 60 * 1000,
                                 })}
                         >
-                            {mins >= 60
-                                ? `${Number(mins / 60).toLocaleString()}h`
-                                : `${mins}m`}
+                            {formatDuration(mins * 60 * 1000)}
                         </button>
                     {/each}
                 </div>

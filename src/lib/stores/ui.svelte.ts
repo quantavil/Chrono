@@ -1,5 +1,6 @@
 export class UIStore {
     isSidebarOpen = $state(true);
+    isMobileSidebarOpen = $state(false);
     isMobile = $state(false);
     isTablet = $state(false);
     focusedTaskId = $state<string | null>(null);
@@ -38,8 +39,14 @@ export class UIStore {
     }
 
     private updateMedia() {
-        this.isMobile = window.innerWidth < 768;
-        this.isTablet = window.innerWidth < 1024;
+        this.isMobile = window.innerWidth < 1024;
+        this.isTablet = window.innerWidth >= 768 && window.innerWidth < 1024;
+    }
+
+    get detailTransition() {
+        return this.isMobile
+            ? { y: 300, duration: 300, opacity: 1 }
+            : { x: 300, duration: 300, opacity: 1 };
     }
 
     focusNext(ids: string[]) {

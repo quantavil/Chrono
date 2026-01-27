@@ -300,7 +300,7 @@ export class TodoModel {
     }
 
     snapshot(): TodoLocal {
-        return JSON.parse(JSON.stringify(this.toLocal()));
+        return $state.snapshot(this.toLocal());
     }
 
     private _createRecurrenceInput(nextDate: Date): TodoCreateInput {

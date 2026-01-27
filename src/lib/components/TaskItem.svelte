@@ -131,9 +131,7 @@
                 todoList.toggleComplete(todo.id);
             } else if (touchCurrentX < -SWIPE_THRESHOLD) {
                 // Swipe Left -> Delete
-                if (confirm(`Delete "${todo.title}"?`)) {
-                    todoList.remove(todo.id);
-                }
+                todoList.remove(todo.id);
             }
         }
         // Reset
@@ -311,7 +309,7 @@
                                         </p>
                                     {/if}
 
-                                    {#each todo.tags.slice(0, 2) as tag}
+                                    {#each todo.tags.slice(0, 2) as tag (tag)}
                                         <p
                                             class="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-md"
                                         >
@@ -385,8 +383,8 @@
                             {/if}
                         </div>
 
-                        <!-- Actions (show on hover) - Hidden on Mobile, accessible via Details Modal -->
-                        <div class="hidden md:block">
+                        <!-- Actions -->
+                        <div class="flex items-center">
                             <TaskActions
                                 {todo}
                                 {isSubtasksOpen}

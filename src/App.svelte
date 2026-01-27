@@ -240,7 +240,6 @@
         {#snippet mobileContent()}
           <div class="w-full px-4 sm:px-6 pt-6 pb-32">
             <Header class="mb-6" />
-            <AddTaskBar variant="inline" class="mb-6" />
             <TaskList class="mb-6" onEdit={(id) => handleSelectTask(id)} />
             <CompletedSection />
           </div>

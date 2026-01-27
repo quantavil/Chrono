@@ -4,6 +4,7 @@
     import StarterKit from "@tiptap/starter-kit";
     import Placeholder from "@tiptap/extension-placeholder";
     import Link from "@tiptap/extension-link";
+    import { uiStore } from "$lib/stores/ui.svelte";
 
     import {
         Bold,
@@ -99,6 +100,15 @@
             },
             onFocus: () => {
                 isFocused = true;
+                // Workaround for mobile keyboard hiding the editor
+                if (typeof window !== "undefined" && window.innerWidth < 1024) {
+                    setTimeout(() => {
+                        element?.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                        });
+                    }, 300);
+                }
             },
             onBlur: () => {
                 isFocused = false;

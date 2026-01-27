@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { fade } from "svelte/transition";
+    import { fade, slide } from "svelte/transition";
+    import { uiStore } from "$lib/stores/ui.svelte";
     import type { Snippet } from "svelte";
     import Sidebar from "$lib/components/layout/Sidebar.svelte";
 
@@ -23,6 +24,28 @@
 <div class="min-h-screen min-h-dvh bg-base-200 {className}">
     <!-- Mobile Layout (< lg) -->
     <div class="lg:hidden text-neutral">
+        <!-- Drawer Overlay -->
+        {#if uiStore.isMobileSidebarOpen}
+            <div
+                class="fixed inset-0 z-50 flex"
+                transition:fade={{ duration: 200 }}
+            >
+                <button
+                    type="button"
+                    class="fixed inset-0 bg-black/50 backdrop-blur-sm w-full h-full border-none cursor-default"
+                    onclick={() => (uiStore.isMobileSidebarOpen = false)}
+                    aria-label="Close menu"
+                ></button>
+
+                <div
+                    class="relative w-[280px] h-full bg-base-100 shadow-2xl flex flex-col"
+                    transition:slide={{ axis: "x", duration: 300 }}
+                >
+                    <Sidebar class="w-full h-full border-none" />
+                </div>
+            </div>
+        {/if}
+
         {@render mobileContent()}
     </div>
 

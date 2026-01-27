@@ -14,7 +14,7 @@
   import { uiStore } from "$lib/stores/ui.svelte";
   import { TODO_TITLE_MAX_LENGTH, PRIORITY_CONFIG } from "$lib/types";
   import { fly, fade, scale, slide } from "svelte/transition";
-  import { getDatePreset } from "$lib/utils/formatTime";
+  import { getDatePreset, formatDuration } from "$lib/utils/formatTime";
 
   interface Props {
     class?: string;
@@ -140,7 +140,7 @@
           transition:fly={{ y: 20, duration: 200 }}
         >
           <!-- Priority -->
-          {#each ["high", "medium", "low"] as p}
+          {#each ["high", "medium", "low"] as p (p)}
             {@const config = PRIORITY_CONFIG[p as keyof typeof PRIORITY_CONFIG]}
             <button
               type="button"
@@ -161,7 +161,7 @@
           <div class="w-px h-5 bg-base-300"></div>
 
           <!-- Due Date -->
-          {#each ["today", "tomorrow", "week"] as d}
+          {#each ["today", "tomorrow", "week"] as d (d)}
             {@const config = dueDateConfig[d as keyof typeof dueDateConfig]}
             <button
               type="button"
@@ -181,7 +181,7 @@
           <div class="w-px h-5 bg-base-300"></div>
 
           <!-- Duration -->
-          {#each [15, 30, 45, 60] as mins}
+          {#each [15, 30, 45, 60] as mins (mins)}
             <button
               type="button"
               class="
@@ -195,7 +195,7 @@
                 (selectedDuration = selectedDuration === mins ? null : mins)}
             >
               <Clock class="w-3 h-3" />
-              {mins}m
+              {formatDuration(mins * 60 * 1000)}
             </button>
           {/each}
         </div>
@@ -385,7 +385,7 @@
                   >Priority Level</span
                 >
                 <div class="flex flex-wrap gap-2">
-                  {#each ["high", "medium", "low"] as p}
+                  {#each ["high", "medium", "low"] as p (p)}
                     {@const config =
                       PRIORITY_CONFIG[p as keyof typeof PRIORITY_CONFIG]}
                     <button
@@ -418,7 +418,7 @@
                   >Est. Duration</span
                 >
                 <div class="flex flex-wrap gap-1.5">
-                  {#each [15, 30, 45, 60, 90] as mins}
+                  {#each [15, 30, 45, 60, 90] as mins (mins)}
                     <button
                       type="button"
                       class="
@@ -432,7 +432,7 @@
                         (selectedDuration =
                           selectedDuration === mins ? null : mins)}
                     >
-                      {mins}m
+                      {formatDuration(mins * 60 * 1000)}
                     </button>
                   {/each}
                 </div>
@@ -447,7 +447,7 @@
               >
               <div class="flex flex-col gap-2">
                 <div class="flex flex-wrap gap-2">
-                  {#each ["today", "tomorrow", "week"] as d}
+                  {#each ["today", "tomorrow", "week"] as d (d)}
                     {@const config =
                       dueDateConfig[d as keyof typeof dueDateConfig]}
                     <button

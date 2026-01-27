@@ -1,11 +1,8 @@
 <script lang="ts">
     import { fade, fly } from "svelte/transition";
-    import { X, Trash2 } from "lucide-svelte";
-    import { getTodoStore } from "$lib/context";
-    import type { TodoItem } from "$lib/stores/todo.svelte";
     import { uiStore } from "$lib/stores/ui.svelte";
-    import TaskEditor from "$lib/components/editor/TaskEditor.svelte";
-    import TaskHeader from "$lib/components/editor/TaskHeader.svelte";
+    import type { TodoItem } from "$lib/stores/todo.svelte";
+    import TaskDetailContainer from "$lib/components/editor/TaskDetailContainer.svelte";
 
     interface Props {
         isOpen: boolean;
@@ -14,20 +11,8 @@
 
     let { isOpen = $bindable(false), todo }: Props = $props();
 
-    const todoList = getTodoStore();
-
-    const isMobile = $derived(uiStore.isMobile);
-
     function close() {
         isOpen = false;
-    }
-
-    // Transition params generator
-    function getTransitionParams() {
-        if (isMobile) {
-            return { y: 300, duration: 300, opacity: 1 };
-        }
-        return { x: 300, duration: 300, opacity: 1 };
     }
 </script>
 
@@ -55,8 +40,8 @@
             md:rounded-l-3xl rounded-t-3xl md:rounded-tr-none
             shadow-2xl
         "
-        in:fly={getTransitionParams()}
-        out:fly={getTransitionParams()}
+        in:fly={uiStore.detailTransition}
+        out:fly={uiStore.detailTransition}
         role="dialog"
         aria-modal="true"
     >
@@ -71,13 +56,6 @@
             <div class="w-12 h-1.5 rounded-full bg-neutral/20"></div>
         </div>
 
-        <TaskHeader task={todo} onClose={close} variant="modal" />
-
-        <!-- Content -->
-        <div class="flex-1 overflow-hidden relative">
-            {#key todo.id}
-                <TaskEditor task={todo} class="h-full" />
-            {/key}
-        </div>
+        <TaskDetailContainer task={todo} onClose={close} variant="modal" />
     </div>
 {/if}
