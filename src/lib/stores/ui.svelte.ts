@@ -3,12 +3,37 @@ export class UIStore {
     isMobile = $state(false);
     isTablet = $state(false);
     focusedTaskId = $state<string | null>(null);
-    view = $state<'dashboard' | 'settings'>('dashboard');
+    private _view = $state<'dashboard' | 'settings'>('dashboard');
 
     constructor() {
         if (typeof window !== 'undefined') {
             this.updateMedia();
             window.addEventListener('resize', () => this.updateMedia());
+
+            // Simple Hash Router
+            const onHashChange = () => {
+                const hash = window.location.hash;
+                if (hash === '#settings') {
+                    this._view = 'settings';
+                } else {
+                    this._view = 'dashboard';
+                }
+            };
+            window.addEventListener('hashchange', onHashChange);
+            onHashChange(); // Init state from URL
+        }
+    }
+
+    get view() { return this._view; }
+    set view(v: 'dashboard' | 'settings') {
+        this._view = v;
+        if (typeof window !== 'undefined') {
+            const hash = v === 'settings' ? '#settings' : '';
+            if (window.location.hash !== hash && window.location.hash !== '#' + hash) {
+                // Push state to allow back button
+                if (v === 'settings') window.location.hash = 'settings';
+                else window.history.pushState(null, '', window.location.pathname);
+            }
         }
     }
 

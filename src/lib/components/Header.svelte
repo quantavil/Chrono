@@ -144,7 +144,7 @@
                 {#if isAuthenticated}
                     <div class="pl-1 ml-1 border-l border-base-200">
                         <UserMenu
-                            onOpenSettings={() => (isSettingsOpen = true)}
+                            onOpenSettings={() => (uiStore.view = "settings")}
                         />
                     </div>
                 {:else if !isAuthLoading}
@@ -218,7 +218,9 @@
 
                 <!-- Auth -->
                 {#if isAuthenticated}
-                    <UserMenu onOpenSettings={() => (isSettingsOpen = true)} />
+                    <UserMenu
+                        onOpenSettings={() => (uiStore.view = "settings")}
+                    />
                 {:else if !isAuthLoading}
                     <button
                         type="button"
