@@ -12,8 +12,10 @@
         Repeat,
         FileText,
         ChevronDown,
+        ChevronRight,
         GripVertical,
         Clock,
+        Settings2,
     } from "lucide-svelte";
     import type { TodoItem } from "$lib/stores/todo.svelte";
     import type { RecurrenceConfig, Priority } from "$lib/types";
@@ -45,6 +47,7 @@
     let tagsInput = $state("");
     let activeTags = $state<string[]>([]);
     let newSubtaskTitle = $state("");
+    let isSubtasksOpen = $state(false);
 
     // UI State
     // let showMetadata = $state(false); // Removed in favor of mode
@@ -274,12 +277,25 @@
                 {/if}
             </button>
 
-            <!-- Priority Dot -->
-            {#if priority}
+            <!-- Mode Indicator -->
+            {#if mode === "content"}
                 <div
-                    class="w-2.5 h-2.5 rounded-full {priorityConfig[priority]
-                        .dot}"
-                ></div>
+                    class="flex items-center gap-2 text-neutral/60 bg-neutral/5 px-2 py-1 rounded-lg"
+                >
+                    <FileText class="w-4 h-4" />
+                    <span class="text-xs font-bold uppercase tracking-wider"
+                        >Notes</span
+                    >
+                </div>
+            {:else}
+                <div
+                    class="flex items-center gap-2 text-neutral/60 bg-neutral/5 px-2 py-1 rounded-lg"
+                >
+                    <Settings2 class="w-4 h-4" />
+                    <span class="text-xs font-bold uppercase tracking-wider"
+                        >Task Settings</span
+                    >
+                </div>
             {/if}
         </div>
 
@@ -318,9 +334,8 @@
             placeholder:text-neutral/30
             outline-none
             transition-colors
-            {isCompleted
-                        ? 'line-through text-neutral/50'
-                        : priorityConfig[priority].color}
+            text-neutral
+            {isCompleted ? 'line-through text-neutral/50' : ''}
           "
                     placeholder="Task title..."
                     disabled={isCompleted}
@@ -342,6 +357,112 @@
 
             <!-- ===== CONTENT MODE: Subtasks & Notes ===== -->
             {#if mode === "content"}
+                <!-- ===== SUBTASKS SECTION ===== -->
+                <div in:fly={{ y: 10, duration: 200, delay: 50 }}>
+                    <button
+                        class="flex items-center gap-2 text-xs font-bold text-neutral/50 uppercase tracking-wider mb-3 hover:text-neutral transition-colors w-full group"
+                        onclick={() => (isSubtasksOpen = !isSubtasksOpen)}
+                    >
+                        {#if isSubtasksOpen}
+                            <ChevronDown class="w-4 h-4" />
+                        {:else}
+                            <ChevronRight class="w-4 h-4" />
+                        {/if}
+                        Subtasks
+                        {#if subtaskProgress.total > 0}
+                            <span
+                                class="ml-auto font-normal normal-case opacity-50"
+                            >
+                                {subtaskProgress.completed}/{subtaskProgress.total}
+                            </span>
+                        {/if}
+                    </button>
+
+                    {#if isSubtasksOpen}
+                        <div
+                            class="space-y-2 mb-6 pl-1"
+                            transition:slide={{ duration: 200 }}
+                        >
+                            <!-- Subtask List -->
+                            {#each task.subtasks as subtask (subtask.id)}
+                                <div class="group flex items-center gap-3">
+                                    <button
+                                        class="
+                                            w-4 h-4 rounded border
+                                            flex items-center justify-center
+                                            transition-all
+                                            {subtask.is_completed
+                                            ? 'bg-primary border-primary text-white'
+                                            : 'border-neutral/30 hover:border-primary'}
+                                        "
+                                        onclick={() =>
+                                            toggleSubtask(subtask.id)}
+                                    >
+                                        {#if subtask.is_completed}
+                                            <CheckCircle2 class="w-3 h-3" />
+                                        {/if}
+                                    </button>
+
+                                    <input
+                                        bind:value={subtask.title}
+                                        class="
+                                            flex-1 bg-transparent
+                                            text-sm
+                                            outline-none
+                                            {subtask.is_completed
+                                            ? 'text-neutral/40 line-through'
+                                            : 'text-neutral'}
+                                            placeholder:text-neutral/30
+                                        "
+                                        onblur={() =>
+                                            updateSubtaskTitle(
+                                                subtask.id,
+                                                subtask.title,
+                                            )}
+                                        onkeydown={(e) => {
+                                            if (e.key === "Enter") {
+                                                (
+                                                    e.target as HTMLInputElement
+                                                ).blur();
+                                            }
+                                        }}
+                                    />
+
+                                    <button
+                                        class="
+                                            opacity-0 group-hover:opacity-100
+                                            text-neutral/30 hover:text-danger
+                                            transition-all
+                                        "
+                                        onclick={() =>
+                                            deleteSubtask(subtask.id)}
+                                    >
+                                        <X class="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            {/each}
+
+                            <!-- Add Subtask -->
+                            <div class="flex items-center gap-3 mt-3">
+                                <Plus class="w-4 h-4 text-neutral/40" />
+                                <input
+                                    bind:value={newSubtaskTitle}
+                                    class="
+                                        flex-1 bg-transparent
+                                        text-sm text-neutral
+                                        placeholder:text-neutral/40
+                                        outline-none
+                                    "
+                                    placeholder="Add subtask..."
+                                    onkeydown={(e) => {
+                                        if (e.key === "Enter") addSubtask();
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    {/if}
+                </div>
+
                 <!-- ===== NOTES SECTION (Live Markdown Editor) ===== -->
                 <div in:fly={{ y: 10, duration: 200, delay: 100 }}>
                     <!-- Tiptap Live Editor -->

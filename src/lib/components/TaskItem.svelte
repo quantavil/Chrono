@@ -64,6 +64,30 @@
         low: "border-l-info",
     };
 
+    const priorityRingColors = {
+        high: "ring-danger",
+        medium: "ring-warning",
+        low: "ring-info",
+    };
+
+    const priorityBgColors = {
+        high: "bg-danger/5",
+        medium: "bg-warning/5",
+        low: "bg-info/5",
+    };
+
+    const priorityTextColors = {
+        high: "text-danger",
+        medium: "text-warning",
+        low: "text-info",
+    };
+
+    const priorityBgTimerColors = {
+        high: "bg-danger",
+        medium: "bg-warning",
+        low: "bg-info",
+    };
+
     function handleToggleComplete(): void {
         todoList.toggleComplete(todo.id);
     }
@@ -134,6 +158,15 @@
         const newSubtasks = todo.subtasks.filter((s) => s.id !== subtaskId);
         todoList.updateSubtasks(todo.id, newSubtasks);
     }
+
+    function updateSubtaskTitle(subtaskId: string, newTitle: string): void {
+        const trimmed = newTitle.trim();
+        if (!trimmed) return;
+        const newSubtasks = todo.subtasks.map((s) =>
+            s.id === subtaskId ? { ...s, title: trimmed } : s,
+        );
+        todoList.updateSubtasks(todo.id, newSubtasks);
+    }
 </script>
 
 <div
@@ -145,9 +178,11 @@
     overflow-visible
     border-l-4
     {todo.priority ? priorityColors[todo.priority] : 'border-l-primary'}
-    {isRunning ? 'ring-2 ring-primary/50 shadow-lg shadow-primary/10' : ''}
+    {isRunning
+        ? `ring-2 ring-opacity-50 shadow-lg ${todo.priority ? priorityRingColors[todo.priority] : 'ring-primary'} ${todo.priority ? priorityRingColors[todo.priority].replace('ring-', 'shadow-') : 'shadow-primary'}/10`
+        : ''}
     {isSelected
-        ? 'ring-2 ring-primary ring-offset-2 ring-offset-base-200 bg-primary/5'
+        ? `ring-2 ${todo.priority ? priorityRingColors[todo.priority] : 'ring-primary'} ${todo.priority ? priorityBgColors[todo.priority] : 'bg-primary/5'}`
         : 'border border-base-300/50'}
     {isCompleted ? 'opacity-60' : ''}
     {isDragging ? 'scale-[1.02] shadow-xl rotate-1 z-50' : ''}
@@ -320,8 +355,9 @@
             px-2 py-1 rounded-lg
             font-mono text-xs md:text-sm tabular-nums
             transition-all
+            transition-all
             {isRunning
-                                ? 'bg-primary text-white font-semibold animate-pulse'
+                                ? `${todo.priority ? priorityBgTimerColors[todo.priority] : 'bg-primary'} text-white font-semibold animate-pulse`
                                 : hasTime
                                   ? 'bg-base-200 text-neutral-light hover:bg-base-300'
                                   : 'text-neutral-muted hover:bg-base-200'}
@@ -401,7 +437,7 @@
                                 e.stopPropagation();
                                 onEdit(todo.id, "settings");
                             }}
-                            title="View details"
+                            title="Task Settings"
                         >
                             <ChevronRight class="w-4 h-4" strokeWidth={2} />
                         </button>
@@ -422,7 +458,7 @@
             </div>
 
             <!-- Subtasks Section (Inline) -->
-            {#if (isSubtasksOpen || (isSelected && !isCompleted) || hasSubtasks) && (isSubtasksOpen || isSelected)}
+            {#if isSubtasksOpen}
                 <div
                     class="px-3 pb-3 md:px-4 md:pb-4 pl-12 md:pl-14 space-y-2"
                     transition:slide
@@ -446,13 +482,28 @@
                                     <CheckCircle2 class="w-3 h-3" />
                                 {/if}
                             </button>
-                            <span
-                                class="{subtask.is_completed
+                            <input
+                                value={subtask.title}
+                                class="
+                                    flex-1 bg-transparent
+                                    text-sm outline-none
+                                    {subtask.is_completed
                                     ? 'line-through text-neutral/40'
-                                    : 'text-neutral'} flex-1 truncate"
-                            >
-                                {subtask.title}
-                            </span>
+                                    : 'text-neutral'}
+                                    placeholder:text-neutral/30
+                                "
+                                onclick={(e) => e.stopPropagation()}
+                                onblur={(e) =>
+                                    updateSubtaskTitle(
+                                        subtask.id,
+                                        (e.target as HTMLInputElement).value,
+                                    )}
+                                onkeydown={(e) => {
+                                    if (e.key === "Enter") {
+                                        (e.target as HTMLInputElement).blur();
+                                    }
+                                }}
+                            />
                             <button
                                 type="button"
                                 class="opacity-0 group-hover/sub:opacity-100 p-0.5 text-neutral/30 hover:text-danger"
