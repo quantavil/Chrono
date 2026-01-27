@@ -11,7 +11,7 @@
     import type { TodoItem } from "$lib/stores/todo.svelte";
     import { getTodoStore } from "$lib/context";
     import { uiStore } from "$lib/stores/ui.svelte";
-    import { formatRelativeDate, formatTimeOnly } from "$lib/utils/formatTime";
+    import { formatRelativeDate } from "$lib/utils/formatTime";
 
     // Sub-components
     import TaskLiquid from "./task-item/TaskLiquid.svelte";
@@ -251,19 +251,6 @@
                                         ~{Math.round(
                                             todo.estimatedTime / 60000,
                                         )}m
-                                    </p>
-                                {/if}
-
-                                {#if todo.startAt || todo.endAt}
-                                    <p
-                                        class="inline-flex items-center gap-1 text-xs font-bold text-primary/70"
-                                    >
-                                        <Clock class="w-3 h-3" />
-                                        {formatTimeOnly(
-                                            todo.startAt,
-                                        )}{todo.endAt
-                                            ? ` - ${formatTimeOnly(todo.endAt)}`
-                                            : ""}
                                     </p>
                                 {/if}
 

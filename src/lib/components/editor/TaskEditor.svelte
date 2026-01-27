@@ -35,14 +35,13 @@
     const todoList = getTodoStore();
 
     let titleRef = $state<HTMLTextAreaElement | null>(null);
+    let datePickerRef = $state<HTMLInputElement | null>(null);
     // -------------------------------------------------------------------------
     // Local State
     // -------------------------------------------------------------------------
     let tagsInput = $state("");
     let newSubtaskTitle = $state("");
     let isSubtasksOpen = $state(true);
-    let startTime = $state("");
-    let endTime = $state("");
 
     // Recurrence
     let recurrenceDays = $state<number[]>([]);
@@ -68,22 +67,6 @@
         } else {
             recurrenceDays = [];
         }
-
-        // Sync Time Blocking
-        startTime = task.startAt
-            ? new Date(task.startAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-              })
-            : "";
-        endTime = task.endAt
-            ? new Date(task.endAt).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: false,
-              })
-            : "";
     });
 
     // -------------------------------------------------------------------------
@@ -169,22 +152,21 @@
         task.applyUpdate({ recurrence });
     }
 
-    // --- Time Blocking ---
-    function updateTime(type: "start" | "end", value: string) {
-        if (!value) {
-            task.applyUpdate(
-                type === "start" ? { startAt: null } : { endAt: null },
-            );
-            return;
+    function setDueDate(type: "today" | "tomorrow" | "week" | "clear") {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+
+        if (type === "today") {
+            task.applyUpdate({ dueAt: d.toISOString() });
+        } else if (type === "tomorrow") {
+            d.setDate(d.getDate() + 1);
+            task.applyUpdate({ dueAt: d.toISOString() });
+        } else if (type === "week") {
+            d.setDate(d.getDate() + 7);
+            task.applyUpdate({ dueAt: d.toISOString() });
+        } else {
+            task.applyUpdate({ dueAt: null });
         }
-        const [h, m] = value.split(":").map(Number);
-        const baseDate = task.dueAt ? new Date(task.dueAt) : new Date();
-        baseDate.setHours(h, m, 0, 0);
-        task.applyUpdate(
-            type === "start"
-                ? { startAt: baseDate.toISOString() }
-                : { endAt: baseDate.toISOString() },
-        );
     }
 
     // -------------------------------------------------------------------------
@@ -400,73 +382,100 @@
             </div>
 
             <!-- Due Date -->
-            <div
-                class="bg-base-200/50 rounded-xl p-3 hover:bg-base-200 transition-colors"
-            >
-                <label
-                    class="text-xs text-neutral/50 font-medium flex items-center gap-1.5 mb-1"
-                >
-                    <Calendar class="w-3.5 h-3.5" /> Due Date
-                </label>
-                <input
-                    type="date"
-                    value={task.dueAt
-                        ? new Date(task.dueAt).toISOString().split("T")[0]
-                        : ""}
-                    onchange={(e) => {
-                        const dateStr = (e.target as HTMLInputElement).value;
-                        task.applyUpdate({
-                            dueAt: dateStr
-                                ? new Date(dateStr).toISOString()
-                                : null,
-                        });
-                    }}
-                    class="w-full bg-transparent text-sm font-medium outline-none cursor-pointer text-neutral"
-                />
-            </div>
-
-            <!-- Time Blocking -->
-            <div class="grid grid-cols-2 gap-3">
-                <div
-                    class="bg-base-200/50 rounded-xl p-3 hover:bg-base-200 transition-colors"
-                >
-                    <label
-                        class="text-xs text-neutral/50 font-medium flex items-center gap-1.5 mb-1"
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <p
+                        class="text-xs font-medium text-neutral/50 flex items-center gap-1.5"
                     >
-                        <Clock class="w-3.5 h-3.5" /> Start
-                    </label>
+                        <Calendar class="w-3.5 h-3.5" /> Due Date
+                    </p>
+
+                    {#if task.dueAt}
+                        <button
+                            class="text-[10px] font-bold text-danger hover:bg-danger/10 px-2 py-1 rounded transition-colors uppercase tracking-wider flex items-center gap-1"
+                            title="Clear due date"
+                            onclick={() => setDueDate("clear")}
+                        >
+                            <X class="w-3 h-3" /> Clear
+                        </button>
+                    {/if}
+                </div>
+
+                <!-- Presets Row -->
+                <div class="flex gap-2">
+                    <button
+                        class="flex-1 py-1.5 rounded-lg text-xs font-semibold bg-base-200/50 hover:bg-base-200 transition-all text-neutral/70 border border-transparent hover:border-base-300"
+                        onclick={() => setDueDate("today")}
+                    >
+                        Today
+                    </button>
+                    <button
+                        class="flex-1 py-1.5 rounded-lg text-xs font-semibold bg-base-200/50 hover:bg-base-200 transition-all text-neutral/70 border border-transparent hover:border-base-300"
+                        onclick={() => setDueDate("tomorrow")}
+                    >
+                        Tomorrow
+                    </button>
+                    <button
+                        class="flex-1 py-1.5 rounded-lg text-xs font-semibold bg-base-200/50 hover:bg-base-200 transition-all text-neutral/70 border border-transparent hover:border-base-300"
+                        onclick={() => setDueDate("week")}
+                    >
+                        Next Week
+                    </button>
+                </div>
+
+                <!-- Big Visual Picker -->
+                <div class="relative group">
+                    <!-- Visual State -->
+                    <button
+                        class="
+                        w-full py-3 px-4 rounded-xl text-sm font-medium transition-all border-2
+                        flex items-center justify-center gap-2
+                        {task.dueAt
+                            ? 'border-primary/20 bg-primary/5 text-primary'
+                            : 'border-base-200 bg-base-100 text-neutral/40 hover:border-base-300 hover:bg-base-200/30'}
+                        "
+                        onclick={() => datePickerRef?.showPicker()}
+                    >
+                        {#if task.dueAt}
+                            <span class="text-lg font-bold">
+                                {new Date(task.dueAt).toLocaleDateString(
+                                    "en-US",
+                                    {
+                                        weekday: "short",
+                                        month: "short",
+                                        day: "numeric",
+                                    },
+                                )}
+                            </span>
+                        {:else}
+                            <Calendar class="w-4 h-4 opacity-50" />
+                            <span>Pick a date...</span>
+                        {/if}
+                    </button>
+
+                    <!-- Hidden Input Trigger -->
                     <input
-                        type="time"
-                        value={startTime}
-                        onchange={(e) =>
-                            updateTime(
-                                "start",
-                                (e.target as HTMLInputElement).value,
-                            )}
-                        class="w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
+                        bind:this={datePickerRef}
+                        type="date"
+                        value={task.dueAt
+                            ? new Date(task.dueAt).toISOString().split("T")[0]
+                            : ""}
+                        onchange={(e) => {
+                            const dateStr = (e.target as HTMLInputElement)
+                                .value;
+                            task.applyUpdate({
+                                dueAt: dateStr
+                                    ? new Date(dateStr).toISOString()
+                                    : null,
+                            });
+                        }}
+                        class="sr-only"
+                        aria-label="Select due date"
                     />
                 </div>
-                <div
-                    class="bg-base-200/50 rounded-xl p-3 hover:bg-base-200 transition-colors"
-                >
-                    <label
-                        class="text-xs text-neutral/50 font-medium flex items-center gap-1.5 mb-1"
-                    >
-                        <Clock class="w-3.5 h-3.5" /> End
-                    </label>
-                    <input
-                        type="time"
-                        value={endTime}
-                        onchange={(e) =>
-                            updateTime(
-                                "end",
-                                (e.target as HTMLInputElement).value,
-                            )}
-                        class="w-full bg-transparent text-sm font-medium outline-none cursor-pointer"
-                    />
-                </div>
             </div>
 
+            <!-- Estimated Duration -->
             <!-- Estimated Duration -->
             <div>
                 <p
@@ -474,15 +483,16 @@
                 >
                     <Clock class="w-3.5 h-3.5" /> Estimated Duration
                 </p>
-                <div class="grid grid-cols-4 gap-2 mb-3">
-                    {#each [15, 30, 60, 120] as mins}
+                <div class="flex flex-wrap gap-2 mb-3">
+                    {#each todoList.preferences.customTimePresets || [15, 30, 45, 60, 90, 120] as mins}
                         <button
                             class="
-                                py-2 rounded-xl text-xs font-semibold transition-all
+                                flex-1 min-w-[3.5rem] px-2 py-1.5 rounded-lg text-xs font-semibold
+                                text-center whitespace-nowrap transition-all
                                 {Math.round(
                                 (task.estimatedTime || 0) / 60000,
                             ) === mins
-                                ? 'bg-primary text-white'
+                                ? 'bg-primary text-white shadow-sm'
                                 : 'bg-base-200 text-neutral/60 hover:bg-base-300'}
                             "
                             onclick={() =>
@@ -490,30 +500,11 @@
                                     estimatedTime: mins * 60 * 1000,
                                 })}
                         >
-                            {mins >= 60 ? `${mins / 60}h` : `${mins}m`}
+                            {mins >= 60
+                                ? `${Number(mins / 60).toLocaleString()}h`
+                                : `${mins}m`}
                         </button>
                     {/each}
-                </div>
-                <div
-                    class="flex items-center gap-3 bg-base-200/50 rounded-xl p-3"
-                >
-                    <input
-                        type="number"
-                        min="1"
-                        max="480"
-                        value={Math.round((task.estimatedTime || 0) / 60000)}
-                        onchange={(e) => {
-                            const mins =
-                                parseInt(
-                                    (e.target as HTMLInputElement).value,
-                                ) || 30;
-                            task.applyUpdate({
-                                estimatedTime: mins * 60 * 1000,
-                            });
-                        }}
-                        class="w-20 bg-transparent text-center text-sm font-bold outline-none text-neutral"
-                    />
-                    <span class="text-sm text-neutral/50">minutes</span>
                 </div>
             </div>
 

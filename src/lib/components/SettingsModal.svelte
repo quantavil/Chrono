@@ -18,6 +18,8 @@
     const isMobile = $derived(uiStore.isMobile);
     let selectedDuration = $state(todoList.preferences.defaultTaskDurationMs);
     let durationMinutes = $state(0);
+    let customPresets = $state([...todoList.preferences.customTimePresets]);
+    let newPresetInput = $state("");
 
     // Sync durationMinutes when selectedDuration changes (e.g. via presets)
     $effect(() => {
@@ -40,7 +42,13 @@
 
     async function handleSave() {
         isSaving = true;
+
+        // Update both preferences
         todoList.updatePreference("defaultTaskDurationMs", selectedDuration);
+        todoList.updatePreference(
+            "customTimePresets",
+            customPresets.sort((a, b) => a - b),
+        );
 
         setTimeout(() => {
             isSaving = false;
@@ -153,6 +161,82 @@
                             (selectedDuration = durationMinutes * 60 * 1000)}
                         class="w-full h-2 bg-base-200 rounded-lg appearance-none cursor-pointer accent-primary"
                     />
+                </div>
+            </section>
+
+            <!-- Custom Presets Management -->
+            <section class="space-y-4 pt-4 border-t border-base-200">
+                <div class="space-y-1">
+                    <h3 class="text-sm font-semibold text-neutral">
+                        Time Presets
+                    </h3>
+                    <p class="text-xs text-neutral/50">
+                        Customize the quick selection buttons available in the
+                        sidebar.
+                    </p>
+                </div>
+
+                <!-- Existing Presets -->
+                <div class="flex flex-wrap gap-2">
+                    {#each customPresets as mins}
+                        <div
+                            class="badge badge-lg gap-2 bg-base-200 text-neutral font-mono text-xs"
+                        >
+                            {mins}m
+                            <button
+                                type="button"
+                                onclick={() => {
+                                    customPresets = customPresets.filter(
+                                        (p) => p !== mins,
+                                    );
+                                }}
+                                class="hover:text-error transition-colors"
+                            >
+                                <X class="w-3 h-3" />
+                            </button>
+                        </div>
+                    {/each}
+                </div>
+
+                <!-- Add New Preset -->
+                <div class="flex items-center gap-2">
+                    <input
+                        type="number"
+                        bind:value={newPresetInput}
+                        placeholder="Add (min)"
+                        class="input input-sm input-bordered w-24 text-sm"
+                        onkeydown={(e) => {
+                            if (e.key === "Enter") {
+                                const val = parseInt(newPresetInput);
+                                if (
+                                    !isNaN(val) &&
+                                    val > 0 &&
+                                    !customPresets.includes(val)
+                                ) {
+                                    customPresets = [...customPresets, val];
+                                    newPresetInput = "";
+                                }
+                            }
+                        }}
+                    />
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-circle btn-ghost"
+                        onclick={() => {
+                            const val = parseInt(newPresetInput);
+                            if (
+                                !isNaN(val) &&
+                                val > 0 &&
+                                !customPresets.includes(val)
+                            ) {
+                                customPresets = [...customPresets, val];
+                                newPresetInput = "";
+                            }
+                        }}
+                    >
+                        <Save class="w-4 h-4 rotate-90" />
+                        <!-- Rotate save icon to look like enter/add or use Plus -->
+                    </button>
                 </div>
             </section>
         </div>

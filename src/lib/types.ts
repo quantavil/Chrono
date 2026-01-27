@@ -84,8 +84,6 @@ export interface Todo {
   last_start_time: string | null;
   position: number;
   recurrence: RecurrenceConfig | null;
-  start_at: string | null;
-  end_at: string | null;
   tags: string[];
   subtasks: Subtask[];
   completed_at: string | null;
@@ -108,8 +106,6 @@ export interface TodoCreateInput {
   due_at?: string | null;
   estimated_time?: number | null;
   recurrence?: RecurrenceConfig | null;
-  start_at?: string | null;
-  end_at?: string | null;
   tags?: string[];
   subtasks?: Subtask[];
   position?: number;
@@ -127,8 +123,6 @@ export interface TodoUpdateInput {
   last_start_time?: string | null;
   position?: number;
   recurrence?: RecurrenceConfig | null;
-  start_at?: string | null;
-  end_at?: string | null;
   tags?: string[];
   subtasks?: Subtask[];
   completed_at?: string | null;
@@ -258,10 +252,12 @@ export interface ModalState {
 
 export interface UserPreferences {
   defaultTaskDurationMs: number;
+  customTimePresets: number[]; // Array of minutes
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
   defaultTaskDurationMs: 60 * 60 * 1000, // 1 hour
+  customTimePresets: [15, 30, 45, 60, 90, 120],
 };
 
 // ============================================================================

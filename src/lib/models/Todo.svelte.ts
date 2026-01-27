@@ -40,8 +40,6 @@ export class TodoModel {
 
     // Recurrence
     recurrence = $state<RecurrenceConfig | null>(null);
-    startAt = $state<string | null>(null);
-    endAt = $state<string | null>(null);
 
     // Metadata
     completedAt = $state<string | null>(null);
@@ -73,8 +71,6 @@ export class TodoModel {
         this.tags = data.tags ?? [];
         this.subtasks = data.subtasks ?? [];
         this.recurrence = data.recurrence;
-        this.startAt = data.start_at;
-        this.endAt = data.end_at;
         this.completedAt = data.completed_at;
         this.createdAt = data.created_at;
         this.updatedAt = data.updated_at;
@@ -216,8 +212,6 @@ export class TodoModel {
             estimated_time: "estimatedTime",
             last_start_time: "lastStartTime",
             accumulated_time: "accumulatedTime",
-            start_at: "startAt",
-            end_at: "endAt",
             is_completed: "isCompleted",
             user_id: "userId",
             completed_at: "completedAt",
@@ -295,8 +289,6 @@ export class TodoModel {
             tags: $state.snapshot(this.tags),
             subtasks: $state.snapshot(this.subtasks),
             recurrence: $state.snapshot(this.recurrence),
-            start_at: this.startAt,
-            end_at: this.endAt,
             completed_at: this.completedAt,
             created_at: this.createdAt,
             updated_at: this.updatedAt,
@@ -332,8 +324,6 @@ export class TodoModel {
             recurrence: $state.snapshot(this.recurrence),
             tags: [...this.tags],
             due_at: shiftDate(this.dueAt),
-            start_at: shiftDate(this.startAt),
-            end_at: shiftDate(this.endAt),
             estimated_time: this.estimatedTime,
             subtasks: this.subtasks.map((s) => ({
                 ...s,

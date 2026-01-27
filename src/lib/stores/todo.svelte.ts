@@ -186,8 +186,6 @@ export class TodoList {
       created_at: now,
       updated_at: now,
       completed_at: null,
-      start_at: input.start_at ?? null,
-      end_at: input.end_at ?? null,
       _dirty: true,
       _new: true,
       _deleted: false,

@@ -176,8 +176,3 @@ export function formatDuration(ms: number): string {
   if (minutes > 0) return `${minutes}m`;
   return '< 1m';
 }
-export function formatTimeOnly(dateStr: string | null | undefined): string {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-}

@@ -24,8 +24,6 @@ export interface Database {
                     last_start_time?: string | null;
                     position?: number;
                     recurrence?: RecurrenceConfig | null;
-                    start_at?: string | null;
-                    end_at?: string | null;
                     deadline?: string | null;
                     tags?: string[];
                     subtasks?: Subtask[];
@@ -41,8 +39,6 @@ export interface Database {
                     last_start_time?: string | null;
                     position?: number;
                     recurrence?: RecurrenceConfig | null;
-                    start_at?: string | null;
-                    end_at?: string | null;
                     deadline?: string | null;
                     tags?: string[];
                     subtasks?: Subtask[];
