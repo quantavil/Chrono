@@ -7,9 +7,6 @@
         Calendar,
         Tag,
         Clock,
-        Type,
-        AlignLeft,
-        MoreVertical,
         Trash2,
         CheckSquare,
         AlertCircle,
@@ -27,7 +24,6 @@
         getDatePresetISO,
         formatRelativeDate,
         formatTime,
-        // formatDateForInput,
     } from "$lib/utils/formatTime";
     import TiptapEditor from "./TiptapEditor.svelte";
     import type { Priority, RecurrenceConfig } from "$lib/types";
@@ -45,8 +41,6 @@
 
     const todoList = getTodoStore();
 
-    let titleRef = $state<HTMLTextAreaElement | null>(null);
-    let datePickerRef = $state<HTMLInputElement | null>(null);
     // -------------------------------------------------------------------------
     // Local State
     // -------------------------------------------------------------------------
@@ -57,7 +51,6 @@
     // Recurrence
     let recurrenceDays = $state<number[]>([]);
 
-    const activeTags = $derived(task.tags);
     const isCompleted = $derived(task.isCompleted);
     const subtaskProgress = $derived(task.subtaskProgress);
 
@@ -70,13 +63,26 @@
     // Sync Reactivity
     // -------------------------------------------------------------------------
     $effect(() => {
-        // Sync Recurrence Days derived from task
-        if (task.recurrence?.type === "daily") {
-            recurrenceDays = [0, 1, 2, 3, 4, 5, 6];
-        } else if (task.recurrence?.type === "weekly" && task.recurrence.days) {
-            recurrenceDays = [...task.recurrence.days];
-        } else {
-            recurrenceDays = [];
+        // One-way sync from task to local state only when task changes externally?
+        // Actually, better to just derive it or init it.
+        // If we want it to be editable, it needs to be state.
+        // But we shouldn't overwrite it if user is editing.
+        // Simple fix: Check if we are already in sync.
+
+        const currentDays =
+            task.recurrence?.type === "daily"
+                ? [0, 1, 2, 3, 4, 5, 6]
+                : task.recurrence?.type === "weekly"
+                  ? (task.recurrence.days ?? [])
+                  : [];
+
+        // Only update local state if it differs significantly (e.g. initial load or remote update)
+        // Set comparison
+        const sortedCurrent = [...currentDays].sort().join(",");
+        const sortedLocal = [...recurrenceDays].sort().join(",");
+
+        if (sortedCurrent !== sortedLocal) {
+            recurrenceDays = currentDays;
         }
     });
 
@@ -383,8 +389,8 @@
                             class="
                                 flex-1 py-1.5 rounded-lg text-xs font-semibold border transition-all
                                 {task.priority === p
-                                ? `bg-${config.color}/10 text-${config.color} border-${config.color} border-opacity-100`
-                                : 'border-base-300 text-neutral/40 hover:border-neutral/30'}
+                                ? `${config.classes.button}`
+                                : `${config.classes.buttonInactive}`}
                             "
                             onclick={() => handlePriorityChange(p)}
                         >
@@ -530,6 +536,28 @@
                     "
                     placeholder="Add tag and press Enter..."
                 />
+
+                <!-- Available Tags Suggestions -->
+                {#if todoList.availableTags.length > 0}
+                    <div class="mt-2 flex flex-wrap gap-1.5">
+                        <span
+                            class="text-[10px] font-bold text-neutral/40 uppercase tracking-widest self-center mr-1"
+                            >Available:</span
+                        >
+                        {#each todoList.availableTags.filter((t) => !task.tags.includes(t)) as tag}
+                            <button
+                                class="px-2 py-1 rounded-lg bg-base-200 hover:bg-primary/10 hover:text-primary text-xs font-medium text-neutral/60 transition-colors border border-transparent hover:border-primary/20"
+                                onclick={() => {
+                                    todoList.updateTask(task.id, {
+                                        tags: [...task.tags, tag],
+                                    });
+                                }}
+                            >
+                                + {tag}
+                            </button>
+                        {/each}
+                    </div>
+                {/if}
             </div>
         </div>
 

@@ -2,7 +2,17 @@
   Collapsible navigation sidebar for filtering tasks by category, project, or status.
 -->
 <script lang="ts">
-    import { Clock, Sparkles, ListTodo, Flame, Zap, X } from "lucide-svelte";
+    import {
+        Clock,
+        Sparkles,
+        ListTodo,
+        Flame,
+        Zap,
+        X,
+        Tag,
+        Plus,
+        Trash2,
+    } from "lucide-svelte";
     import { formatTimeCompact, formatDateHeader } from "$lib/utils/formatTime";
     import { getTodoStore, getAuthStore } from "$lib/context";
     import { uiStore } from "$lib/stores/ui.svelte";
@@ -27,6 +37,30 @@
 
     // -------------------------------------------------------------------------
     // Local State
+    let isAddingTag = $state(false);
+    let newTagInput = $state("");
+    let newTagInputEl = $state<HTMLInputElement | null>(null);
+
+    function toggleTagFilter(tag: string) {
+        todoList.toggleTagFilter(tag);
+        // On mobile close sidebar after selection
+        if (uiStore.isMobile) {
+            uiStore.isMobileSidebarOpen = false;
+        }
+    }
+
+    function handleAddTag(e?: Event) {
+        e?.preventDefault();
+        todoList.addTag(newTagInput);
+        newTagInput = "";
+        isAddingTag = false;
+    }
+
+    $effect(() => {
+        if (isAddingTag && newTagInputEl) {
+            newTagInputEl.focus();
+        }
+    });
     // -------------------------------------------------------------------------
 </script>
 
@@ -88,16 +122,14 @@
         >
             <span class="text-neutral/50">Daily Goal</span>
             {#if stats.totalTasks > 0}
-                {@const percent =
-                    (stats.completedTasks / stats.totalTasks) * 100}
-                {#if percent >= 80}
+                {#if stats.completionRate >= 80}
                     <div
                         class="flex items-center gap-1 text-warning animate-pulse-slow"
                     >
                         <Flame class="w-3.5 h-3.5 fill-current" />
                         <span>On Fire!</span>
                     </div>
-                {:else if percent >= 50}
+                {:else if stats.completionRate >= 50}
                     <div class="flex items-center gap-1 text-primary">
                         <Zap class="w-3.5 h-3.5 fill-current" />
                         <span>Focused</span>
@@ -110,11 +142,7 @@
             <div class="flex items-end justify-between">
                 <span
                     class="text-3xl font-bold text-neutral tabular-nums tracking-tight"
-                    >{Math.round(
-                        stats.totalTasks > 0
-                            ? (stats.completedTasks / stats.totalTasks) * 100
-                            : 0,
-                    )}%</span
+                    >{Math.round(stats.completionRate)}%</span
                 >
                 <div class="text-right">
                     <span class="text-xs text-neutral/50 block">completed</span>
@@ -131,9 +159,7 @@
                 <div
                     class="h-full transition-all duration-700 ease-out relative"
                     style="
-                        width: {stats.totalTasks > 0
-                        ? (stats.completedTasks / stats.totalTasks) * 100
-                        : 0}%;
+                        width: {stats.completionRate}%;
                         background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
                      "
                 >
@@ -161,13 +187,112 @@
         </div>
     </div>
 
-    <!-- Navigation -->
-    <nav class="flex-1 space-y-1">
-        <button
-            class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary/10 text-primary font-bold text-sm"
-        >
-            <ListTodo class="w-4.5 h-4.5" />
-            <span>My Tasks</span>
-        </button>
+    <nav class="flex-1 space-y-6 overflow-y-auto scrollbar-hide">
+        <!-- Main Nav -->
+        <div class="space-y-1">
+            <button
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-colors
+                {todoList.filters.tags.length === 0
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-neutral/70 hover:bg-base-200'}"
+                onclick={() => todoList.clearFilters()}
+            >
+                <ListTodo class="w-4.5 h-4.5" />
+                <span>My Tasks</span>
+            </button>
+        </div>
+
+        <!-- Tags Section -->
+        <div class="space-y-2">
+            <div class="px-3 flex items-center justify-between group">
+                <h3
+                    class="text-xs font-bold text-neutral/40 uppercase tracking-widest"
+                >
+                    Tags
+                </h3>
+                <button
+                    class="p-1 rounded hover:bg-base-200 text-neutral/40 hover:text-primary transition-colors"
+                    onclick={() => (isAddingTag = true)}
+                    aria-label="Add Tag"
+                >
+                    <Plus class="w-3.5 h-3.5" />
+                </button>
+            </div>
+
+            <div class="space-y-0.5">
+                {#each todoList.availableTags as tag (tag)}
+                    {@const isActive = todoList.filters.tags.includes(tag)}
+                    <div class="relative group/tag">
+                        <button
+                            class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                            {isActive
+                                ? 'bg-primary/10 text-primary'
+                                : 'text-neutral/70 hover:bg-base-200'}"
+                            onclick={() => toggleTagFilter(tag)}
+                        >
+                            <Tag
+                                class="w-4 h-4 {isActive ? 'fill-current' : ''}"
+                            />
+                            <span class="truncate">{tag}</span>
+
+                            <!-- Count -->
+                            <span
+                                class="ml-auto text-xs opacity-50 font-normal"
+                            >
+                                {stats.tagCounts[tag] ?? 0}
+                            </span>
+                        </button>
+
+                        <!-- Delete Action (Hover) -->
+                        <button
+                            class="absolute right-1 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-neutral/40 hover:text-danger hover:bg-danger/10 opacity-0 group-hover/tag:opacity-100 transition-all"
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                todoList.deleteTag(tag);
+                            }}
+                            title="Delete Tag"
+                        >
+                            <Trash2 class="w-3.5 h-3.5" />
+                        </button>
+                    </div>
+                {/each}
+
+                <!-- Add Tag Input -->
+                {#if isAddingTag}
+                    <form class="px-2 py-1" onsubmit={handleAddTag}>
+                        <div
+                            class="flex items-center gap-2 bg-base-200 rounded-lg px-3 py-2 ring-2 ring-primary"
+                        >
+                            <Tag class="w-4 h-4 text-primary" />
+                            <input
+                                bind:this={newTagInputEl}
+                                bind:value={newTagInput}
+                                type="text"
+                                class="bg-transparent border-none outline-none w-full text-sm placeholder:text-neutral/30 min-w-0"
+                                placeholder="Tag name..."
+                                onblur={() => {
+                                    if (!newTagInput) isAddingTag = false;
+                                }}
+                                onkeydown={(e) => {
+                                    if (e.key === "Escape") isAddingTag = false;
+                                }}
+                            />
+                        </div>
+                    </form>
+                {/if}
+
+                {#if todoList.availableTags.length === 0 && !isAddingTag}
+                    <div class="px-3 py-4 text-center">
+                        <p class="text-xs text-neutral/40 mb-2">No tags yet</p>
+                        <button
+                            class="text-xs font-bold text-primary hover:underline"
+                            onclick={() => (isAddingTag = true)}
+                        >
+                            Create a tag
+                        </button>
+                    </div>
+                {/if}
+            </div>
+        </div>
     </nav>
 </div>

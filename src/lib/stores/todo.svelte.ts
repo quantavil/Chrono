@@ -28,6 +28,9 @@ export class TodoList {
   private _isLoading = $state(true);
   private _undoStack = $state<UndoAction[]>([]);
   private _preferences = $state<UserPreferences>(storageService.loadPreferences());
+  private _tags = $state<string[]>(storageService.loadTags());
+  // We'll manage filters in the store to allow deeper integration (e.g. persisted filters)
+  private _filters = $state<FilterState>({ ...storageService.loadFilters() });
 
   private _tickInterval: any;
   private _unsubscribeRealtime: (() => void) | null = null;
@@ -44,6 +47,7 @@ export class TodoList {
     // Load initial data
     const localTodos = storageService.loadLocalTodos();
     this._items = localTodos.map((t) => new TodoModel(t));
+    this._syncTagsFromTasks(); // Ensure tags are synced
     this._isLoading = false;
 
     // Start Timer Loop
@@ -51,22 +55,7 @@ export class TodoList {
   }
 
   // Persistence & Reactivity
-
-  // Note: In Svelte 5 classes, we can use $effect if we register it in effect root.
-  // However, since this is a singleton exported at module level, effects might not strictly attach to component tree.
-  // Best practice for stores is often explicit save or subscriptions.
-  // But we are in a .svelte.ts module.
-  // calling $effect(() => ...) at top level of module works? No.
-  // Inside constructor? Yes, but needs a root.
-  // We will stick to explicit save schedules triggered by actions + reactivity on change?
-  // Actually, `TodoModel` marks itself dirty. We can watch `_items` in an effect if we are inside a component.
-  // But here we are the store.
-  // We will use a standard "subscription" pattern via $effect in the App.svelte or use `setInterval`.
-  // OR we rely on the fact that `_items` is reactive.
-
-  // Let's implement explicit save for now to be safe and robust without relying on unmounted effects.
-  // Actually, we can use a simple `$effect.root` if we want, but explicit method calls `save()` are clearer.
-  // I will add `_save()` calls to all mutators.
+  // We use explicit save calls to robustly persist state changes.
 
   private _save() {
     // We defer this slightly to batch updates
@@ -80,24 +69,40 @@ export class TodoList {
 
   // Getters
 
+  private _applyFilters(todos: TodoModel[]): TodoModel[] {
+    let filtered = todos;
+
+    // Apply Tag Filter
+    if (this._filters.tags.length > 0) {
+      filtered = filtered.filter(t =>
+        this._filters.tags.every(filterTag => t.tags.includes(filterTag))
+      );
+    }
+
+    // Apply Priority Filter
+    if (this._filters.priority !== 'all') {
+      filtered = filtered.filter(t => t.priority === this._filters.priority);
+    }
+
+    return filtered;
+  }
+
   get all(): TodoModel[] {
     return this._items.filter(t => !t._deleted);
   }
 
   get activeTodos(): TodoModel[] {
-    return this.all
-      .filter((t) => !t.isCompleted)
-      .sort((a, b) => a.position - b.position);
+    const active = this.all.filter((t) => !t.isCompleted);
+    return this._applyFilters(active).sort((a, b) => a.position - b.position);
   }
 
   get completedTodos(): TodoModel[] {
-    return this.all
-      .filter((t) => t.isCompleted)
-      .sort(
-        (a, b) =>
-          new Date(b.completedAt || 0).getTime() -
-          new Date(a.completedAt || 0).getTime()
-      );
+    const completed = this.all.filter((t) => t.isCompleted);
+    return this._applyFilters(completed).sort(
+      (a, b) =>
+        new Date(b.completedAt || 0).getTime() -
+        new Date(a.completedAt || 0).getTime()
+    );
   }
 
   get runningTodo(): TodoModel | null {
@@ -144,6 +149,14 @@ export class TodoList {
     return this._preferences;
   }
 
+  get availableTags() {
+    return this._tags;
+  }
+
+  get filters() {
+    return this._filters;
+  }
+
   get loading() { return this._isLoading; }
   get syncing() { return storageService.isSyncing; }
   get error() { return storageService.lastError; }
@@ -181,6 +194,11 @@ export class TodoList {
       _deleted: false,
       _syncError: null,
     });
+
+    // Sync tags (add any new ones to global list)
+    if (input.tags) {
+      input.tags.forEach(t => this.addTag(t));
+    }
 
     this._items.push(newItem);
     this._save();
@@ -250,30 +268,45 @@ export class TodoList {
     } else {
       item.applyUpdate(fields);
     }
+
+    // Sync tags if we updated them
+    if ('tags' in fields && Array.isArray(fields.tags)) {
+      fields.tags.forEach((t: string) => this.addTag(t));
+    }
+
     this._save();
   }
 
   reorder(fromIndex: number, toIndex: number) {
-    const active = this.activeTodos; // This is a sorted view, but we need to manipulate positions
-    // We better rely on the view that passed the indices.
-    // Assuming indices correspond to "Active Todos" view.
+    const active = this.activeTodos;
+
+    // Safety check for bounds
+    if (fromIndex < 0 || fromIndex >= active.length || toIndex < 0 || toIndex >= active.length) {
+      console.error("Reorder out of bounds", fromIndex, toIndex);
+      return;
+    }
 
     if (fromIndex === toIndex) return;
 
-    // Remove from list
-    // Note: splice on a derived array won't affect source, we need to map positions
     // 1. Get the item moving
     const itemMoving = active[fromIndex];
-    const itemTarget = active[toIndex];
-
     if (!itemMoving) return;
 
-    // Visual reorder in the filtered list
+    // 2. We need to reorder within the potentially filtered list, 
+    // but perserve relative order in total list...
+    // Actually simpler: Just swap positions of items in the filtered view
+    // AND then normalize the whole list? No, that messes up partial views.
+    // 
+    // Strategy:
+    // Move visual item in the specific subarray (activeTodos)
+    // Then reassign positions for that subarray based on index.
+    // This allows reordering within a filtered tag view which is nice.
+
     const newOrder = [...active];
     newOrder.splice(fromIndex, 1);
     newOrder.splice(toIndex, 0, itemMoving);
 
-    // Update positions based on new index
+    // Update positions
     newOrder.forEach((t, i) => {
       t.position = i;
       t.markDirty();
@@ -355,9 +388,144 @@ export class TodoList {
     storageService.savePreferences(this._preferences);
   }
 
+  // Tags Management
+
+  addTag(tag: string) {
+    if (!tag.trim()) return;
+    if (!this._tags.includes(tag)) {
+      this._tags.push(tag);
+      this._tags.sort();
+      storageService.saveTags(this._tags);
+    }
+  }
+
+  deleteTag(tag: string) {
+    // 1. Capture snapshot for undo
+    // We need to know which tasks had this tag to restore it accurately
+    const affectedTaskIds: string[] = [];
+    this._items.forEach(t => {
+      if (t.tags.includes(tag)) {
+        affectedTaskIds.push(t.id);
+      }
+    });
+
+    const wasInFilters = this._filters.tags.includes(tag);
+
+    // Undo Action
+    this._pushUndo({
+      id: crypto.randomUUID(),
+      type: "DELETE_TAG",
+      timestamp: Date.now(),
+      data: { tag, affectedTaskIds, wasInFilters },
+      undo: () => {
+        // Restore to global list
+        if (!this._tags.includes(tag)) {
+          this._tags.push(tag);
+          this._tags.sort();
+          storageService.saveTags(this._tags);
+        }
+
+        // Restore to tasks
+        affectedTaskIds.forEach(id => {
+          const t = this.getById(id);
+          if (t && !t.tags.includes(tag)) {
+            t.tags = [...t.tags, tag];
+            t.markDirty();
+          }
+        });
+
+        // Restore filter if it was active
+        if (wasInFilters && !this._filters.tags.includes(tag)) {
+          this._filters.tags = [...this._filters.tags, tag];
+        }
+
+        this._save();
+        toastManager.success(`Restored tag "${tag}"`);
+      }
+    });
+
+    // 2. Perform Deletion
+    // Remove from available tags
+    if (this._tags.includes(tag)) {
+      this._tags = this._tags.filter(t => t !== tag);
+      storageService.saveTags(this._tags);
+    }
+
+    // Remove from all todos
+    let updated = false;
+    this._items.forEach(todo => {
+      if (todo.tags.includes(tag)) {
+        todo.tags = todo.tags.filter(t => t !== tag);
+        todo._dirty = true;
+        updated = true;
+      }
+    });
+
+    // Remove from filters if active
+    if (this._filters.tags.includes(tag)) {
+      // Bug fixed: Was calling toggle which might re-add if logic changed
+      this._filters.tags = this._filters.tags.filter(t => t !== tag);
+    }
+
+    if (updated) this._save();
+
+    // 3. Show Toast
+    toastManager.add({
+      type: "info",
+      message: `Deleted tag "${tag}"`,
+      action: { label: "Undo", onClick: () => this.undo() },
+    });
+  }
+
+  toggleTagFilter(tag: string) {
+    if (this._filters.tags.includes(tag)) {
+      this._filters.tags = this._filters.tags.filter(t => t !== tag);
+    } else {
+      // Decide if multi-select or single-select. 
+      // TickTick often allows single context or multi. 
+      // Let's support adding to filter (AND logic implemented in getter).
+      // But arguably, user might want to switch tags. 
+      // Let's do single select first for sidebar behavior, or toggle.
+      // If clicking a tag in sidebar, usually it selects that ONE tag.
+      // So we clear others unless generic multi-select is requested.
+      // For sidebar "navigation", it's usually 1 tag context.
+      this._filters.tags = [tag];
+    }
+    // We don't necessarily save filters for session persistence unless requested.
+    // storageservice has saveFilters.
+    // storageService.saveFilters(this._filters); 
+  }
+
+  clearFilters() {
+    this._filters.tags = [];
+    // storageService.saveFilters(this._filters);
+  }
+
   // =========================================================================
   // Helpers
   // =========================================================================
+
+  private _syncTagsFromTasks() {
+    const allTaskTags = new Set<string>();
+    this._items.forEach(t => {
+      if (!t._deleted) {
+        t.tags.forEach(tag => allTaskTags.add(tag));
+      }
+    });
+
+    let changed = false;
+    allTaskTags.forEach(tag => {
+      if (!this._tags.includes(tag)) {
+        this._tags.push(tag);
+        changed = true;
+      }
+    });
+
+    if (changed) {
+      this._tags.sort();
+      storageService.saveTags(this._tags);
+    }
+  }
 
   getById(id: string): TodoModel | undefined {
     return this._items.find(t => t.id === id && !t._deleted);

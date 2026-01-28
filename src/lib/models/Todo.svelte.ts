@@ -8,6 +8,7 @@ import type {
     Subtask,
     RecurrenceConfig,
     Priority,
+    PriorityOrNone,
     TimerDisplayData,
 } from "../types";
 import { formatTime, calculateCurrentTime, nowTimestamp, isOverdue } from "../utils/formatTime";
@@ -28,7 +29,7 @@ export class TodoModel {
     description = $state<string | null>(null);
     notes = $state<string | null>(null);
     isCompleted = $state(false);
-    priority = $state<Priority>("medium");
+    priority = $state<PriorityOrNone>("medium");
     dueAt = $state<string | null>(null);
 
     // Timer Data

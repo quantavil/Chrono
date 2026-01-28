@@ -14,22 +14,21 @@
     } from "lucide-svelte";
     import { toastManager } from "$lib/stores/toast.svelte";
     import type { Toast, ToastType } from "$lib/types";
-
-    // -------------------------------------------------------------------------
-    // Constants
-    // -------------------------------------------------------------------------
-    const TOAST_CONFIG = {
-        success: { icon: CheckCircle, color: "accent" },
-        error: { icon: XCircle, color: "red-500" },
-        warning: { icon: AlertTriangle, color: "amber-500" },
-        info: { icon: Info, color: "primary" },
-    } as const;
+    import { TOAST_CONFIG } from "$lib/types";
 
     const POSITION_CLASSES: Record<string, string> = {
         "top-right": "top-4 right-4 items-end",
         "top-center": "top-4 left-1/2 -translate-x-1/2 items-center",
         "bottom-right": "bottom-4 right-4 items-end",
         "bottom-center": "bottom-4 left-1/2 -translate-x-1/2 items-center",
+    };
+
+    const ICONS = {
+        CheckCircle,
+        XCircle,
+        AlertTriangle,
+        Info,
+        CheckCircle2: CheckCircle, // Mapping CheckCircle2 to CheckCircle as fallback or alias if needed
     };
 
     // -------------------------------------------------------------------------
@@ -57,20 +56,7 @@
     // Helpers
     // -------------------------------------------------------------------------
     function getConfig(type: ToastType) {
-        const config = TOAST_CONFIG[type] ?? TOAST_CONFIG.info;
-        return {
-            Icon: config.icon,
-            color: config.color,
-        };
-    }
-
-    function getStyleClasses(color: string) {
-        return {
-            bg: `bg-${color}/10`,
-            icon: `text-${color}`,
-            border: `border-${color}/20`,
-            progress: `bg-${color}`,
-        };
+        return TOAST_CONFIG[type] ?? TOAST_CONFIG.info;
     }
 
     // -------------------------------------------------------------------------
@@ -100,8 +86,8 @@
         aria-live="polite"
     >
         {#each toasts as toast (toast.id)}
-            {@const { Icon, color } = getConfig(toast.type)}
-            {@const styles = getStyleClasses(color)}
+            {@const config = getConfig(toast.type)}
+            {@const Icon = ICONS[config.icon as keyof typeof ICONS] || Info}
 
             <div
                 animate:flip={{ duration: 200, easing: quintOut }}
@@ -109,16 +95,20 @@
                 out:fade={{ duration: 150 }}
                 class="pointer-events-auto flex items-start gap-3 w-full px-4 py-3
                        rounded-2xl border bg-base-100/95 backdrop-blur-sm
-                       shadow-lg shadow-neutral/5 {styles.border}"
+                       shadow-lg shadow-neutral/5 {config.classes.border}"
                 role="alert"
                 onmouseenter={() => toastManager.pause(toast.id)}
                 onmouseleave={() => toastManager.resume(toast.id)}
             >
                 <!-- Icon -->
                 <div
-                    class="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center {styles.bg}"
+                    class="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center {config
+                        .classes.bg}"
                 >
-                    <Icon class="w-4 h-4 {styles.icon}" strokeWidth={2.5} />
+                    <Icon
+                        class="w-4 h-4 {config.classes.text}"
+                        strokeWidth={2.5}
+                    />
                 </div>
 
                 <!-- Message -->
@@ -155,8 +145,14 @@
                         class="absolute bottom-0 left-4 right-4 h-0.5 rounded-full overflow-hidden bg-base-200"
                     >
                         <div
-                            class="h-full rounded-full {styles.progress} opacity-50"
-                            style="animation: toast-shrink {toast.duration}ms linear forwards;"
+                            class="h-full rounded-full {config.classes
+                                .progress} opacity-50"
+                            style="
+                                animation: toast-shrink {toast.duration}ms linear forwards;
+                                animation-play-state: {toast.pausedAt
+                                ? 'paused'
+                                : 'running'};
+                            "
                         ></div>
                     </div>
                 {/if}

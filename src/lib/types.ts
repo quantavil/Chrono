@@ -37,7 +37,8 @@ export interface AuthState {
 // Priority & Status
 // ============================================================================
 
-export type Priority = 'high' | 'medium' | 'low' | null;
+export type Priority = 'high' | 'medium' | 'low';
+export type PriorityOrNone = Priority | null;
 
 export type TaskStatus = 'active' | 'completed' | 'overdue';
 
@@ -76,7 +77,7 @@ export interface Todo {
   description: string | null;
   notes: string | null;
   is_completed: boolean;
-  priority: Priority;
+  priority: PriorityOrNone;
   due_at: string | null; // ISO timestamp
   accumulated_time: number; // milliseconds
   estimated_time: number | null; // milliseconds - for time estimates
@@ -101,7 +102,7 @@ export interface TodoCreateInput {
   title: string;
   description?: string | null;
   notes?: string | null;
-  priority?: Priority;
+  priority?: PriorityOrNone;
   due_at?: string | null;
   estimated_time?: number | null;
   recurrence?: RecurrenceConfig | null;
@@ -115,7 +116,7 @@ export interface TodoUpdateInput {
   description?: string | null;
   notes?: string | null;
   is_completed?: boolean;
-  priority?: Priority;
+  priority?: PriorityOrNone;
   due_at?: string | null;
   accumulated_time?: number;
   estimated_time?: number | null;
@@ -176,7 +177,7 @@ export type SortField = 'created' | 'due' | 'priority' | 'title' | 'position';
 export type SortOrder = 'asc' | 'desc';
 
 export interface FilterState {
-  priority: Priority | 'all';
+  priority: PriorityOrNone | 'all';
   status: 'all' | 'active' | 'completed' | 'overdue';
   tags: string[];
   hasDueDate: boolean | null;
@@ -217,6 +218,7 @@ export type UndoActionType =
   | 'DELETE_TODO'
   | 'COMPLETE_TODO'
   | 'UPDATE_TODO'
+  | 'DELETE_TAG'
   | 'CLEAR_COMPLETED';
 
 export interface UndoAction {
@@ -286,6 +288,7 @@ export const LOCAL_STORAGE_KEYS = {
   VERSION: 'chronos_version',
   UNDO_STACK: 'chronos_undo',
   PREFERENCES: 'chronos_preferences_v2',
+  TAGS: 'chronos_tags_v1',
 } as const;
 
 // ============================================================================
@@ -318,18 +321,102 @@ export const UNDO_EXPIRY_MS = 30000; // 30 seconds
 export const PRIORITY_CONFIG = {
   high: {
     label: "High",
-    color: "danger",
+    color: "red-500",
     sortWeight: 0,
+    classes: {
+      bg: "bg-red-500/10",
+      bgHover: "hover:bg-red-500/20",
+      text: "text-red-500",
+      border: "border-red-500",
+      ring: "ring-red-500/30",
+      badge: "bg-red-500/10 text-red-500 border-red-500/20",
+      button: "bg-red-500/10 text-red-500 border-red-500 hover:bg-red-500/20",
+      buttonInactive: "border-base-300 text-neutral/40 hover:border-red-500/30 hover:text-red-500/60",
+    },
   },
   medium: {
     label: "Medium",
-    color: "warning",
+    color: "amber-500",
     sortWeight: 1,
+    classes: {
+      bg: "bg-amber-500/10",
+      bgHover: "hover:bg-amber-500/20",
+      text: "text-amber-500",
+      border: "border-amber-500",
+      ring: "ring-amber-500/30",
+      badge: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+      button: "bg-amber-500/10 text-amber-500 border-amber-500 hover:bg-amber-500/20",
+      buttonInactive: "border-base-300 text-neutral/40 hover:border-amber-500/30 hover:text-amber-500/60",
+    },
   },
   low: {
     label: "Low",
-    color: "success",
+    color: "emerald-500",
     sortWeight: 2,
+    classes: {
+      bg: "bg-emerald-500/10",
+      bgHover: "hover:bg-emerald-500/20",
+      text: "text-emerald-500",
+      border: "border-emerald-500",
+      ring: "ring-emerald-500/30",
+      badge: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+      button: "bg-emerald-500/10 text-emerald-500 border-emerald-500 hover:bg-emerald-500/20",
+      buttonInactive: "border-base-300 text-neutral/40 hover:border-emerald-500/30 hover:text-emerald-500/60",
+    },
+  },
+  none: {
+    label: "None",
+    color: "neutral",
+    sortWeight: 3,
+    classes: {
+      bg: "bg-base-200",
+      bgHover: "hover:bg-base-300",
+      text: "text-neutral/70",
+      border: "border-transparent",
+      ring: "ring-neutral/20",
+      badge: "bg-base-200 text-neutral/60 border-transparent",
+      button: "bg-base-200 text-neutral/70 border-transparent hover:bg-base-300",
+      buttonInactive: "border-base-300 text-neutral/40 hover:border-neutral/30 hover:text-neutral/60",
+    },
+  },
+} as const;
+
+export const TOAST_CONFIG = {
+  success: {
+    icon: "CheckCircle",
+    classes: {
+      bg: "bg-emerald-500/10",
+      text: "text-emerald-500",
+      border: "border-emerald-500/20",
+      progress: "bg-emerald-500",
+    },
+  },
+  error: {
+    icon: "XCircle",
+    classes: {
+      bg: "bg-red-500/10",
+      text: "text-red-500",
+      border: "border-red-500/20",
+      progress: "bg-red-500",
+    },
+  },
+  warning: {
+    icon: "AlertTriangle",
+    classes: {
+      bg: "bg-amber-500/10",
+      text: "text-amber-500",
+      border: "border-amber-500/20",
+      progress: "bg-amber-500",
+    },
+  },
+  info: {
+    icon: "Info",
+    classes: {
+      bg: "bg-blue-500/10",
+      text: "text-blue-500",
+      border: "border-blue-500/20",
+      progress: "bg-blue-500",
+    },
   },
 } as const;
 

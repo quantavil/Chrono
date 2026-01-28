@@ -19,12 +19,20 @@ import {
  */
 class StorageService {
     // Save state
-    isSyncing = $state(false);
-    lastError = $state<string | null>(null);
-    lastSyncTime = $state<number>(0);
+    private _isSyncing = $state(false);
+    private _lastError = $state<string | null>(null);
+    private _lastSyncTime = $state<number>(0);
+
+    get isSyncing() { return this._isSyncing; }
+    get lastError() { return this._lastError; }
+    get lastSyncTime() { return this._lastSyncTime; }
+
+    set isSyncing(v: boolean) { this._isSyncing = v; }
+    set lastError(v: string | null) { this._lastError = v; }
+    set lastSyncTime(v: number) { this._lastSyncTime = v; }
 
     constructor() {
-        this.lastSyncTime = Number(
+        this._lastSyncTime = Number(
             localStorage.getItem(LOCAL_STORAGE_KEYS.LAST_SYNC) || 0
         );
     }
@@ -85,6 +93,25 @@ class StorageService {
             localStorage.setItem(LOCAL_STORAGE_KEYS.PREFERENCES, JSON.stringify(prefs));
         } catch (e) {
             console.error("Failed to save preferences", e);
+        }
+    }
+
+    loadTags(): string[] {
+        try {
+            const json = localStorage.getItem(LOCAL_STORAGE_KEYS.TAGS);
+            if (!json) return [];
+            return JSON.parse(json);
+        } catch (e) {
+            console.error("Failed to load tags", e);
+            return [];
+        }
+    }
+
+    saveTags(tags: string[]): void {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEYS.TAGS, JSON.stringify(tags));
+        } catch (e) {
+            console.error("Failed to save tags", e);
         }
     }
 
