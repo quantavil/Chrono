@@ -1,49 +1,11 @@
 <script lang="ts">
     import { fade, scale } from "svelte/transition";
-    import {
-        Minimize2,
-        Pause,
-        Play,
-        Square,
-        CheckCircle2,
-        X,
-        Maximize2,
-    } from "lucide-svelte";
+    import { onDestroy } from "svelte";
+    import { Minimize2, Pause, Play, Waves, CheckCircle2 } from "lucide-svelte";
     import { getTodoStore } from "$lib/context";
     import { uiStore } from "$lib/stores/ui.svelte";
 
     const todoList = getTodoStore();
-
-    // Get the currently running task, or the last one if we are paused inside focus mode?
-    // Actually, focus mode implies we are focusing on *something*.
-    // If we pause, we are still in focus mode until we exit.
-    // So we should track the *active* task.
-    // However, todoList.runningTodo might be null if paused.
-    // But we usually enter focus mode for a specific task.
-    // Let's use `uiStore.focusedTaskId` or derive it.
-    // Better: FocusSession should probably lock onto the task that started it.
-    // But for simplicity, let's look for the running task.
-    // IF no task is running, does the Focus Mode close?
-    // "when user exist the will be still running" -> Exiting keeps it running.
-    // If I stop the timer inside Focus Mode, should it close? Usually yes or go to "Select Task" state.
-    // Let's assume Focus mode is bound to the task that was running when opened.
-
-    // We can use a derived store for the task to display.
-    // If todoList.runningTodo is null, we might show "Ready to Focus" or just the last focused task.
-    // But simpler: Bind to `todoList.runningTodo`. If null, show a placeholder or close?
-    // If I pause in focus mode, `runningTodo` becomes null. The UI would disappear or break if I rely only on `runningTodo`.
-    // Be careful. `todo.startTime` is nullified on pause? No, `isRunning` connects to `runningTodo`.
-    // I need the task object even if paused.
-
-    // Let's find the task that *was* running or is currently selected.
-    // We can iterate `todoList.activeTodos` and find the one that has `accumulated_time` changing? No.
-    // Let's use `todoList.activeTodos` and find the one with `isRunning`.
-    // If none are running (paused), we should probably stay on the task that *was* active.
-    // How do we know which one?
-    // Maybe `uiStore.focusedTaskId`?
-
-    // Alternative: `FocusSession` takes a `taskId` prop? No, it's a global overlay.
-    // Let's make `uiStore.focusModeTaskId` to track which task we are focusing on.
 
     let activeTask = $derived(
         uiStore.focusedTaskId
@@ -51,18 +13,93 @@
             : todoList.runningTodo,
     );
 
-    // Start/Stop handlers
+    // -------------------------------------------------------------------------
+    // White Noise Logic
+    // -------------------------------------------------------------------------
+    let isWhiteNoisePlaying = $state(false);
+    let audioContext: AudioContext | null = null;
+    let gainNode: GainNode | null = null;
+    let whiteNoiseSource: AudioBufferSourceNode | null = null;
+
+    function initAudio() {
+        if (!audioContext) {
+            audioContext = new (window.AudioContext ||
+                (window as any).webkitAudioContext)();
+        }
+    }
+
+    function createWhiteNoiseBuffer(): AudioBuffer | null {
+        if (!audioContext) return null;
+        const bufferSize = audioContext.sampleRate * 2; // 2 seconds buffer
+        const buffer = audioContext.createBuffer(
+            1,
+            bufferSize,
+            audioContext.sampleRate,
+        );
+        const output = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+            output[i] = Math.random() * 2 - 1;
+        }
+        return buffer;
+    }
+
+    function toggleWhiteNoise() {
+        initAudio();
+        if (!audioContext) return;
+
+        if (isWhiteNoisePlaying) {
+            // Stop
+            const currentTime = audioContext.currentTime;
+            gainNode?.gain.exponentialRampToValueAtTime(
+                0.001,
+                currentTime + 0.5,
+            );
+            whiteNoiseSource?.stop(currentTime + 0.5);
+            isWhiteNoisePlaying = false;
+        } else {
+            // Start
+            if (audioContext.state === "suspended") {
+                audioContext.resume();
+            }
+
+            whiteNoiseSource = audioContext.createBufferSource();
+            const buffer = createWhiteNoiseBuffer();
+            if (buffer) {
+                whiteNoiseSource.buffer = buffer;
+                whiteNoiseSource.loop = true;
+
+                gainNode = audioContext.createGain();
+                gainNode.gain.setValueAtTime(0.001, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(
+                    0.05,
+                    audioContext.currentTime + 1,
+                ); // 5% volume - soft BG
+
+                whiteNoiseSource.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+                whiteNoiseSource.start();
+                isWhiteNoisePlaying = true;
+            }
+        }
+    }
+
+    onDestroy(() => {
+        if (audioContext && isWhiteNoisePlaying) {
+            // Quick fade out on destroy if possible, but usually synchronous
+            whiteNoiseSource?.stop();
+            audioContext.close();
+        } else if (audioContext) {
+            audioContext.close();
+        }
+    });
+
+    // -------------------------------------------------------------------------
+    // Actions
+    // -------------------------------------------------------------------------
     function toggleTimer() {
         if (activeTask) {
             todoList.toggleTimer(activeTask.id);
         }
-    }
-
-    function stopFocus() {
-        if (activeTask?.isRunning) {
-            todoList.pauseTimer(activeTask.id);
-        }
-        uiStore.isFocusModeActive = false;
     }
 
     function minimize() {
@@ -78,9 +115,6 @@
             uiStore.isFocusModeActive = false;
         }
     }
-
-    // Colors based on priority?
-    // We can reuse the priority config colors if we want, or stick to a clean dark/glass theme.
 </script>
 
 {#if activeTask}
@@ -170,19 +204,28 @@
 
             <!-- Controls -->
             <div class="flex items-center gap-6 md:gap-8">
+                <!-- White Noise Button (Replaces Stop) -->
                 <button
                     class="group flex flex-col items-center gap-2"
-                    onclick={stopFocus}
-                    title="Stop Session"
+                    onclick={toggleWhiteNoise}
+                    title={isWhiteNoisePlaying
+                        ? "Stop White Noise"
+                        : "Play White Noise"}
                 >
                     <div
-                        class="w-14 h-14 rounded-2xl bg-base-200 border border-base-300 flex items-center justify-center text-neutral/60 transition-all duration-300 group-hover:border-error/30 group-hover:bg-error/10 group-hover:text-error shadow-lg"
+                        class="w-14 h-14 rounded-2xl border transition-all duration-300 flex items-center justify-center shadow-lg
+                        {isWhiteNoisePlaying
+                            ? 'bg-primary/20 border-primary text-primary'
+                            : 'bg-base-200 border-base-300 text-neutral/60 group-hover:border-primary/30 group-hover:bg-primary/10 group-hover:text-primary'}"
                     >
-                        <Square class="w-5 h-5 fill-current" />
+                        <Waves class="w-6 h-6 fill-current" />
                     </div>
                     <span
-                        class="text-xs font-medium text-neutral/40 group-hover:text-error transition-colors"
-                        >Stop</span
+                        class="text-xs font-medium transition-colors
+                        {isWhiteNoisePlaying
+                            ? 'text-primary'
+                            : 'text-neutral/40 group-hover:text-primary'}"
+                        >Noise</span
                     >
                 </button>
 
