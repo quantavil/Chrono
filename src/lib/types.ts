@@ -304,9 +304,9 @@ export const TAG_MAX_LENGTH = 30;
 export const TIMER_UPDATE_INTERVAL_MS = 100;
 export const TIMER_SAVE_INTERVAL_MS = 5000; // Save running timer every 5s
 
-export const TOAST_DEFAULT_DURATION_MS = 4000;
-export const TOAST_ERROR_DURATION_MS = 6000;
-export const TOAST_WITH_ACTION_DURATION_MS = 8000;
+export const TOAST_DEFAULT_DURATION_MS = 2000;
+export const TOAST_ERROR_DURATION_MS = 4000;
+export const TOAST_WITH_ACTION_DURATION_MS = 6000;
 
 export const SYNC_DEBOUNCE_MS = 1000;
 export const SYNC_RETRY_DELAYS = [1000, 2000, 5000, 10000]; // Exponential backoff

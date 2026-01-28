@@ -90,9 +90,9 @@
             {@const Icon = ICONS[config.icon as keyof typeof ICONS] || Info}
 
             <div
-                animate:flip={{ duration: 200, easing: quintOut }}
-                in:fly={{ y: animationY, duration: 300, easing: quintOut }}
-                out:fade={{ duration: 150 }}
+                animate:flip={{ duration: 100, easing: quintOut }}
+                in:fly={{ y: animationY, duration: 150, easing: quintOut }}
+                out:fade={{ duration: 50 }}
                 class="relative overflow-hidden pointer-events-auto flex items-center gap-3 w-full px-4 py-3
                        rounded-xl border bg-base-100/95 backdrop-blur-sm
                        shadow-lg shadow-neutral/5 {config.classes.border}"
@@ -103,7 +103,7 @@
                 <!-- Icon -->
                 <div
                     class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center {config
-                        .classes.bg}"
+                        .classes.bg} animate-scale-in"
                 >
                     <Icon
                         class="w-4 h-4 {config.classes.text}"
@@ -120,9 +120,10 @@
                 {#if toast.action}
                     <button
                         type="button"
-                        class="flex-shrink-0 px-4 py-1.5 rounded-md text-sm font-semibold
-                               bg-base-200/50 hover:bg-base-200 transition-colors
-                               text-neutral-700 hover:text-neutral-900"
+                        class="flex-shrink-0 px-4 py-1.5 rounded-lg text-sm font-bold
+                               transition-all active:scale-95
+                               {config.classes.bg} {config.classes.text}
+                               hover:brightness-95 contrast-125"
                         onclick={() => handleAction(toast)}
                     >
                         {toast.action.label}

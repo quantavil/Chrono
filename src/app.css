@@ -526,7 +526,7 @@
   }
 
   .animate-scale-in {
-    animation: scale-in 200ms ease-out;
+    animation: scale-in 100ms ease-out;
   }
 
   /* Shake for errors */
