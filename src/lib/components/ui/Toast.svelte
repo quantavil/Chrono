@@ -93,8 +93,8 @@
                 animate:flip={{ duration: 200, easing: quintOut }}
                 in:fly={{ y: animationY, duration: 300, easing: quintOut }}
                 out:fade={{ duration: 150 }}
-                class="pointer-events-auto flex items-start gap-3 w-full px-4 py-3
-                       rounded-2xl border bg-base-100/95 backdrop-blur-sm
+                class="relative overflow-hidden pointer-events-auto flex items-center gap-3 w-full px-4 py-3
+                       rounded-xl border bg-base-100/95 backdrop-blur-sm
                        shadow-lg shadow-neutral/5 {config.classes.border}"
                 role="alert"
                 onmouseenter={() => toastManager.pause(toast.id)}
@@ -102,7 +102,7 @@
             >
                 <!-- Icon -->
                 <div
-                    class="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center {config
+                    class="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center {config
                         .classes.bg}"
                 >
                     <Icon
@@ -112,7 +112,7 @@
                 </div>
 
                 <!-- Message -->
-                <p class="flex-1 text-sm text-neutral font-medium pt-1">
+                <p class="flex-1 text-sm text-neutral font-medium">
                     {toast.message}
                 </p>
 
@@ -120,8 +120,9 @@
                 {#if toast.action}
                     <button
                         type="button"
-                        class="flex-shrink-0 px-3 py-1 rounded-lg text-xs font-bold uppercase
-                               bg-base-200 hover:bg-base-300 transition-colors"
+                        class="flex-shrink-0 px-4 py-1.5 rounded-md text-sm font-semibold
+                               bg-base-200/50 hover:bg-base-200 transition-colors
+                               text-neutral-700 hover:text-neutral-900"
                         onclick={() => handleAction(toast)}
                     >
                         {toast.action.label}
@@ -131,7 +132,7 @@
                 <!-- Dismiss Button -->
                 <button
                     type="button"
-                    class="flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center
+                    class="flex-shrink-0 w-8 h-8 rounded-md flex items-center justify-center
                            text-neutral/30 hover:text-neutral/60 hover:bg-base-200 transition-colors"
                     onclick={() => dismiss(toast.id)}
                     aria-label="Dismiss notification"
@@ -142,12 +143,12 @@
                 <!-- Progress Bar -->
                 {#if toast.duration > 0}
                     <div
-                        class="absolute bottom-0 left-4 right-4 h-0.5 rounded-full overflow-hidden bg-base-200"
+                        class="absolute bottom-0 left-0 right-0 h-1 bg-base-200/50"
                     >
                         <div
-                            class="h-full rounded-full {config.classes
-                                .progress} opacity-50"
+                            class="h-full {config.classes.progress}"
                             style="
+                                width: 100%;
                                 animation: toast-shrink {toast.duration}ms linear forwards;
                                 animation-play-state: {toast.pausedAt
                                 ? 'paused'
@@ -160,14 +161,3 @@
         {/each}
     </div>
 {/if}
-
-<style>
-    @keyframes toast-shrink {
-        from {
-            width: 100%;
-        }
-        to {
-            width: 0%;
-        }
-    }
-</style>
