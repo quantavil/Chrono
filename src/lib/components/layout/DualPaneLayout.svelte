@@ -1,29 +1,29 @@
 <script lang="ts">
-    import { fade, slide } from "svelte/transition";
+    import { fade, slide, fly } from "svelte/transition";
     import { uiStore } from "$lib/stores/ui.svelte";
     import type { Snippet } from "svelte";
     import Sidebar from "$lib/components/layout/Sidebar.svelte";
 
     interface Props {
-        leftPane: Snippet;
-        rightPane: Snippet;
-        mobileContent: Snippet;
-        isRightPaneOpen?: boolean;
+        listPane: Snippet;
+        detailPane: Snippet;
+        isRightPaneOpen?: boolean; // Desktop Split State
+        mobileShowDetail?: boolean; // Mobile Full Page State
         class?: string;
     }
 
     let {
-        leftPane,
-        rightPane,
-        mobileContent,
+        listPane,
+        detailPane,
         isRightPaneOpen = true,
+        mobileShowDetail = false,
         class: className = "",
     }: Props = $props();
 </script>
 
 <div class="min-h-screen min-h-dvh bg-base-200 {className}">
     <!-- Mobile Layout (< lg) -->
-    <div class="lg:hidden text-neutral">
+    <div class="lg:hidden text-neutral h-[100dvh] overflow-hidden relative">
         <!-- Drawer Overlay -->
         {#if uiStore.isMobileSidebarOpen}
             <div
@@ -46,7 +46,21 @@
             </div>
         {/if}
 
-        {@render mobileContent()}
+        <!-- List View (Always rendered, hidden or behind detail) -->
+        <div class="absolute inset-0 w-full h-full bg-base-200">
+            {@render listPane()}
+        </div>
+
+        <!-- Mobile Detail Page (Overlays List) -->
+        {#if mobileShowDetail}
+            <div
+                class="absolute inset-0 z-50 w-full h-full bg-base-100"
+                in:fly={{ x: "100%", duration: 300, opacity: 1 }}
+                out:fly={{ x: "100%", duration: 300, opacity: 1 }}
+            >
+                {@render detailPane()}
+            </div>
+        {/if}
     </div>
 
     <!-- Desktop Dual-Pane Layout (≥ lg) -->
@@ -67,11 +81,11 @@
             >
                 <div
                     class="
-                         mx-auto
+                         mx-auto h-full
                         transition-all duration-300 ease-in-out
                     "
                 >
-                    {@render leftPane()}
+                    {@render listPane()}
                 </div>
             </div>
 
@@ -90,7 +104,7 @@
                     "
                     transition:fade={{ duration: 200 }}
                 >
-                    {@render rightPane()}
+                    {@render detailPane()}
                 </div>
             {/if}
         </div>
