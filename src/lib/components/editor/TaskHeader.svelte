@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { X, Trash2, RotateCcw } from "lucide-svelte";
+    import { X, Trash2, RotateCcw, ArrowLeft } from "lucide-svelte";
     import { getTodoStore } from "$lib/context";
     import type { TodoItem } from "$lib/stores/todo.svelte";
 
@@ -37,11 +37,21 @@
         flex items-center justify-between border-b border-base-200 transition-all
         {variant === 'panel'
         ? 'p-4 bg-base-100/80 backdrop-blur-sm sticky top-0 z-10'
-        : 'p-5 md:p-6 bg-base-100'}
+        : 'p-4 md:p-6 bg-base-100 sticky top-0 md:static z-10'}
         {className}
     "
 >
     <div class="flex items-center gap-3">
+        {#if variant === "modal"}
+            <button
+                type="button"
+                class="md:hidden -ml-2 p-2 text-neutral hover:bg-base-200 rounded-full"
+                onclick={onClose}
+                aria-label="Go back"
+            >
+                <ArrowLeft class="w-6 h-6" />
+            </button>
+        {/if}
         <h2
             class="
                 font-bold text-neutral
@@ -79,11 +89,14 @@
                 <RotateCcw class="w-4 h-4 md:w-5 md:h-5" />
             </button>
         {/if}
+
+        <!-- Close button (Desktop only for modal, or Panel) -->
         <button
             type="button"
             class="
                 p-2 rounded-xl transition-all
                 text-neutral/40 hover:text-neutral hover:bg-base-200
+                {variant === 'modal' ? 'hidden md:block' : ''}
             "
             onclick={onClose}
             title="Close (Esc)"

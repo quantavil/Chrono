@@ -69,7 +69,7 @@
 
   function handleSelectTask(id: string): void {
     // On desktop: show in right pane
-    // On mobile: open modal
+    // On mobile: open modal & push history
     if (!uiStore.isMobile) {
       if (selectedTaskId === id) {
         // Same task -> Close
@@ -81,6 +81,11 @@
     } else {
       selectedTaskId = id;
       isMobileModalOpen = true;
+      // Push state if not already there (to avoid duplicates if we handle re-entrance)
+      // We use a simple hash or state object
+      const url = new URL(window.location.href);
+      url.hash = `task=${id}`;
+      window.history.pushState({ taskId: id }, "", url.toString());
     }
   }
 
@@ -89,9 +94,20 @@
   }
 
   function handleCloseMobileModal(): void {
-    isMobileModalOpen = false;
-    // Keep selectedTaskId for potential reopen, or clear it:
-    // selectedTaskId = null;
+    // If we have history state, go back
+    if (window.history.state?.taskId) {
+      window.history.back();
+    } else {
+      // Fallback if opened without history (e.g. direct link in future)
+      // or just to be safe
+      isMobileModalOpen = false;
+      // Clear hash if present
+      if (window.location.hash.includes("task=")) {
+        const url = new URL(window.location.href);
+        url.hash = "";
+        window.history.replaceState(null, "", url.toString());
+      }
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -118,6 +134,32 @@
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+
+    // Handle Back Button (Mobile)
+    const handlePopState = (event: PopStateEvent) => {
+      // If we popped a state and it's not our task state, or if we just went back to "null" state
+      // We should close the modal if explicitly open
+      if (isMobileModalOpen) {
+        // If we are still "on" a task according to state, maybe keep it?
+        // But usually popstate means we went BACK.
+        // If the new state doesn't have taskId, we definitively close.
+        if (!event.state?.taskId) {
+          isMobileModalOpen = false;
+          selectedTaskId = null; // Sync state
+        } else {
+          // If we navigated forward or back TO a task
+          selectedTaskId = event.state.taskId;
+          isMobileModalOpen = true;
+        }
+      } else {
+        // If modal was closed but we navigated TO a task URL (e.g. forward)
+        if (event.state?.taskId && uiStore.isMobile) {
+          selectedTaskId = event.state.taskId;
+          isMobileModalOpen = true;
+        }
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
 
     // Keyboard shortcuts
     const handleKeydown = (event: KeyboardEvent) => {
@@ -193,6 +235,7 @@
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("popstate", handlePopState);
       window.removeEventListener("keydown", handleKeydown);
       clearTimeout(initTimeout);
       todoList.destroy();
@@ -251,6 +294,7 @@
           <TaskDetailModal
             bind:isOpen={isMobileModalOpen}
             todo={selectedTask}
+            onClose={handleCloseMobileModal}
           />
         {/snippet}
       </DualPaneLayout>

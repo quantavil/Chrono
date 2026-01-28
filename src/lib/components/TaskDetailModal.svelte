@@ -7,12 +7,17 @@
     interface Props {
         isOpen: boolean;
         todo: TodoItem | null;
+        onClose?: () => void;
     }
 
-    let { isOpen = $bindable(false), todo }: Props = $props();
+    let { isOpen = $bindable(false), todo, onClose }: Props = $props();
 
     function close() {
-        isOpen = false;
+        if (onClose) {
+            onClose();
+        } else {
+            isOpen = false;
+        }
     }
 </script>
 
@@ -28,33 +33,28 @@
         aria-label="Close details"
     ></div>
 
-    <!-- Sidebar / Bottom Sheet Container -->
+    <!-- Sidebar / Bottom Sheet Container (Now Full Page on Mobile) -->
     <div
         class="
             fixed z-50
-            inset-x-0 bottom-0 md:inset-x-auto md:inset-y-0 md:right-0
+            inset-0 md:inset-x-auto md:inset-y-0 md:right-0
             w-full md:w-96
-            max-h-[85vh] md:max-h-full
+            h-full
             flex flex-col
             bg-base-100
-            md:rounded-l-3xl rounded-t-3xl md:rounded-tr-none
+            md:rounded-l-3xl
             shadow-2xl
         "
-        in:fly={uiStore.detailTransition}
-        out:fly={uiStore.detailTransition}
+        in:fly={uiStore.isMobile
+            ? { x: "100%", duration: 300 }
+            : uiStore.detailTransition}
+        out:fly={uiStore.isMobile
+            ? { x: "100%", duration: 300 }
+            : uiStore.detailTransition}
         role="dialog"
         aria-modal="true"
     >
-        <!-- Mobile Handle -->
-        <div
-            class="md:hidden flex justify-center pt-3 pb-1 cursor-grab active:cursor-grabbing"
-            onclick={close}
-            role="button"
-            tabindex="0"
-            onkeydown={(e) => (e.key === "Enter" || e.key === " ") && close()}
-        >
-            <div class="w-12 h-1.5 rounded-full bg-neutral/20"></div>
-        </div>
+        <!-- Mobile Handle (Removed for full page view) -->
 
         <TaskDetailContainer task={todo} onClose={close} variant="modal" />
     </div>
