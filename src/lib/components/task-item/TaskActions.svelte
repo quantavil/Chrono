@@ -3,9 +3,7 @@
         MoreVertical,
         Trash2,
         Clock,
-        FileText,
         CheckSquare,
-        Pencil,
         ChevronDown,
         ChevronRight,
     } from "lucide-svelte";

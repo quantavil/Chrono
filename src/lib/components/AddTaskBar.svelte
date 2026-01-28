@@ -1,21 +1,30 @@
 <script lang="ts">
-  import {
-    Plus,
-    Calendar,
-    Tag,
-    Loader2,
-    Clock,
-    X,
-    Flag,
-    Check,
-  } from "lucide-svelte";
+  import { Plus, Calendar, Clock, Flag } from "lucide-svelte";
   import CustomDatePicker from "$lib/components/CustomDatePicker.svelte";
   import { getTodoStore } from "$lib/context";
-  import { uiStore } from "$lib/stores/ui.svelte";
   import { TODO_TITLE_MAX_LENGTH, PRIORITY_CONFIG } from "$lib/types";
-  import { fly, fade, scale, slide } from "svelte/transition";
+  import { fly, slide } from "svelte/transition";
   import { getDatePreset, formatDuration } from "$lib/utils/formatTime";
 
+  // -------------------------------------------------------------------------
+  // Constants
+  // -------------------------------------------------------------------------
+  const DURATION_OPTIONS = [15, 30, 45, 60, 90] as const;
+  const PRIORITY_OPTIONS = ["high", "medium", "low"] as const;
+  const DUE_DATE_OPTIONS = ["today", "tomorrow", "week"] as const;
+
+  const DUE_DATE_CONFIG = {
+    today: { label: "Today", getValue: () => getDatePreset("today") },
+    tomorrow: { label: "Tomorrow", getValue: () => getDatePreset("tomorrow") },
+    week: { label: "Next Week", getValue: () => getDatePreset("week") },
+  } as const;
+
+  type Priority = (typeof PRIORITY_OPTIONS)[number];
+  type DueDatePreset = (typeof DUE_DATE_OPTIONS)[number];
+
+  // -------------------------------------------------------------------------
+  // Props & State
+  // -------------------------------------------------------------------------
   interface Props {
     class?: string;
     variant?: "inline" | "fixed";
@@ -29,12 +38,10 @@
   let inputRef = $state<HTMLInputElement | null>(null);
   let isFocused = $state(false);
   let isSubmitting = $state(false);
-
-  // Quick action states
   let showQuickActions = $state(false);
 
-  let selectedPriority = $state<"high" | "medium" | "low" | null>(null);
-  let selectedDueDate = $state<"today" | "tomorrow" | "week" | null>(null);
+  let selectedPriority = $state<Priority | null>(null);
+  let selectedDueDate = $state<DueDatePreset | null>(null);
   let customDueDate = $state<string | null>(null);
   let selectedDuration = $state<number | null>(
     todoList.preferences.defaultTaskDurationMs
@@ -43,47 +50,50 @@
   );
 
   const canSubmit = $derived(inputValue.trim().length > 0);
+  const isMobile = $derived(variant === "fixed");
 
-  const dueDateConfig = {
-    today: { label: "Today", value: () => getDatePreset("today") },
-    tomorrow: {
-      label: "Tomorrow",
-      value: () => getDatePreset("tomorrow"),
-    },
-    week: {
-      label: "Next Week",
-      value: () => getDatePreset("week"),
-    },
-  };
+  // -------------------------------------------------------------------------
+  // Helpers
+  // -------------------------------------------------------------------------
+  function toggle<T>(current: T | null, value: T): T | null {
+    return current === value ? null : value;
+  }
 
+  function getResolvedDueDate(): string | undefined {
+    if (customDueDate) return customDueDate;
+    if (selectedDueDate)
+      return DUE_DATE_CONFIG[selectedDueDate].getValue().toISOString();
+    return undefined;
+  }
+
+  function resetForm(): void {
+    inputValue = "";
+    selectedPriority = null;
+    selectedDueDate = null;
+    customDueDate = null;
+    showQuickActions = false;
+    inputRef?.focus();
+  }
+
+  // -------------------------------------------------------------------------
+  // Handlers
+  // -------------------------------------------------------------------------
   function handleSubmit(event?: Event): void {
     event?.preventDefault();
-
     const title = inputValue.trim();
     if (!title || isSubmitting) return;
 
     isSubmitting = true;
-
     try {
       todoList.add({
         title,
         priority: selectedPriority,
-        due_at: customDueDate
-          ? customDueDate
-          : selectedDueDate
-            ? dueDateConfig[selectedDueDate].value().toISOString()
-            : undefined,
+        due_at: getResolvedDueDate(),
         estimated_time: selectedDuration
           ? selectedDuration * 60 * 1000
           : undefined,
       });
-
-      // Reset
-      inputValue = "";
-      selectedPriority = null;
-      selectedDueDate = null;
-      showQuickActions = false;
-      inputRef?.focus();
+      resetForm();
     } finally {
       isSubmitting = false;
     }
@@ -100,376 +110,323 @@
     }
   }
 
-  function togglePriority(p: "high" | "medium" | "low") {
-    selectedPriority = selectedPriority === p ? null : p;
+  function handleFocus(): void {
+    isFocused = true;
+    showQuickActions = true;
   }
 
-  function toggleDueDate(d: "today" | "tomorrow" | "week") {
-    if (selectedDueDate === d) {
-      selectedDueDate = null;
-    } else {
-      selectedDueDate = d;
-      customDueDate = null; // Clear custom if preset selected
+  function handleFormBlur(event: FocusEvent): void {
+    const form = (event.target as HTMLElement).closest("form");
+    if (!form?.contains(event.relatedTarget as Node)) {
+      isFocused = false;
+      showQuickActions = false;
     }
   }
 
   $effect(() => {
-    // If custom date is set, clear prompt presets
-    if (customDueDate) {
-      selectedDueDate = null;
-    }
+    if (customDueDate) selectedDueDate = null;
   });
-
-  function handleFocus() {
-    isFocused = true;
-    showQuickActions = true;
-  }
 </script>
 
+<!-- ======================================================================= -->
+<!-- SHARED SNIPPETS -->
+<!-- ======================================================================= -->
+
+{#snippet taskInput()}
+  <input
+    bind:this={inputRef}
+    bind:value={inputValue}
+    type="text"
+    placeholder={isMobile ? "Add a task..." : "Add a new task... (⌘K)"}
+    class="flex-1 bg-transparent outline-none text-sm text-neutral py-2 {!isMobile
+      ? 'sm:text-base sm:py-3'
+      : ''}"
+    maxlength={TODO_TITLE_MAX_LENGTH}
+    onkeydown={handleKeydown}
+    onfocus={handleFocus}
+    onblur={isMobile
+      ? () => setTimeout(() => (isFocused = false), 200)
+      : undefined}
+    autocomplete="off"
+    enterkeyhint="done"
+  />
+{/snippet}
+
+{#snippet selectionIndicators()}
+  {#if selectedPriority || selectedDueDate || customDueDate || selectedDuration}
+    <div class="flex items-center gap-1.5">
+      {#if selectedPriority}
+        <span
+          class="w-2 h-2 rounded-full"
+          class:bg-danger={selectedPriority === "high"}
+          class:bg-warning={selectedPriority === "medium"}
+          class:bg-info={selectedPriority === "low"}
+        ></span>
+      {/if}
+      {#if selectedDueDate || customDueDate}
+        <Calendar class="w-3.5 h-3.5 text-primary" />
+      {/if}
+      {#if selectedDuration}
+        <Clock class="w-3.5 h-3.5 text-secondary" />
+      {/if}
+    </div>
+  {/if}
+{/snippet}
+
+{#snippet submitBtn(compact = false)}
+  <button
+    type="submit"
+    disabled={!canSubmit || isSubmitting}
+    class="
+      flex items-center justify-center gap-2 font-semibold text-sm transition-all
+      {compact
+      ? 'w-10 h-10 rounded-lg'
+      : 'w-10 h-10 rounded-lg p-0 sm:w-auto sm:h-auto sm:px-5 sm:py-2.5 sm:rounded-xl'}
+      {canSubmit
+      ? 'bg-primary text-white shadow-primary hover:brightness-110 active:scale-[0.98]'
+      : 'bg-base-200 text-neutral-muted'}
+    "
+  >
+    <Plus
+      class={compact ? "w-5 h-5" : "w-5 h-5 sm:w-4 sm:h-4"}
+      strokeWidth={2.5}
+    />
+    {#if !compact}<span class="hidden sm:inline">Add</span>{/if}
+  </button>
+{/snippet}
+
+{#snippet chipBase(
+  isActive: boolean,
+  compact: boolean,
+  activeClass: string,
+  onclick: () => void,
+  children: import("svelte").Snippet,
+)}
+  <button
+    type="button"
+    class="
+      flex items-center gap-1.5 font-medium border transition-all whitespace-nowrap
+      {compact
+      ? 'px-2.5 py-1 text-xs rounded-full'
+      : 'px-3 py-2 text-xs font-semibold rounded-xl text-center'}
+      {isActive
+      ? activeClass
+      : compact
+        ? 'border-base-300 text-neutral-light hover:border-neutral-muted'
+        : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral hover:border-base-300'}
+    "
+    {onclick}
+  >
+    {@render children()}
+  </button>
+{/snippet}
+
+{#snippet priorityChips(compact = false)}
+  {#each PRIORITY_OPTIONS as p (p)}
+    {@const config = PRIORITY_CONFIG[p]}
+    {@const isActive = selectedPriority === p}
+    {@render chipBase(
+      isActive,
+      compact,
+      `text-${config.color} bg-${config.color}/10 border-current shadow-sm`,
+      () => (selectedPriority = toggle(selectedPriority, p)),
+      chipContent,
+    )}
+    {#snippet chipContent()}
+      {#if !compact}
+        <div
+          class="w-1.5 h-1.5 rounded-full {isActive
+            ? 'bg-current'
+            : 'bg-neutral/20'}"
+        ></div>
+      {:else}
+        <Flag class="w-3 h-3" />
+      {/if}
+      {config.label}
+    {/snippet}
+  {/each}
+{/snippet}
+
+{#snippet dueDateChips(compact = false)}
+  {#each DUE_DATE_OPTIONS as d (d)}
+    {@const config = DUE_DATE_CONFIG[d]}
+    {@const isActive = selectedDueDate === d}
+    {@render chipBase(
+      isActive,
+      compact,
+      "bg-primary/10 text-primary border-primary/30",
+      () => {
+        selectedDueDate = toggle(selectedDueDate, d);
+        if (selectedDueDate) customDueDate = null;
+      },
+      chipContent,
+    )}
+    {#snippet chipContent()}
+      {#if compact}<Calendar class="w-3 h-3" />{/if}
+      {config.label}
+    {/snippet}
+  {/each}
+{/snippet}
+
+{#snippet durationChips(compact = false)}
+  {#each DURATION_OPTIONS as mins (mins)}
+    {@const isActive = selectedDuration === mins}
+    {@render chipBase(
+      isActive,
+      compact,
+      "bg-secondary/10 text-secondary border-secondary/30",
+      () => (selectedDuration = toggle(selectedDuration, mins)),
+      chipContent,
+    )}
+    {#snippet chipContent()}
+      {#if compact}<Clock class="w-3 h-3" />{/if}
+      {formatDuration(mins * 60 * 1000)}
+    {/snippet}
+  {/each}
+{/snippet}
+
+{#snippet quickActionsRow()}
+  <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide">
+    {@render priorityChips(true)}
+    <div class="w-px h-5 bg-base-300 flex-shrink-0"></div>
+    {@render dueDateChips(true)}
+    <div class="w-px h-5 bg-base-300 flex-shrink-0"></div>
+    {@render durationChips(true)}
+  </div>
+{/snippet}
+
+{#snippet quickActionsPanel()}
+  <div
+    class="px-5 pb-5 pt-2 border-t border-base-200/50"
+    transition:slide={{ duration: 300 }}
+  >
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+      <!-- Priority & Duration -->
+      <div class="space-y-6">
+        <div class="space-y-3">
+          <span
+            class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
+            >Priority Level</span
+          >
+          <div class="flex flex-wrap gap-2">
+            {@render priorityChips(false)}
+          </div>
+        </div>
+        <div class="space-y-3">
+          <span
+            class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
+            >Est. Duration</span
+          >
+          <div class="flex flex-wrap gap-1.5">
+            {@render durationChips(false)}
+          </div>
+        </div>
+      </div>
+      <!-- Timeline -->
+      <div class="space-y-3">
+        <span
+          class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
+          >Timeline</span
+        >
+        <div class="flex flex-wrap gap-2">
+          {@render dueDateChips(false)}
+        </div>
+      </div>
+    </div>
+  </div>
+{/snippet}
+
+{#snippet iconButtons()}
+  <div class="flex items-center gap-1">
+    <button
+      type="button"
+      class="p-1.5 rounded-lg transition-colors {selectedPriority
+        ? `text-${PRIORITY_CONFIG[selectedPriority].color} bg-${PRIORITY_CONFIG[selectedPriority].color}/10`
+        : 'text-neutral-muted hover:bg-base-200'}"
+      onclick={() => (showQuickActions = !showQuickActions)}
+      title="Set priority"
+    >
+      <Flag class="w-4 h-4" />
+    </button>
+
+    <button
+      type="button"
+      class="p-1.5 rounded-lg transition-colors {selectedDuration
+        ? 'text-secondary bg-secondary/10'
+        : 'text-neutral-muted hover:bg-base-200'}"
+      onclick={() => (showQuickActions = !showQuickActions)}
+      title="Set duration"
+    >
+      <Clock class="w-4 h-4" />
+    </button>
+
+    <CustomDatePicker bind:value={customDueDate} class="!w-auto">
+      {#snippet trigger()}
+        <button
+          type="button"
+          title="Set due date"
+          class="p-1.5 rounded-lg transition-colors {selectedDueDate ||
+          customDueDate
+            ? 'text-primary bg-primary-muted'
+            : 'text-neutral-muted hover:bg-base-200'}"
+        >
+          <Calendar class="w-4 h-4" />
+        </button>
+      {/snippet}
+    </CustomDatePicker>
+  </div>
+{/snippet}
+
+<!-- ======================================================================= -->
+<!-- RENDER VARIANTS -->
+<!-- ======================================================================= -->
+
 {#if variant === "fixed"}
-  <!-- Mobile Fixed Bottom Bar -->
+  <!-- MOBILE FIXED -->
   <div
     class="fixed bottom-0 left-0 right-0 z-50 lg:hidden {className}"
     in:fly={{ y: 100, duration: 400 }}
   >
     <div class="bg-base-100 border-t border-base-300 shadow-lg">
-      <!-- Quick Actions Row -->
       {#if showQuickActions && isFocused}
         <div
-          class="px-4 py-2 flex items-center gap-2 border-b border-base-200 overflow-x-auto scrollbar-hide"
+          class="px-4 py-2 border-b border-base-200"
           transition:fly={{ y: 20, duration: 200 }}
         >
-          <!-- Priority -->
-          {#each ["high", "medium", "low"] as p (p)}
-            {@const config = PRIORITY_CONFIG[p as keyof typeof PRIORITY_CONFIG]}
-            <button
-              type="button"
-              class="
-                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
-                border transition-all whitespace-nowrap
-                {selectedPriority === p
-                ? `text-${config.color} bg-${config.color}/10 border-current`
-                : 'border-base-300 text-neutral-light hover:border-neutral-muted'}
-              "
-              onclick={() => togglePriority(p as "high" | "medium" | "low")}
-            >
-              <Flag class="w-3 h-3" />
-              {config.label}
-            </button>
-          {/each}
-
-          <div class="w-px h-5 bg-base-300"></div>
-
-          <!-- Due Date -->
-          {#each ["today", "tomorrow", "week"] as d (d)}
-            {@const config = dueDateConfig[d as keyof typeof dueDateConfig]}
-            <button
-              type="button"
-              class="
-                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
-                border transition-all whitespace-nowrap
-                {selectedDueDate === d
-                ? 'bg-primary-muted text-primary border-primary'
-                : 'border-base-300 text-neutral-light hover:border-neutral-muted'}
-              "
-              onclick={() => toggleDueDate(d as "today" | "tomorrow" | "week")}
-            >
-              <Calendar class="w-3 h-3" />
-              {config.label}
-            </button>
-          {/each}
-          <div class="w-px h-5 bg-base-300"></div>
-
-          <!-- Duration -->
-          {#each [15, 30, 45, 60] as mins (mins)}
-            <button
-              type="button"
-              class="
-                flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium
-                border transition-all whitespace-nowrap
-                {selectedDuration === mins
-                ? 'bg-secondary/10 text-secondary border-secondary'
-                : 'border-base-300 text-neutral-light hover:border-neutral-muted'}
-              "
-              onclick={() =>
-                (selectedDuration = selectedDuration === mins ? null : mins)}
-            >
-              <Clock class="w-3 h-3" />
-              {formatDuration(mins * 60 * 1000)}
-            </button>
-          {/each}
+          {@render quickActionsRow()}
         </div>
       {/if}
 
       <div class="px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
         <form
           onsubmit={handleSubmit}
-          class="
-            flex items-center gap-2
-            bg-base-200 rounded-xl
-            p-1.5 pl-4
-            ring-2 transition-all duration-200
-            {isFocused ? 'ring-primary bg-base-100' : 'ring-transparent'}
-          "
+          class="flex items-center gap-2 bg-base-200 rounded-xl p-1.5 pl-4 ring-2 transition-all duration-200
+            {isFocused ? 'ring-primary bg-base-100' : 'ring-transparent'}"
         >
-          <input
-            bind:this={inputRef}
-            bind:value={inputValue}
-            type="text"
-            placeholder="Add a task..."
-            class="flex-1 bg-transparent outline-none text-sm text-neutral py-2"
-            maxlength={TODO_TITLE_MAX_LENGTH}
-            onkeydown={handleKeydown}
-            onfocus={handleFocus}
-            onblur={() =>
-              setTimeout(() => {
-                isFocused = false;
-              }, 200)}
-            autocomplete="off"
-            enterkeyhint="done"
-          />
-
-          <!-- Active Selections Preview -->
-          {#if selectedPriority || selectedDueDate}
-            <div class="flex items-center gap-1">
-              {#if selectedPriority}
-                <span
-                  class="w-2 h-2 rounded-full {selectedPriority === 'high'
-                    ? 'bg-danger'
-                    : selectedPriority === 'medium'
-                      ? 'bg-warning'
-                      : 'bg-info'}"
-                ></span>
-              {/if}
-              {#if selectedDueDate}
-                <Calendar class="w-3.5 h-3.5 text-primary" />
-              {/if}
-            </div>
-          {/if}
-
-          <button
-            type="submit"
-            disabled={!canSubmit || isSubmitting}
-            class="
-              w-10 h-10 rounded-lg
-              flex items-center justify-center
-              transition-all
-              {canSubmit
-              ? 'bg-primary text-white shadow-primary active:scale-95'
-              : 'bg-base-300 text-neutral-muted'}
-            "
-          >
-            <Plus class="w-5 h-5" strokeWidth={2.5} />
-          </button>
+          {@render taskInput()}
+          {@render selectionIndicators()}
+          {@render submitBtn(true)}
         </form>
       </div>
     </div>
   </div>
 {:else}
-  <!-- Desktop Inline - Similar pattern with expanded quick actions -->
+  <!-- DESKTOP INLINE -->
   <div class="w-full {className}">
     <form
       onsubmit={handleSubmit}
-      onfocusout={(e) => {
-        if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-          isFocused = false;
-          showQuickActions = false;
-        }
-      }}
-      class="
-        relative bg-base-100 rounded-2xl
-        shadow-sm border border-base-300/50
-        transition-all duration-300
-        {isFocused ? 'shadow-md border-primary/30' : 'hover:shadow-md'}
-      "
+      onfocusout={handleFormBlur}
+      class="relative bg-base-100 rounded-2xl shadow-sm border border-base-300/50 transition-all duration-300
+        {isFocused ? 'shadow-md border-primary/30' : 'hover:shadow-md'}"
     >
       <div class="flex items-center gap-3 p-2 pl-5">
-        <input
-          bind:this={inputRef}
-          bind:value={inputValue}
-          type="text"
-          placeholder="Add a new task... (⌘K)"
-          class="flex-1 bg-transparent outline-none text-base text-neutral py-3"
-          maxlength={TODO_TITLE_MAX_LENGTH}
-          onkeydown={handleKeydown}
-          onfocus={handleFocus}
-          autocomplete="off"
-        />
-
-        <!-- Quick Action Buttons (Desktop) -->
-        <div class="flex items-center gap-1">
-          <!-- Priority Dropdown -->
-          <div class="relative">
-            <button
-              type="button"
-              class="
-                p-2 rounded-lg transition-colors
-                {selectedPriority
-                ? `text-${PRIORITY_CONFIG[selectedPriority].color} bg-${PRIORITY_CONFIG[selectedPriority].color}/10`
-                : 'text-neutral-muted hover:bg-base-200'}
-              "
-              onclick={() => (showQuickActions = !showQuickActions)}
-              title="Set priority"
-            >
-              <Flag class="w-4 h-4" />
-            </button>
-          </div>
-
-          <!-- Duration Toggle -->
-          <div class="relative">
-            <button
-              type="button"
-              class="
-                p-2 rounded-lg transition-colors
-                {selectedDuration
-                ? 'text-secondary bg-secondary/10'
-                : 'text-neutral-muted hover:bg-base-200'}
-              "
-              onclick={() => (showQuickActions = !showQuickActions)}
-              title="Set duration"
-            >
-              <Clock class="w-4 h-4" />
-            </button>
-          </div>
-
-          <!-- Custom Date Picker Trigger -->
-          <CustomDatePicker bind:value={customDueDate} class="!w-auto">
-            {#snippet trigger()}
-              <button
-                type="button"
-                title="Set due date"
-                class="
-                  p-2 rounded-lg transition-colors
-                  {selectedDueDate || customDueDate
-                  ? 'text-primary bg-primary-muted'
-                  : 'text-neutral-muted hover:bg-base-200'}
-                "
-              >
-                <Calendar class="w-4 h-4" />
-              </button>
-            {/snippet}
-          </CustomDatePicker>
-        </div>
-
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          class="
-            flex items-center gap-2
-            px-5 py-2.5 rounded-xl
-            font-semibold text-sm
-            transition-all
-            {canSubmit
-            ? 'bg-primary text-white shadow-primary hover:brightness-110 active:scale-[0.98]'
-            : 'bg-base-200 text-neutral-muted'}
-          "
-        >
-          <Plus class="w-4 h-4" strokeWidth={2.5} />
-          Add
-        </button>
+        {@render taskInput()}
+        {@render iconButtons()}
+        {@render submitBtn(false)}
       </div>
 
-      <!-- Quick Actions - Now Inline and Sliding -->
       {#if showQuickActions}
-        <div
-          class="px-5 pb-5 pt-2 border-t border-base-200/50"
-          transition:slide={{ duration: 300 }}
-        >
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <!-- Left Column: Priority & Duration -->
-            <div class="space-y-6">
-              <!-- Priority Selector -->
-              <div class="space-y-3">
-                <span
-                  class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
-                  >Priority Level</span
-                >
-                <div class="flex flex-wrap gap-2">
-                  {#each ["high", "medium", "low"] as p (p)}
-                    {@const config =
-                      PRIORITY_CONFIG[p as keyof typeof PRIORITY_CONFIG]}
-                    <button
-                      type="button"
-                      class="
-                        group relative flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold
-                        border transition-all duration-300
-                        {selectedPriority === p
-                        ? `text-${config.color} bg-${config.color}/10 border-current shadow-sm`
-                        : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral hover:border-base-300'}
-                      "
-                      onclick={() =>
-                        togglePriority(p as "high" | "medium" | "low")}
-                    >
-                      <div
-                        class="w-1.5 h-1.5 rounded-full {selectedPriority === p
-                          ? 'bg-current'
-                          : 'bg-neutral/20 group-hover:bg-neutral/40'} transition-colors"
-                      ></div>
-                      {config.label}
-                    </button>
-                  {/each}
-                </div>
-              </div>
-
-              <!-- Duration (Compact) -->
-              <div class="space-y-3">
-                <span
-                  class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
-                  >Est. Duration</span
-                >
-                <div class="flex flex-wrap gap-1.5">
-                  {#each [15, 30, 45, 60, 90] as mins (mins)}
-                    <button
-                      type="button"
-                      class="
-                           px-2.5 py-1.5 rounded-lg text-[11px] font-medium
-                           border transition-all
-                           {selectedDuration === mins
-                        ? 'bg-secondary/10 text-secondary border-secondary/30'
-                        : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral'}
-                         "
-                      onclick={() =>
-                        (selectedDuration =
-                          selectedDuration === mins ? null : mins)}
-                    >
-                      {formatDuration(mins * 60 * 1000)}
-                    </button>
-                  {/each}
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Column: Timeline -->
-            <div class="space-y-3">
-              <span
-                class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
-                >Timeline</span
-              >
-              <div class="flex flex-col gap-2">
-                <div class="flex flex-wrap gap-2">
-                  {#each ["today", "tomorrow", "week"] as d (d)}
-                    {@const config =
-                      dueDateConfig[d as keyof typeof dueDateConfig]}
-                    <button
-                      type="button"
-                      class="
-                          px-3 py-2 rounded-xl text-xs font-semibold
-                          border transition-all w-full sm:w-auto text-center
-                          {selectedDueDate === d
-                        ? 'bg-primary/10 text-primary border-primary/30'
-                        : 'bg-base-200/50 border-transparent text-neutral/60 hover:bg-base-200 hover:text-neutral'}
-                        "
-                      onclick={() =>
-                        toggleDueDate(d as "today" | "tomorrow" | "week")}
-                    >
-                      {config.label}
-                    </button>
-                  {/each}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        {@render quickActionsPanel()}
       {/if}
     </form>
   </div>
