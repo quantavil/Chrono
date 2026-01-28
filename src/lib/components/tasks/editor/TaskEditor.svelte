@@ -216,7 +216,7 @@
 <div
     class="flex flex-col h-full bg-base-100 {className} overflow-y-auto scrollbar-hide"
 >
-    <div class="p-6 space-y-8">
+    <div class="p-4 md:p-6 space-y-5 md:space-y-8">
         <!-- 1. TITLE SECTION -->
         <div class="space-y-4">
             <div class="flex items-start gap-3">
@@ -247,7 +247,7 @@
                             (e.target as HTMLElement).blur()}
                         class="
                             w-full bg-transparent
-                            text-2xl md:text-3xl font-bold tracking-tight font-display
+                            text-xl md:text-3xl font-bold tracking-tight font-display
                             placeholder:text-neutral/20
                             outline-none
                             text-neutral
@@ -372,7 +372,9 @@
         </div>
 
         <!-- 4. METADATA & SETTINGS -->
-        <div class="space-y-6 pt-6 border-t border-base-200">
+        <div
+            class="space-y-4 md:space-y-6 pt-4 md:pt-6 border-t border-base-200"
+        >
             <h3
                 class="text-xs font-bold text-neutral/40 uppercase tracking-wider"
             >

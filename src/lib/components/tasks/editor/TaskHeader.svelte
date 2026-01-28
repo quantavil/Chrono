@@ -71,6 +71,7 @@
         <button
             type="button"
             class="
+                hidden md:block
                 p-2 rounded-xl transition-all
                 text-neutral/40 hover:text-danger hover:bg-danger/10
             "

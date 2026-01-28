@@ -275,7 +275,7 @@
                                 >
                                     <p
                                         class="
-                                        text-sm md:text-base font-semibold truncate transition-colors
+                                        text-sm md:text-base font-semibold line-clamp-2 break-words whitespace-normal transition-colors
                                         {isCompleted
                                             ? 'text-neutral-muted line-through opacity-50'
                                             : 'text-neutral'}

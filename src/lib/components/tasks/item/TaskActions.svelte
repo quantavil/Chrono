@@ -73,7 +73,7 @@
 
     <button
         type="button"
-        class="p-2 rounded-lg text-neutral-muted hover:text-danger hover:bg-danger/10 transition-colors"
+        class="hidden md:block p-2 rounded-lg text-neutral-muted hover:text-danger hover:bg-danger/10 transition-colors"
         onclick={(e) => {
             e.stopPropagation();
             handleDelete();
