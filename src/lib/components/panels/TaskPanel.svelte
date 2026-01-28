@@ -1,3 +1,6 @@
+<!--
+  Wrapper component for the task editor and detail view in the right pane.
+-->
 <script lang="ts">
     import type { TodoItem } from "$lib/stores/todo.svelte";
     import TaskDetailContainer from "$lib/components/tasks/editor/TaskDetailContainer.svelte";

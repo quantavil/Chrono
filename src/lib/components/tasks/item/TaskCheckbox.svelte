@@ -1,3 +1,6 @@
+<!--
+  Interactive completion checkbox optimized for task list interactions.
+-->
 <script lang="ts">
     import { Check } from "lucide-svelte";
     import type { TodoItem } from "$lib/stores/todo.svelte";

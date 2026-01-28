@@ -1,3 +1,6 @@
+/**
+ * Utilities for parsing raw natural language task input into structured task data.
+ */
 import { parseDuration } from "./formatTime";
 
 interface ParsedTask {

@@ -1,3 +1,6 @@
+<!--
+  Header component for the task detail view, providing editable titles and key status indicators.
+-->
 <script lang="ts">
     import { X, Trash2, RotateCcw, ArrowLeft } from "lucide-svelte";
     import { getTodoStore } from "$lib/context";

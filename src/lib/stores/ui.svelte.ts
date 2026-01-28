@@ -1,3 +1,6 @@
+/**
+ * UI Store: Manages global UI state such as sidebar visibility, responsive layout flags, and navigation view.
+ */
 export class UIStore {
     isSidebarOpen = $state(true);
     isMobileSidebarOpen = $state(false);

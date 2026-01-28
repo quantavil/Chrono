@@ -1,3 +1,6 @@
+<!--
+  List item component representing a single task with its status, title, and key actions.
+-->
 <script lang="ts">
     import {
         GripVertical,

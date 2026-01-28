@@ -1,3 +1,6 @@
+<!--
+  Documentation modal displaying available keyboard shortcuts for application navigation and control.
+-->
 <script lang="ts">
     import { fade, scale } from "svelte/transition";
     import { X, Keyboard } from "lucide-svelte";

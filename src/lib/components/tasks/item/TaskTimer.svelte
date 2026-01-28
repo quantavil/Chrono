@@ -1,3 +1,6 @@
+<!--
+  Interactive timer control for logging and tracking time spent on individual tasks.
+-->
 <script lang="ts">
     import { Play, Pause } from "lucide-svelte";
     import type { TodoItem } from "$lib/stores/todo.svelte";

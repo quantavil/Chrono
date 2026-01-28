@@ -1,3 +1,6 @@
+<!--
+  Management component for subtask lists, including creation, completion, and deletion of subtasks.
+-->
 <script lang="ts">
     import { slide } from "svelte/transition";
     import { Plus, GripVertical, X, Trash2, CheckCircle2 } from "lucide-svelte";

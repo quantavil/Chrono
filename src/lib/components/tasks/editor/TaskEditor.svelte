@@ -1,3 +1,6 @@
+<!--
+  Comprehensive task property editor for modifying priority, deadlines, recurrence, and other metadata.
+-->
 <script lang="ts">
     import { fade, slide } from "svelte/transition";
     import {

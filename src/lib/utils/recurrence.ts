@@ -1,3 +1,6 @@
+/**
+ * Logic for calculating the next occurrence of recurring tasks based on configuration.
+ */
 import type { RecurrenceConfig } from '../types';
 
 export function calculateNextOccurrence(config: RecurrenceConfig, fromDate: Date = new Date()): Date | null {

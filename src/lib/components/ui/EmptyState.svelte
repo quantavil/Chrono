@@ -1,3 +1,6 @@
+<!--
+  Informative component for displaying when a view or list is empty.
+-->
 <script lang="ts">
     /**
      * EmptyState Component

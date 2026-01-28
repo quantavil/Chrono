@@ -1,3 +1,6 @@
+<!--
+  Interactive, visual duration controller for adjusting task estimated time via a squiggly line UI.
+-->
 <script lang="ts">
     interface Props {
         value?: number | null;
@@ -47,7 +50,7 @@
     const color = $derived(
         active
             ? `hsl(${Math.max(0, 200 - ratio * 220)} ${60 + ratio * 30}% ${60 - ratio * 10}%)`
-            : undefined
+            : undefined,
     );
 
     const label = $derived.by(() => {
@@ -70,7 +73,9 @@
 
     const knobX = $derived(ratio * width);
     const knobY = $derived(
-        width > 0 ? HEIGHT / 2 + Math.sin((knobX / width) * 50 * freq) * amp : HEIGHT / 2
+        width > 0
+            ? HEIGHT / 2 + Math.sin((knobX / width) * 50 * freq) * amp
+            : HEIGHT / 2,
     );
 
     function posToMinutes(clientX: number): number {
@@ -131,7 +136,7 @@
 
 <div
     bind:this={container}
-    class="relative h-16 w-full touch-none select-none rounded-xl bg-base-200/50 
+    class="relative h-16 w-full touch-none select-none rounded-xl bg-base-200/50
            overflow-hidden cursor-crosshair {className}"
     role="slider"
     tabindex="0"
@@ -148,7 +153,9 @@
     {onkeydown}
 >
     <!-- Track -->
-    <div class="absolute inset-x-3 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-current/10"></div>
+    <div
+        class="absolute inset-x-3 top-1/2 h-0.5 -translate-y-1/2 rounded-full bg-current/10"
+    ></div>
 
     <!-- Wave -->
     <svg class="absolute inset-0 overflow-visible pointer-events-none">
@@ -165,7 +172,7 @@
 
     <!-- Knob -->
     <div
-        class="absolute -ml-2 -mt-2 size-4 rounded-full border-2 bg-base-100 shadow-md 
+        class="absolute -ml-2 -mt-2 size-4 rounded-full border-2 bg-base-100 shadow-md
                pointer-events-none z-10 transition-transform duration-150"
         class:scale-125={dragging}
         style:left="{knobX}px"
@@ -174,14 +181,20 @@
     ></div>
 
     <!-- Label -->
-    <div class="absolute inset-x-0 bottom-1 flex justify-center pointer-events-none">
+    <div
+        class="absolute inset-x-0 bottom-1 flex justify-center pointer-events-none"
+    >
         {#if active || dragging}
-            <span class="text-[10px] font-bold tabular-nums px-2 py-0.5 bg-base-100/90 
-                         rounded-full shadow-sm border border-base-200 backdrop-blur-sm">
+            <span
+                class="text-[10px] font-bold tabular-nums px-2 py-0.5 bg-base-100/90
+                         rounded-full shadow-sm border border-base-200 backdrop-blur-sm"
+            >
                 {label}
             </span>
         {:else}
-            <span class="text-[10px] uppercase tracking-wider text-neutral/40 font-medium">
+            <span
+                class="text-[10px] uppercase tracking-wider text-neutral/40 font-medium"
+            >
                 Drag to set
             </span>
         {/if}

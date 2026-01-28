@@ -1,3 +1,6 @@
+<!--
+  Placeholder component displayed in the detail pane when no task is selected.
+-->
 <script lang="ts">
     import {
         MousePointerClick,

@@ -1,5 +1,7 @@
 
-// src/lib/stores/toast.svelte.ts - WITH ACTIONS
+/**
+ * Toast Store: Manages a queue of transient notification messages with support for timeouts and interactive actions.
+ */
 
 import type { Toast, ToastInput, ToastAction, ToastType } from '../types';
 import { TOAST_DEFAULT_DURATION_MS, TOAST_WITH_ACTION_DURATION_MS } from '../types';

@@ -1,3 +1,6 @@
+<!--
+  Unified container that manages the presentation of task details and editor views.
+-->
 <script lang="ts">
     import type { TodoItem } from "$lib/stores/todo.svelte";
     import TaskEditor from "./TaskEditor.svelte";

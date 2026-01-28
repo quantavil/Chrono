@@ -1,6 +1,5 @@
 /**
- * Authentication State Management with Svelte 5 Runes
- * Handles user auth state, magic link, and OAuth providers
+ * Authentication Store: Manages user session, login/logout logic, and Supabase auth integration using Svelte 5 runes.
  */
 
 import type { User, AuthState } from '../types';

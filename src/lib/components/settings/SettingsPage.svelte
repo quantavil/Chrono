@@ -1,3 +1,6 @@
+<!--
+  Application settings page for managing data, account, and preferences.
+-->
 <script lang="ts">
 	import {
 		ChevronLeft,

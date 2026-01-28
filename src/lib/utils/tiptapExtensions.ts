@@ -1,3 +1,6 @@
+/**
+ * Custom Tiptap editor extensions for smart highlighting of tags and task durations.
+ */
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
 import { Decoration, DecorationSet } from '@tiptap/pm/view';

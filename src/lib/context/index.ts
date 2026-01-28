@@ -1,3 +1,6 @@
+/**
+ * Typed Svelte context wrappers for accessing global stores (UI, Auth, Todo).
+ */
 import { setContext, getContext } from 'svelte';
 import { TodoList } from '../stores/todo.svelte';
 import { AuthManager } from '../stores/auth.svelte';

@@ -1,3 +1,6 @@
+<!--
+  Task entry bar component that enables quick task creation with natural language parsing.
+-->
 <script lang="ts">
   import { Plus, Calendar, Clock, Flag } from "lucide-svelte";
   import CustomDatePicker from "$lib/components/ui/CustomDatePicker.svelte";

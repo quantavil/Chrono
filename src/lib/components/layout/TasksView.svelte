@@ -1,3 +1,6 @@
+<!--
+  High-level view component that orchestrates the display of tasks and handles pane transitions.
+-->
 <script lang="ts">
     import AddTaskBar from "$lib/components/tasks/AddTaskBar.svelte";
     import TaskList from "$lib/components/tasks/TaskList.svelte";

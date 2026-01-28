@@ -1,3 +1,6 @@
+<!--
+  Rich-text editor component powered by Tiptap for managing task descriptions and notes.
+-->
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import { Editor } from "@tiptap/core";

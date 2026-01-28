@@ -1,8 +1,17 @@
+<!--
+  Individual notification toast component that displays messages and optional action buttons.
+-->
 <script lang="ts">
     import { fly, fade } from "svelte/transition";
     import { flip } from "svelte/animate";
     import { quintOut } from "svelte/easing";
-    import { CheckCircle, XCircle, AlertTriangle, Info, X } from "lucide-svelte";
+    import {
+        CheckCircle,
+        XCircle,
+        AlertTriangle,
+        Info,
+        X,
+    } from "lucide-svelte";
     import { toastManager } from "$lib/stores/toast.svelte";
     import type { Toast, ToastType } from "$lib/types";
 
@@ -27,7 +36,11 @@
     // Props
     // -------------------------------------------------------------------------
     interface Props {
-        position?: "top-right" | "top-center" | "bottom-right" | "bottom-center";
+        position?:
+            | "top-right"
+            | "top-center"
+            | "bottom-right"
+            | "bottom-center";
         class?: string;
     }
 
@@ -102,7 +115,9 @@
                 onmouseleave={() => toastManager.resume(toast.id)}
             >
                 <!-- Icon -->
-                <div class="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center {styles.bg}">
+                <div
+                    class="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center {styles.bg}"
+                >
                     <Icon class="w-4 h-4 {styles.icon}" strokeWidth={2.5} />
                 </div>
 
@@ -136,7 +151,9 @@
 
                 <!-- Progress Bar -->
                 {#if toast.duration > 0}
-                    <div class="absolute bottom-0 left-4 right-4 h-0.5 rounded-full overflow-hidden bg-base-200">
+                    <div
+                        class="absolute bottom-0 left-4 right-4 h-0.5 rounded-full overflow-hidden bg-base-200"
+                    >
                         <div
                             class="h-full rounded-full {styles.progress} opacity-50"
                             style="animation: toast-shrink {toast.duration}ms linear forwards;"
@@ -150,7 +167,11 @@
 
 <style>
     @keyframes toast-shrink {
-        from { width: 100%; }
-        to { width: 0%; }
+        from {
+            width: 100%;
+        }
+        to {
+            width: 0%;
+        }
     }
 </style>

@@ -2,6 +2,9 @@
  * Chronos Application Entry Point
  * Mounts the Svelte application and initializes global state
  */
+/**
+ * Application Entry Point: Initializes the Svelte application and mounts it to the DOM.
+ */
 import './app.css';
 import { mount } from 'svelte';
 import App from './App.svelte';

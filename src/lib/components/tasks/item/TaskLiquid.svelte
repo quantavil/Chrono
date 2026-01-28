@@ -1,3 +1,6 @@
+<!--
+  Visual component providing a liquid/wave completion indicator for task progress.
+-->
 <script lang="ts">
     import type { TodoItem } from "$lib/stores/todo.svelte";
 

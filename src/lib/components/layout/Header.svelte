@@ -1,3 +1,6 @@
+<!--
+  Top navigation header containing branding, global actions, and user menu.
+-->
 <script lang="ts">
     import {
         Sun,

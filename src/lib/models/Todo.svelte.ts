@@ -1,3 +1,6 @@
+/**
+ * TodoModel: A reactive class representing an individual task, containing its state, validation, and transition logic.
+ */
 import type {
     Todo,
     TodoLocal,

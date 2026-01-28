@@ -1,3 +1,6 @@
+<!--
+  User profile menu component displaying user info and providing logout/settings actions.
+-->
 <script lang="ts">
   /**
    * UserMenu Component

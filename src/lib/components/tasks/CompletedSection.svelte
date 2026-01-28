@@ -1,3 +1,6 @@
+<!--
+  Collapsible layout section for displaying and managing completed tasks.
+-->
 <script lang="ts">
   /**
    * CompletedSection Component

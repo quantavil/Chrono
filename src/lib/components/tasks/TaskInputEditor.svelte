@@ -1,3 +1,6 @@
+<!--
+  Specialized input field that provides real-time highlighting and parsing for task meta-data (tags, duration).
+-->
 <script lang="ts">
     import { onMount, onDestroy } from "svelte";
     import { Editor } from "@tiptap/core";

@@ -1,3 +1,6 @@
+<!--
+  Collapsible navigation sidebar for filtering tasks by category, project, or status.
+-->
 <script lang="ts">
     import { Clock, Sparkles, ListTodo, Flame, Zap, X } from "lucide-svelte";
     import { formatTimeCompact, formatDateHeader } from "$lib/utils/formatTime";

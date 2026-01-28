@@ -1,5 +1,6 @@
-
-// src/lib/utils/formatTime.ts - ENHANCED
+/**
+ * Utility functions for time and date formatting, parsing, and relative date calculations.
+ */
 
 import type { TimerDisplayData } from '../types';
 

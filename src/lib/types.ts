@@ -1,7 +1,6 @@
 
 /**
- * Chronos Type Definitions
- * Complete type system for the Todo & Timer application
+ * Central repository for all TypeScript interfaces, types, and constants used across the application.
  */
 
 // ============================================================================

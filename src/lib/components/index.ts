@@ -1,3 +1,6 @@
+/**
+ * Component Registry: Centralized exports for all Svelte components in the library.
+ */
 // Auth
 export { default as LoginForm } from './auth/LoginForm.svelte';
 export { default as UserMenu } from './auth/UserMenu.svelte';

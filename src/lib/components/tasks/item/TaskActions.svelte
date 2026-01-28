@@ -1,3 +1,6 @@
+<!--
+  Small utility component providing secondary actions like deletion and manual editing for task items.
+-->
 <script lang="ts">
     import {
         MoreVertical,

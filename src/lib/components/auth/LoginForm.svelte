@@ -1,3 +1,6 @@
+<!--
+  Authentication form component providing Magic Link and GitHub OAuth login options.
+-->
 <script lang="ts">
     /**
      * LoginForm Component

@@ -1,3 +1,6 @@
+<!--
+  Layout container for the task details column or empty state panel.
+-->
 <script lang="ts">
     import { fade } from "svelte/transition";
     import EmptyPanel from "$lib/components/panels/EmptyPanel.svelte";

@@ -1,3 +1,6 @@
+/**
+ * Storage Service: Handles persistence of application data to local storage and coordinates synchronization with Supabase.
+ */
 import type { TodoLocal, Todo, TodoCreateInput, FilterState, UserPreferences } from "../types";
 import { LOCAL_STORAGE_KEYS, DEFAULT_FILTERS, DEFAULT_PREFERENCES } from "../types";
 import {

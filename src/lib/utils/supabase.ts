@@ -1,14 +1,11 @@
 /**
- * Supabase Client Configuration
- * Initializes and exports the Supabase client with proper TypeScript types
+ * Supabase client setup and helper functions for database operations and authentication.
  */
 
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import type { Todo, User, RecurrenceConfig, Subtask } from '../types';
 
-// ============================================================================
-// Database Types (Generated from Schema)
-// ============================================================================
+// Database Types
 
 export interface Database {
     public: {
@@ -53,16 +50,12 @@ export interface Database {
     };
 }
 
-// ============================================================================
 // Environment Variables
-// ============================================================================
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string | undefined;
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined;
 
-// ============================================================================
 // Client Configuration
-// ============================================================================
 
 interface SupabaseConfig {
     url: string;
@@ -80,9 +73,7 @@ function getSupabaseConfig(): SupabaseConfig {
 
 export const supabaseConfig = getSupabaseConfig();
 
-// ============================================================================
 // Client Instance
-// ============================================================================
 
 let supabaseInstance: SupabaseClient<Database> | null = null;
 
@@ -123,9 +114,7 @@ export function getSupabase(): SupabaseClient<Database> | null {
 
 export const supabase = getSupabase();
 
-// ============================================================================
 // Auth Helpers
-// ============================================================================
 
 export async function getCurrentUser(): Promise<User | null> {
     const client = getSupabase();
@@ -203,9 +192,7 @@ export async function signOut(): Promise<{ error: Error | null }> {
     }
 }
 
-// ============================================================================
 // Todo API Helpers
-// ============================================================================
 
 export async function fetchTodos(userId: string): Promise<{ data: Todo[] | null; error: Error | null }> {
     const client = getSupabase();
@@ -325,9 +312,7 @@ export async function batchUpdateTodos(
     }
 }
 
-// ============================================================================
 // Realtime Subscriptions
-// ============================================================================
 
 export type TodoChangeCallback = (payload: {
     eventType: 'INSERT' | 'UPDATE' | 'DELETE';
@@ -367,9 +352,7 @@ export function subscribeTodoChanges(
     };
 }
 
-// ============================================================================
 // Connection Status
-// ============================================================================
 
 export function isSupabaseConfigured(): boolean {
     return supabaseConfig.isConfigured;

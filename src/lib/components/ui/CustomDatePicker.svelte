@@ -1,3 +1,6 @@
+<!--
+  Date selection component for setting task deadlines with preset options.
+-->
 <script lang="ts">
     import {
         ChevronLeft,
@@ -24,10 +27,8 @@
     let isOpen = $state(false);
     let pickerRef = $state<HTMLDivElement | null>(null);
 
-    // View state (which month are we looking at?)
     let viewDate = $state(new Date());
 
-    // Sync viewDate when value changes (if not open)
     $effect(() => {
         if (value && !isOpen) {
             viewDate = new Date(value);
@@ -151,7 +152,6 @@
 </script>
 
 <div class="relative {className}" bind:this={pickerRef}>
-    <!-- Trigger -->
     <div
         onclick={() => (isOpen = !isOpen)}
         role="button"
@@ -187,13 +187,11 @@
         {/if}
     </div>
 
-    <!-- Popover -->
     {#if isOpen}
         <div
             class="absolute top-full left-0 mt-2 z-50 bg-base-100 border border-base-200 shadow-xl rounded-xl p-4 w-[300px]"
             transition:fade={{ duration: 100 }}
         >
-            <!-- Header -->
             <div class="flex items-center justify-between mb-4">
                 <button
                     class="p-1 hover:bg-base-200 rounded-lg text-neutral/50 hover:text-neutral transition-colors"
@@ -213,7 +211,6 @@
                 </button>
             </div>
 
-            <!-- Grid -->
             <div class="grid grid-cols-7 gap-1 text-center mb-2">
                 {#each weekDays as day}
                     <div

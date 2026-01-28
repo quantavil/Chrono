@@ -1,14 +1,11 @@
 /**
- * Theme State Management with Svelte 5 Runes
- * Handles light/dark mode with system preference detection
+ * Theme Store: Manages application appearance (light, dark, system) and user preferences.
  */
 
 import type { Theme, ThemeState } from '../types';
 import { LOCAL_STORAGE_KEYS } from '../types';
 
-// ============================================================================
-// Theme Manager Class
-// ============================================================================
+// Theme Manager
 
 class ThemeManager {
   private current = $state<Theme>('system');
@@ -23,9 +20,6 @@ class ThemeManager {
     }
   }
 
-  // -------------------------------------------------------------------------
-  // Getters
-  // -------------------------------------------------------------------------
 
   get theme(): Theme {
     return this.current;
@@ -57,9 +51,6 @@ class ThemeManager {
     return this.current === 'system';
   }
 
-  // -------------------------------------------------------------------------
-  // Actions
-  // -------------------------------------------------------------------------
 
   setTheme(theme: Theme): void {
     this.current = theme;
@@ -97,9 +88,6 @@ class ThemeManager {
     this.setTheme('system');
   }
 
-  // -------------------------------------------------------------------------
-  // Private Methods
-  // -------------------------------------------------------------------------
 
   private loadFromStorage(): void {
     try {
@@ -160,15 +148,11 @@ class ThemeManager {
   }
 }
 
-// ============================================================================
 // Singleton Instance
-// ============================================================================
 
 export const themeManager = new ThemeManager();
 
-// ============================================================================
 // Convenience Exports
-// ============================================================================
 
 export function getTheme(): Theme {
   return themeManager.theme;

@@ -1,3 +1,6 @@
+<!--
+  Layout container for the main task list column.
+-->
 <script lang="ts">
     import AddTaskBar from "$lib/components/tasks/AddTaskBar.svelte";
     import Header from "$lib/components/layout/Header.svelte";

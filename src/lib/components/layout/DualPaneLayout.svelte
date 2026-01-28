@@ -1,3 +1,6 @@
+<!--
+  Primary application layout manager that handles responsive display of task list and details in a dual-pane setup.
+-->
 <script lang="ts">
     import { fade, slide, fly } from "svelte/transition";
     import { uiStore } from "$lib/stores/ui.svelte";

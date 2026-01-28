@@ -1,3 +1,6 @@
+<!--
+  Renders and manages a collection of TaskItems with drag-and-drop support.
+-->
 <script lang="ts">
     import { flip } from "svelte/animate";
     import { fade, fly } from "svelte/transition";
@@ -25,7 +28,6 @@
     const hasActiveTodos = $derived(activeTodos.length > 0);
     const isLoading = $derived(todoList.loading);
 
-    // Drag state
     let draggedId = $state<string | null>(null);
     let dragOverId = $state<string | null>(null);
     let dragStartIndex = $state<number>(-1);

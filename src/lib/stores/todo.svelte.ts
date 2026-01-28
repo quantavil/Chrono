@@ -19,11 +19,7 @@ import { toastManager } from "./toast.svelte";
 import { isSupabaseConfigured, subscribeTodoChanges } from "../utils/supabase";
 
 /**
- * TodoList Store
- *
- * Manages the collection of Todos.
- * Orchestrates persistence via StorageService.
- * Handles undo/redo and filtering.
+ * TodoList Store: Central orchestrator for task state, persistence, sync, and undo/redo.
  */
 export class TodoList {
   // State
@@ -54,9 +50,7 @@ export class TodoList {
     this._startTimerLoop();
   }
 
-  // =========================================================================
-  // Reactivity (Auto-Save)
-  // =========================================================================
+  // Persistence & Reactivity
 
   // Note: In Svelte 5 classes, we can use $effect if we register it in effect root.
   // However, since this is a singleton exported at module level, effects might not strictly attach to component tree.
@@ -84,9 +78,7 @@ export class TodoList {
   }
   private _saveTimeout: any;
 
-  // =========================================================================
   // Getters
-  // =========================================================================
 
   get all(): TodoModel[] {
     return this._items.filter(t => !t._deleted);
@@ -159,9 +151,7 @@ export class TodoList {
   get undoStack() { return this._undoStack; }
   get canUndo() { return this._undoStack.length > 0; }
 
-  // =========================================================================
   // Actions
-  // =========================================================================
 
   add(input: TodoCreateInput): TodoModel {
     const now = new Date().toISOString();
@@ -292,7 +282,7 @@ export class TodoList {
     this._save();
   }
 
-  // --- Timer ---
+  // Timer
 
   toggleTimer(id: string): void {
     const item = this.getById(id);
@@ -331,7 +321,7 @@ export class TodoList {
     this._save();
   }
 
-  // --- Bulk ---
+  // Bulk Operations
 
   clearCompleted() {
     const completed = this.completedTodos;
@@ -358,9 +348,7 @@ export class TodoList {
     this._save();
   }
 
-  // =========================================================================
-  // Filters
-  // =========================================================================
+  // Preferences
 
   updatePreference<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
     this._preferences[key] = value;

@@ -1,12 +1,13 @@
+<!--
+  Root App Component: Orchestrates the high-level application state, context provision, and view routing.
+-->
 <script lang="ts">
   import { onMount } from "svelte";
   import { fade } from "svelte/transition";
 
-  // Layout
   import DualPaneLayout from "$lib/components/layout/DualPaneLayout.svelte";
   import RightPane from "$lib/components/layout/RightPane.svelte";
 
-  // Components
   import Header from "$lib/components/layout/Header.svelte";
   import AddTaskBar from "$lib/components/tasks/AddTaskBar.svelte";
   import TaskList from "$lib/components/tasks/TaskList.svelte";
@@ -15,14 +16,12 @@
   import KeyboardShortcuts from "$lib/components/ui/KeyboardShortcuts.svelte";
   import SettingsPage from "$lib/components/settings/SettingsPage.svelte";
 
-  // Stores
   import { themeManager } from "$lib/stores/theme.svelte";
   import { toastManager } from "$lib/stores/toast.svelte";
   import { uiStore } from "$lib/stores/ui.svelte";
   import { isSupabaseConfigured } from "$lib/utils/supabase";
   import { initStores } from "$lib/context";
 
-  // Icons
   import { WifiOff } from "lucide-svelte";
 
   // -------------------------------------------------------------------------
@@ -105,7 +104,6 @@
     const { key, metaKey, ctrlKey } = event;
     const mod = metaKey || ctrlKey;
 
-    // Check if typing in input
     const el = document.activeElement;
     const isTyping =
       el instanceof HTMLInputElement ||
@@ -133,7 +131,6 @@
       return;
     }
 
-    // Navigation shortcuts (only when not typing)
     if (isTyping) return;
 
     const taskIds = todoList.activeTodos.map((t) => t.id);
@@ -194,7 +191,6 @@
     };
   });
 
-  // Effects
   $effect(() => {
     if (isAuthInitialized && !isLoading && !isInitialized) isInitialized = true;
   });
