@@ -29,7 +29,7 @@ export class TodoModel {
     description = $state<string | null>(null);
     notes = $state<string | null>(null);
     isCompleted = $state(false);
-    priority = $state<PriorityOrNone>("medium");
+    priority = $state<PriorityOrNone>("none");
     dueAt = $state<string | null>(null);
 
     // Timer Data

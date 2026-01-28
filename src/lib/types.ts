@@ -37,7 +37,7 @@ export interface AuthState {
 // Priority & Status
 // ============================================================================
 
-export type Priority = 'high' | 'medium' | 'low';
+export type Priority = 'high' | 'medium' | 'low' | 'none';
 export type PriorityOrNone = Priority | null;
 
 export type TaskStatus = 'active' | 'completed' | 'overdue';
@@ -366,17 +366,17 @@ export const PRIORITY_CONFIG = {
   },
   none: {
     label: "None",
-    color: "neutral",
+    color: "blue-500",
     sortWeight: 3,
     classes: {
-      bg: "bg-base-200",
-      bgHover: "hover:bg-base-300",
-      text: "text-neutral/70",
-      border: "border-transparent",
-      ring: "ring-neutral/20",
-      badge: "bg-base-200 text-neutral/60 border-transparent",
-      button: "bg-base-200 text-neutral/70 border-transparent hover:bg-base-300",
-      buttonInactive: "border-base-300 text-neutral/40 hover:border-neutral/30 hover:text-neutral/60",
+      bg: "bg-blue-500/10",
+      bgHover: "hover:bg-blue-500/20",
+      text: "text-blue-500",
+      border: "border-blue-500",
+      ring: "ring-blue-500/30",
+      badge: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+      button: "bg-blue-500/10 text-blue-500 border-blue-500 hover:bg-blue-500/20",
+      buttonInactive: "border-base-300 text-neutral/40 hover:border-blue-500/30 hover:text-blue-500/60",
     },
   },
 } as const;

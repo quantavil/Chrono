@@ -61,7 +61,7 @@
         todo.dueAt && new Date(todo.dueAt) < new Date() && !isCompleted,
     );
 
-    const currentPriority = $derived(todo.priority || "low");
+    const currentPriority = $derived(todo.priority || "none");
     const currentConfig = $derived(PRIORITY_CONFIG[currentPriority]);
     const currentPriorityColor = $derived(
         `var(--color-${currentConfig.color})`,

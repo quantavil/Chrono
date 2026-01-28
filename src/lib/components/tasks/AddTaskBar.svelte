@@ -15,7 +15,7 @@
   // Constants
   // -------------------------------------------------------------------------
 
-  const PRIORITY_OPTIONS = ["high", "medium", "low"] as const;
+  const PRIORITY_OPTIONS = ["high", "medium", "low", "none"] as const;
   const DUE_DATE_OPTIONS = ["today", "tomorrow", "week"] as const;
 
   const DUE_DATE_CONFIG = {
@@ -45,7 +45,7 @@
   let isSubmitting = $state(false);
   let showQuickActions = $state(false);
 
-  let selectedPriority = $state<Priority | null>(null);
+  let selectedPriority = $state<Priority | null>("none");
   let selectedDueDate = $state<DueDatePreset | null>(null);
   let customDueDate = $state<string | null>(null);
   let selectedDuration = $state<number | null>(null);
@@ -82,7 +82,7 @@
 
   function resetForm(): void {
     inputValue = "";
-    selectedPriority = null;
+    selectedPriority = "none";
     selectedDueDate = null;
     customDueDate = null;
     showQuickActions = false;

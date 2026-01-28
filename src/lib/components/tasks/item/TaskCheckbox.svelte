@@ -5,6 +5,7 @@
     import { Check } from "lucide-svelte";
     import type { TodoItem } from "$lib/stores/todo.svelte";
     import { getTodoStore } from "$lib/context";
+    import { PRIORITY_CONFIG } from "$lib/types";
 
     interface Props {
         todo: TodoItem;
@@ -15,6 +16,7 @@
     const todoList = getTodoStore();
 
     const isCompleted = $derived(todo.isCompleted);
+    const priorityConfig = $derived(PRIORITY_CONFIG[todo.priority || "none"]);
 
     function handleToggleComplete(): void {
         todoList.toggleComplete(todo.id);
@@ -28,10 +30,10 @@
         w-5 h-5 md:w-6 md:h-6
         rounded-lg border-2
         transition-all duration-200
-        focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/50
+        focus:outline-none focus:ring-2 focus:ring-${priorityConfig.color}/50
         {isCompleted
-        ? 'bg-accent border-accent'
-        : 'border-neutral-muted hover:border-primary hover:bg-primary-muted'}
+        ? `bg-${priorityConfig.color} border-${priorityConfig.color}`
+        : `border-neutral-muted hover:border-${priorityConfig.color} hover:bg-${priorityConfig.color}/10`}
     "
     onclick={(e) => {
         e.stopPropagation();

@@ -385,7 +385,7 @@
             <div>
                 <p class="text-xs font-medium text-neutral/50 mb-2">Priority</p>
                 <div class="flex gap-2">
-                    {#each ["high", "medium", "low"] as const as p}
+                    {#each ["high", "medium", "low", "none"] as const as p}
                         {@const config = PRIORITY_CONFIG[p]}
                         <button
                             class="

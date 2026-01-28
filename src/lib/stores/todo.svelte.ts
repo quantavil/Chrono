@@ -176,7 +176,7 @@ export class TodoList {
       title: input.title,
       description: input.description ?? null,
       notes: input.notes ?? null,
-      priority: input.priority ?? null,
+      priority: input.priority ?? "none",
       tags: input.tags ?? [],
       recurrence: input.recurrence ?? null,
       due_at: input.due_at ?? null,
