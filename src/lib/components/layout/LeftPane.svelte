@@ -1,8 +1,8 @@
 <script lang="ts">
-    import AddTaskBar from "$lib/components/AddTaskBar.svelte";
-    import Header from "$lib/components/Header.svelte";
-    import TaskList from "$lib/components/TaskList.svelte";
-    import CompletedSection from "$lib/components/CompletedSection.svelte";
+    import AddTaskBar from "$lib/components/tasks/AddTaskBar.svelte";
+    import Header from "$lib/components/layout/Header.svelte";
+    import TaskList from "$lib/components/tasks/TaskList.svelte";
+    import CompletedSection from "$lib/components/tasks/CompletedSection.svelte";
     import { formatDateHeader } from "$lib/utils/formatTime";
 
     interface Props {

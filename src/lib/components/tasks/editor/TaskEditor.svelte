@@ -23,13 +23,14 @@
     import {
         getDatePresetISO,
         formatRelativeDate,
-        formatDuration,
+        formatTime,
+        // formatDateForInput,
     } from "$lib/utils/formatTime";
-    import TiptapEditor from "$lib/components/editor/TiptapEditor.svelte";
+    import TiptapEditor from "./TiptapEditor.svelte";
     import type { Priority, RecurrenceConfig } from "$lib/types";
     import { uiStore } from "$lib/stores/ui.svelte";
-    import TaskHeader from "$lib/components/editor/TaskHeader.svelte";
-    import CustomDatePicker from "$lib/components/CustomDatePicker.svelte";
+    import TaskHeader from "./TaskHeader.svelte";
+    import CustomDatePicker from "$lib/components/ui/CustomDatePicker.svelte";
     import SquigglyDuration from "$lib/components/ui/SquigglyDuration.svelte";
 
     interface Props {

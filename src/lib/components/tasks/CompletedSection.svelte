@@ -14,7 +14,9 @@
   import { flip } from "svelte/animate";
   import { slide, fade } from "svelte/transition";
   import { quintOut } from "svelte/easing";
+  import { ChevronRight } from "lucide-svelte";
   import { getTodoStore } from "$lib/context";
+  import TaskItem from "./TaskItem.svelte";
   import { formatRelativeDate, formatTimeCompact } from "$lib/utils/formatTime";
 
   // -------------------------------------------------------------------------

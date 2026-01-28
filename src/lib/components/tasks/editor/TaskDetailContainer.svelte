@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { TodoItem } from "$lib/stores/todo.svelte";
-    import TaskHeader from "./TaskHeader.svelte";
     import TaskEditor from "./TaskEditor.svelte";
+    import TaskHeader from "./TaskHeader.svelte";
 
     interface Props {
         task: TodoItem;

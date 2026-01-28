@@ -1,6 +1,8 @@
 <script lang="ts">
     import { slide } from "svelte/transition";
-    import { CheckCircle2, Trash2, Plus } from "lucide-svelte";
+    import { Plus, GripVertical, X, Trash2, CheckCircle2 } from "lucide-svelte";
+    import TaskCheckbox from "./TaskCheckbox.svelte";
+    import { getTodoStore } from "$lib/context";
     import type { TodoItem } from "$lib/stores/todo.svelte";
 
     let { todo }: { todo: TodoItem } = $props();

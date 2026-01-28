@@ -1,6 +1,6 @@
 <script lang="ts">
     import type { TodoItem } from "$lib/stores/todo.svelte";
-    import TaskDetailContainer from "$lib/components/editor/TaskDetailContainer.svelte";
+    import TaskDetailContainer from "$lib/components/tasks/editor/TaskDetailContainer.svelte";
 
     interface Props {
         task: TodoItem;

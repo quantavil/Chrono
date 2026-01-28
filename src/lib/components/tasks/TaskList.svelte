@@ -2,8 +2,9 @@
     import { flip } from "svelte/animate";
     import { fade, fly } from "svelte/transition";
     import { quintOut } from "svelte/easing";
+    import { uiStore } from "$lib/stores/ui.svelte";
     import TaskItem from "./TaskItem.svelte";
-    import EmptyState from "./EmptyState.svelte";
+    import EmptyState from "$lib/components/ui/EmptyState.svelte";
     import { getTodoStore } from "$lib/context";
 
     interface Props {

@@ -7,13 +7,13 @@
   import RightPane from "$lib/components/layout/RightPane.svelte";
 
   // Components
-  import Header from "$lib/components/Header.svelte";
-  import AddTaskBar from "$lib/components/AddTaskBar.svelte";
-  import TaskList from "$lib/components/TaskList.svelte";
-  import CompletedSection from "$lib/components/CompletedSection.svelte";
-  import Toast from "$lib/components/Toast.svelte";
-  import KeyboardShortcuts from "$lib/components/KeyboardShortcuts.svelte";
-  import SettingsPage from "$lib/components/SettingsPage.svelte";
+  import Header from "$lib/components/layout/Header.svelte";
+  import AddTaskBar from "$lib/components/tasks/AddTaskBar.svelte";
+  import TaskList from "$lib/components/tasks/TaskList.svelte";
+  import CompletedSection from "$lib/components/tasks/CompletedSection.svelte";
+  import Toast from "$lib/components/ui/Toast.svelte";
+  import KeyboardShortcuts from "$lib/components/ui/KeyboardShortcuts.svelte";
+  import SettingsPage from "$lib/components/settings/SettingsPage.svelte";
 
   // Stores
   import { themeManager } from "$lib/stores/theme.svelte";
@@ -43,7 +43,7 @@
   const isAuthInitialized = $derived(authManager.isInitialized);
   const isLoading = $derived(todoList.loading);
   const selectedTask = $derived(
-    selectedTaskId ? (todoList.getById(selectedTaskId) ?? null) : null
+    selectedTaskId ? (todoList.getById(selectedTaskId) ?? null) : null,
   );
 
   // -------------------------------------------------------------------------
@@ -51,7 +51,9 @@
   // -------------------------------------------------------------------------
   function getTaskIdFromHash(): string | null {
     const hash = window.location.hash;
-    return hash.startsWith("#task=") ? hash.replace("#task=", "") || null : null;
+    return hash.startsWith("#task=")
+      ? hash.replace("#task=", "") || null
+      : null;
   }
 
   function updateUrlWithTask(taskId: string | null): void {
@@ -76,7 +78,10 @@
   }
 
   function handleCloseTask(): void {
-    if (window.history.state?.taskId || window.location.hash.includes("task=")) {
+    if (
+      window.history.state?.taskId ||
+      window.location.hash.includes("task=")
+    ) {
       window.history.back();
     } else {
       selectedTaskId = null;
@@ -90,7 +95,9 @@
       toastManager.success("Back online");
       if (isSupabaseEnabled && isAuthenticated) todoList.forceSync();
     } else {
-      toastManager.warning("You're offline. Changes will sync when reconnected.");
+      toastManager.warning(
+        "You're offline. Changes will sync when reconnected.",
+      );
     }
   }
 
@@ -108,7 +115,9 @@
     // Global shortcuts
     if (mod && key === "k") {
       event.preventDefault();
-      document.querySelector<HTMLInputElement>('input[placeholder*="task"]')?.focus();
+      document
+        .querySelector<HTMLInputElement>('input[placeholder*="task"]')
+        ?.focus();
       return;
     }
 
@@ -135,7 +144,10 @@
     } else if (key === "ArrowUp") {
       event.preventDefault();
       uiStore.focusPrev(taskIds);
-    } else if ((key === " " || event.code === "Space") && uiStore.focusedTaskId) {
+    } else if (
+      (key === " " || event.code === "Space") &&
+      uiStore.focusedTaskId
+    ) {
       event.preventDefault();
       todoList.toggleTimer(uiStore.focusedTaskId);
     } else if (key === "Enter" && uiStore.focusedTaskId) {
@@ -201,11 +213,16 @@
     {#if uiStore.view === "settings"}
       <SettingsPage />
     {:else}
-      <DualPaneLayout isRightPaneOpen={!!selectedTask} mobileShowDetail={!!selectedTask}>
+      <DualPaneLayout
+        isRightPaneOpen={!!selectedTask}
+        mobileShowDetail={!!selectedTask}
+      >
         {#snippet listPane()}
           <div class="h-full flex flex-col">
             <Header class="flex-shrink-0" />
-            <div class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-6 pt-4">
+            <div
+              class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-6 pt-4"
+            >
               <AddTaskBar variant="inline" class="mb-6" />
               <TaskList class="mb-6" onEdit={handleSelectTask} />
               <CompletedSection />
@@ -222,7 +239,9 @@
     <!-- Loading -->
     <div class="min-h-screen bg-base-200 flex items-center justify-center">
       <div class="flex flex-col items-center gap-4">
-        <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary animate-pulse"></div>
+        <div
+          class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary animate-pulse"
+        ></div>
         <p class="text-sm text-neutral/50 font-medium">Loading Chronos...</p>
       </div>
     </div>
@@ -245,9 +264,16 @@
 
   <!-- Background -->
   {#if uiStore.view !== "settings"}
-    <div class="fixed inset-0 pointer-events-none overflow-hidden opacity-30 dark:opacity-10 -z-10" aria-hidden="true">
-      <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 blur-3xl"></div>
-      <div class="absolute -bottom-48 -left-48 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-accent/20 to-primary/20 blur-3xl"></div>
+    <div
+      class="fixed inset-0 pointer-events-none overflow-hidden opacity-30 dark:opacity-10 -z-10"
+      aria-hidden="true"
+    >
+      <div
+        class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 blur-3xl"
+      ></div>
+      <div
+        class="absolute -bottom-48 -left-48 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-accent/20 to-primary/20 blur-3xl"
+      ></div>
     </div>
   {/if}
 

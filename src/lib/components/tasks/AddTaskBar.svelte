@@ -1,12 +1,12 @@
 <script lang="ts">
   import { Plus, Calendar, Clock, Flag } from "lucide-svelte";
-  import CustomDatePicker from "$lib/components/CustomDatePicker.svelte";
+  import CustomDatePicker from "$lib/components/ui/CustomDatePicker.svelte";
   import { getTodoStore } from "$lib/context";
   import { TODO_TITLE_MAX_LENGTH, PRIORITY_CONFIG } from "$lib/types";
   import { fly, slide } from "svelte/transition";
   import { getDatePreset, formatDuration } from "$lib/utils/formatTime";
   import { parseTaskInput } from "$lib/utils/smartInput";
-  import TaskInputEditor from "$lib/components/TaskInputEditor.svelte";
+  import TaskInputEditor from "./TaskInputEditor.svelte";
 
   // -------------------------------------------------------------------------
   // Constants

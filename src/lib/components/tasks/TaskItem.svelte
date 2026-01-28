@@ -16,11 +16,11 @@
     import { PRIORITY_CONFIG, TODO_TITLE_MAX_LENGTH } from "$lib/types";
 
     // Sub-components
-    import TaskLiquid from "./task-item/TaskLiquid.svelte";
-    import TaskCheckbox from "./task-item/TaskCheckbox.svelte";
-    import TaskTimer from "./task-item/TaskTimer.svelte";
-    import TaskActions from "./task-item/TaskActions.svelte";
-    import TaskSubtasks from "./task-item/TaskSubtasks.svelte";
+    import TaskLiquid from "./item/TaskLiquid.svelte";
+    import TaskCheckbox from "./item/TaskCheckbox.svelte";
+    import TaskTimer from "./item/TaskTimer.svelte";
+    import TaskActions from "./item/TaskActions.svelte";
+    import TaskSubtasks from "./item/TaskSubtasks.svelte";
 
     interface Props {
         todo: TodoItem;

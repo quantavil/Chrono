@@ -12,8 +12,8 @@
     import { getTodoStore, getAuthStore } from "$lib/context";
     import { formatDateHeader } from "$lib/utils/formatTime";
     import { uiStore } from "$lib/stores/ui.svelte";
-    import UserMenu from "./UserMenu.svelte";
-    import LoginForm from "./LoginForm.svelte";
+    import UserMenu from "../auth/UserMenu.svelte";
+    import LoginForm from "../auth/LoginForm.svelte";
 
     interface Props {
         class?: string;
