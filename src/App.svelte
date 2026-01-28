@@ -219,7 +219,7 @@
             <div
               class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-6 pt-4"
             >
-              <AddTaskBar variant="inline" class="mb-6" />
+              <AddTaskBar variant="inline" class="mb-4" />
               <TaskList class="mb-6" onEdit={handleSelectTask} />
               <CompletedSection />
             </div>

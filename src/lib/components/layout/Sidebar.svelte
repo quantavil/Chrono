@@ -3,19 +3,24 @@
 -->
 <script lang="ts">
     import {
-        Clock,
         Sparkles,
         ListTodo,
-        Flame,
-        Zap,
         X,
         Tag,
         Plus,
         Trash2,
+        Sun,
+        Moon,
+        Monitor,
+        Settings,
+        LogIn,
     } from "lucide-svelte";
     import { formatTimeCompact, formatDateHeader } from "$lib/utils/formatTime";
     import { getTodoStore, getAuthStore } from "$lib/context";
     import { uiStore } from "$lib/stores/ui.svelte";
+    import { themeManager } from "$lib/stores/theme.svelte";
+    import UserMenu from "../auth/UserMenu.svelte";
+    import LoginForm from "../auth/LoginForm.svelte";
 
     interface Props {
         class?: string;
@@ -31,8 +36,8 @@
     // Derived State
     // -------------------------------------------------------------------------
     const stats = $derived(todoList.stats);
-    const hasRunningTimer = $derived(todoList.hasRunningTimer);
-    const totalTimeFormatted = $derived(formatTimeCompact(stats.totalTimeMs));
+    // const hasRunningTimer = $derived(todoList.hasRunningTimer); // Unused
+    // const totalTimeFormatted = $derived(formatTimeCompact(stats.totalTimeMs)); // Unused
     const dateInfo = $derived(formatDateHeader(new Date()));
 
     // -------------------------------------------------------------------------
@@ -40,6 +45,7 @@
     let isAddingTag = $state(false);
     let newTagInput = $state("");
     let newTagInputEl = $state<HTMLInputElement | null>(null);
+    let showLoginModal = $state(false);
 
     function toggleTagFilter(tag: string) {
         todoList.toggleTagFilter(tag);
@@ -61,6 +67,16 @@
             newTagInputEl.focus();
         }
     });
+
+    // Theme Helpers
+    const ThemeIcon = $derived(
+        themeManager.theme === "system"
+            ? Monitor
+            : themeManager.isDark
+              ? Moon
+              : Sun,
+    );
+
     // -------------------------------------------------------------------------
 </script>
 
@@ -102,88 +118,6 @@
             >
                 {dateInfo.fullDate}
             </p>
-        </div>
-    </div>
-
-    <!-- Stats Card (Momentum) -->
-    <div
-        class="bg-base-200/50 rounded-2xl p-4 mb-6 space-y-3 relative overflow-hidden group"
-    >
-        {#if stats.completedTasks > 0 && stats.totalTasks > 0}
-            <div
-                class="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity"
-            >
-                <Sparkles class="w-12 h-12 text-current" />
-            </div>
-        {/if}
-
-        <div
-            class="flex items-center justify-between text-xs font-bold uppercase tracking-wider"
-        >
-            <span class="text-neutral/50">Daily Goal</span>
-            {#if stats.totalTasks > 0}
-                {#if stats.completionRate >= 80}
-                    <div
-                        class="flex items-center gap-1 text-warning animate-pulse-slow"
-                    >
-                        <Flame class="w-3.5 h-3.5 fill-current" />
-                        <span>On Fire!</span>
-                    </div>
-                {:else if stats.completionRate >= 50}
-                    <div class="flex items-center gap-1 text-primary">
-                        <Zap class="w-3.5 h-3.5 fill-current" />
-                        <span>Focused</span>
-                    </div>
-                {/if}
-            {/if}
-        </div>
-
-        <div class="space-y-2">
-            <div class="flex items-end justify-between">
-                <span
-                    class="text-3xl font-bold text-neutral tabular-nums tracking-tight"
-                    >{Math.round(stats.completionRate)}%</span
-                >
-                <div class="text-right">
-                    <span class="text-xs text-neutral/50 block">completed</span>
-                    <span class="text-xs font-bold text-neutral/70"
-                        >{stats.completedTasks}/{stats.totalTasks} tasks</span
-                    >
-                </div>
-            </div>
-
-            <!-- Progress Bar -->
-            <div
-                class="h-2 w-full bg-base-300 rounded-full overflow-hidden shadow-inner"
-            >
-                <div
-                    class="h-full transition-all duration-700 ease-out relative"
-                    style="
-                        width: {stats.completionRate}%;
-                        background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
-                     "
-                >
-                    <div
-                        class="absolute inset-0 bg-white/20 animate-[shimmer_2s_infinite]"
-                    ></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="pt-3 border-t border-base-300/50 flex flex-col gap-2">
-            <div class="flex items-center justify-between text-xs">
-                <div class="flex items-center gap-1.5 text-neutral/60">
-                    <Clock class="w-3.5 h-3.5" />
-                    <span>Tracked</span>
-                </div>
-                <span
-                    class="font-mono font-bold text-neutral/80"
-                    class:text-primary={hasRunningTimer}
-                    class:animate-pulse={hasRunningTimer}
-                >
-                    {totalTimeFormatted}
-                </span>
-            </div>
         </div>
     </div>
 
@@ -295,4 +229,50 @@
             </div>
         </div>
     </nav>
+
+    <!-- Bottom Controls -->
+    <div class="mt-auto pt-4 border-t border-base-200 flex flex-col gap-1">
+        <!-- Theme -->
+        <button
+            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-base-200 text-neutral/70 transition-colors w-full text-left"
+            onclick={() => themeManager.toggle()}
+            title="Toggle Theme"
+        >
+            <ThemeIcon class="w-4.5 h-4.5" />
+            <span class="text-sm font-medium">
+                {themeManager.theme === "system"
+                    ? "System Theme"
+                    : themeManager.isDark
+                      ? "Dark Mode"
+                      : "Light Mode"}
+            </span>
+        </button>
+
+        <!-- Settings -->
+        <button
+            class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-base-200 text-neutral/70 transition-colors w-full text-left"
+            onclick={() => (uiStore.view = "settings")}
+            title="Settings"
+        >
+            <Settings class="w-4.5 h-4.5" />
+            <span class="text-sm font-medium">Settings</span>
+        </button>
+
+        <!-- Auth -->
+        {#if authManager.isAuthenticated}
+            <div class="pt-2 mt-1 border-t border-base-200/50">
+                <UserMenu onOpenSettings={() => (uiStore.view = "settings")} />
+            </div>
+        {:else}
+            <button
+                class="flex items-center gap-3 px-3 py-2 rounded-lg text-primary hover:bg-primary/10 transition-colors w-full text-left font-medium"
+                onclick={() => (showLoginModal = true)}
+            >
+                <LogIn class="w-4.5 h-4.5" />
+                <span class="text-sm">Sign in</span>
+            </button>
+        {/if}
+    </div>
 </div>
+
+<LoginForm bind:isOpen={showLoginModal} />
