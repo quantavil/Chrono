@@ -1,8 +1,11 @@
 export class UIStore {
     isSidebarOpen = $state(true);
     isMobileSidebarOpen = $state(false);
+
+    // Mobile/Tablet state (reverted to simple bools)
     isMobile = $state(false);
     isTablet = $state(false);
+
     focusedTaskId = $state<string | null>(null);
     private _view = $state<'dashboard' | 'settings'>('dashboard');
 

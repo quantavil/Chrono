@@ -89,17 +89,45 @@
     <div
         class="hidden md:flex items-center justify-between h-14 w-full px-6 xl:px-10"
     >
-        <!-- Left Side: Hamburger (Tablet) & Spacer -->
+        <!-- Left Side: Hamburger (Tablet-Split) & Branding -->
         <div class="flex items-center gap-4">
-            <!-- Hamburger for Tablet (< lg) -->
-            <button
-                type="button"
-                class="lg:hidden w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
-                onclick={() => (uiStore.isMobileSidebarOpen = true)}
-                aria-label="Open menu"
-            >
-                <Menu class="w-5 h-5 text-neutral/70" strokeWidth={2} />
-            </button>
+            <!-- Hamburger: Visible if NOT desktop (i.e. Tablet Split) -->
+            {#if uiStore.layoutMode !== "desktop"}
+                <button
+                    type="button"
+                    class="w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
+                    onclick={() => (uiStore.isMobileSidebarOpen = true)}
+                    aria-label="Open menu"
+                >
+                    <Menu class="w-5 h-5 text-neutral/70" strokeWidth={2} />
+                </button>
+
+                <!-- Branding: Visible if NOT desktop (Sidebar hidden) -->
+                <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-2">
+                        <div
+                            class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md shadow-primary/20"
+                        >
+                            <Sparkles
+                                class="w-4 h-4 text-white"
+                                strokeWidth={2.5}
+                            />
+                        </div>
+                        <div class="flex flex-col">
+                            <h1
+                                class="text-base font-bold font-display text-neutral tracking-tight leading-none"
+                            >
+                                Chronos
+                            </h1>
+                            <p
+                                class="text-[9px] font-bold uppercase tracking-widest text-neutral/40 leading-none mt-0.5"
+                            >
+                                {dateInfo.fullDate}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            {/if}
         </div>
 
         <!-- Right Side Controls (The Ribbon) -->

@@ -23,6 +23,8 @@
 
 <div class="flex h-screen h-[100dvh] overflow-hidden bg-base-200 {className}">
     <!-- 1. SIDEBAR -->
+    <!-- Desktop Mode (>=960px): Always visible -->
+    <!-- 1. SIDEBAR -->
     <!-- Desktop: Always visible -->
     <div class="hidden lg:block flex-shrink-0 z-20 h-full">
         <Sidebar class="h-full border-r border-base-300/50" />
