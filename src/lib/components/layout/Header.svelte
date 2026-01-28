@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Menu, ListTodo } from "lucide-svelte";
+    import { Menu, ListTodo, Tag } from "lucide-svelte";
     import { uiStore } from "$lib/stores/ui.svelte";
     import { getTodoStore } from "$lib/context";
     import ViewOptions from "$lib/components/tasks/ViewOptions.svelte";
@@ -12,6 +12,19 @@
 
     const todoList = getTodoStore();
     const stats = $derived(todoList.stats);
+
+    // Dynamic Header Logic
+    const activeTagName = $derived(todoList.filters.tags[0] || null);
+    const headerTitle = $derived(activeTagName || "My Tasks");
+    const HeaderIcon = $derived(activeTagName ? Tag : ListTodo);
+
+    const titleFontSize = $derived.by(() => {
+        const len = headerTitle.length;
+        if (len > 24) return "text-xs sm:text-sm";
+        if (len > 18) return "text-sm sm:text-base";
+        if (len > 12) return "text-base sm:text-lg";
+        return "text-lg sm:text-xl";
+    });
 
     function openSidebar(): void {
         uiStore.isMobileSidebarOpen = true;
@@ -33,22 +46,28 @@
         </button>
 
         <!-- Title -->
-        <div class="flex items-center gap-3 flex-1">
+        <div
+            class="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 flex-nowrap"
+        >
             <div
-                class="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary"
+                class="w-8 h-8 rounded-lg bg-primary/10 flex-shrink-0 flex items-center justify-center text-primary"
             >
-                <ListTodo class="w-5 h-5" />
+                <HeaderIcon
+                    class="w-5 h-5 {activeTagName ? 'fill-current/20' : ''}"
+                />
             </div>
             <h1
-                class="text-xl font-bold font-display text-neutral tracking-tight"
+                class="{titleFontSize} font-bold font-display text-neutral tracking-tight whitespace-nowrap overflow-hidden"
             >
-                My Tasks
+                {headerTitle}
             </h1>
 
-            <div class="h-6 w-px bg-base-300 mx-1"></div>
+            <div
+                class="h-6 w-px bg-base-300 mx-0.5 sm:mx-1 flex-shrink-0"
+            ></div>
 
             <div
-                class="flex items-center justify-center h-6 px-2.5 rounded-full bg-base-200 text-xs font-bold text-neutral/60 tabular-nums"
+                class="flex items-center justify-center h-6 px-2 rounded-full bg-base-200 text-[10px] sm:text-xs font-bold text-neutral/60 tabular-nums flex-shrink-0"
             >
                 {stats.completedTasks}/{stats.totalTasks}
             </div>

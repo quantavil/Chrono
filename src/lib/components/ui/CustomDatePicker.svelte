@@ -16,12 +16,14 @@
         value?: string | null;
         class?: string;
         trigger?: Snippet;
+        align?: "left" | "right";
     }
 
     let {
         value = $bindable(null),
         class: className = "",
         trigger,
+        align = "left",
     }: Props = $props();
 
     let isOpen = $state(false);
@@ -189,7 +191,10 @@
 
     {#if isOpen}
         <div
-            class="absolute top-full left-0 mt-2 z-50 bg-base-100 border border-base-200 shadow-xl rounded-xl p-4 w-[300px]"
+            class="absolute top-full mt-2 z-50 bg-base-100 border border-base-200 shadow-xl rounded-xl p-4 w-[300px] {align ===
+            'left'
+                ? 'left-0'
+                : 'right-0'}"
             transition:fade={{ duration: 100 }}
         >
             <div class="flex items-center justify-between mb-4">

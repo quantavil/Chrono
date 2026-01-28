@@ -56,7 +56,7 @@
 
 <svelte:window onclick={handleOutsideClick} />
 
-<div class="relative z-20 mb-2 flex justify-end view-options-container">
+<div class="relative z-20 flex justify-end view-options-container">
     <button
         class="flex items-center gap-2 px-3 py-2 text-sm font-bold text-neutral/70 bg-base-200/50 hover:bg-base-200 rounded-xl transition-all active:scale-95"
         onclick={toggleOptions}

@@ -349,7 +349,7 @@
       <Flag class="w-4 h-4" />
     </button>
 
-    <CustomDatePicker bind:value={customDueDate} class="!w-auto">
+    <CustomDatePicker bind:value={customDueDate} class="!w-auto" align="right">
       {#snippet trigger()}
         <button
           type="button"
