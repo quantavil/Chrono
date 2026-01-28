@@ -4,7 +4,7 @@
 
   // Layout
   import DualPaneLayout from "$lib/components/layout/DualPaneLayout.svelte";
-  import LeftPane from "$lib/components/layout/LeftPane.svelte";
+
   import RightPane from "$lib/components/layout/RightPane.svelte";
 
   // Components
@@ -264,18 +264,13 @@
             <div
               class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-6 pt-4"
             >
-              <!-- Inline Add Task (Desktop/Tablet) -->
-              <div class="hidden lg:block mb-6">
+              <!-- Add Task Bar -->
+              <div class="mb-6">
                 <AddTaskBar variant="inline" />
               </div>
 
               <TaskList class="mb-6" onEdit={(id) => handleSelectTask(id)} />
               <CompletedSection />
-            </div>
-
-            <!-- Fixed Add Task (Mobile/Tablet < lg) -->
-            <div class="lg:hidden">
-              <AddTaskBar variant="fixed" />
             </div>
           </div>
         {/snippet}

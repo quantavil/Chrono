@@ -267,7 +267,7 @@
   </div>
 {:else}
   <!-- Desktop Inline - Similar pattern with expanded quick actions -->
-  <div class="hidden md:block w-full {className}">
+  <div class="w-full {className}">
     <form
       onsubmit={handleSubmit}
       onfocusout={(e) => {

@@ -90,48 +90,45 @@
         class="hidden md:flex items-center justify-between h-14 w-full px-6 xl:px-10"
     >
         <!-- Left Side: Hamburger (Tablet-Split) & Branding -->
-        <div class="flex items-center gap-4">
-            <!-- Hamburger: Visible if NOT desktop (i.e. Tablet Split) -->
-            {#if uiStore.layoutMode !== "desktop"}
-                <button
-                    type="button"
-                    class="w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
-                    onclick={() => (uiStore.isMobileSidebarOpen = true)}
-                    aria-label="Open menu"
-                >
-                    <Menu class="w-5 h-5 text-neutral/70" strokeWidth={2} />
-                </button>
+        <div class="flex items-center gap-4 lg:hidden">
+            <button
+                type="button"
+                class="w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
+                onclick={() => (uiStore.isMobileSidebarOpen = true)}
+                aria-label="Open menu"
+            >
+                <Menu class="w-5 h-5 text-neutral/70" strokeWidth={2} />
+            </button>
 
-                <!-- Branding: Visible if NOT desktop (Sidebar hidden) -->
-                <div class="flex items-center gap-3">
-                    <div class="flex items-center gap-2">
-                        <div
-                            class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md shadow-primary/20"
+            <!-- Branding -->
+            <div class="flex items-center gap-3">
+                <div class="flex items-center gap-2">
+                    <div
+                        class="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md shadow-primary/20"
+                    >
+                        <Sparkles
+                            class="w-4 h-4 text-white"
+                            strokeWidth={2.5}
+                        />
+                    </div>
+                    <div class="flex flex-col">
+                        <h1
+                            class="text-base font-bold font-display text-neutral tracking-tight leading-none"
                         >
-                            <Sparkles
-                                class="w-4 h-4 text-white"
-                                strokeWidth={2.5}
-                            />
-                        </div>
-                        <div class="flex flex-col">
-                            <h1
-                                class="text-base font-bold font-display text-neutral tracking-tight leading-none"
-                            >
-                                Chronos
-                            </h1>
-                            <p
-                                class="text-[9px] font-bold uppercase tracking-widest text-neutral/40 leading-none mt-0.5"
-                            >
-                                {dateInfo.fullDate}
-                            </p>
-                        </div>
+                            Chronos
+                        </h1>
+                        <p
+                            class="text-[9px] font-bold uppercase tracking-widest text-neutral/40 leading-none mt-0.5"
+                        >
+                            {dateInfo.fullDate}
+                        </p>
                     </div>
                 </div>
-            {/if}
+            </div>
         </div>
 
         <!-- Right Side Controls (The Ribbon) -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 ml-auto">
             <!-- Stats (Compact) -->
             {#if stats.totalTasks > 0}
                 <div
@@ -208,107 +205,84 @@
     </div>
 
     <!-- Mobile Layout -->
-    <div class="flex md:hidden flex-col gap-3">
-        <!-- Top Row: Logo, Theme & Auth -->
-        <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2.5">
-                <button
-                    type="button"
-                    class="w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
-                    onclick={() => (uiStore.isMobileSidebarOpen = true)}
-                    aria-label="Open menu"
-                >
-                    <Menu class="w-5 h-5 text-neutral/70" strokeWidth={2} />
-                </button>
+    <div class="flex md:hidden items-center justify-between gap-3">
+        <!-- Left: Menu & Branding -->
+        <div class="flex items-center gap-3">
+            <button
+                type="button"
+                class="w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
+                onclick={() => (uiStore.isMobileSidebarOpen = true)}
+                aria-label="Open menu"
+            >
+                <Menu class="w-5 h-5 text-neutral/70" strokeWidth={2} />
+            </button>
 
+            <!-- Compact Branding with Date -->
+            <div class="flex items-center gap-2">
                 <div
                     class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-soft"
                 >
                     <Sparkles class="w-4 h-4 text-white" strokeWidth={2.5} />
                 </div>
-                <h1
-                    class="text-lg font-bold font-display text-neutral tracking-tight"
-                >
-                    Chronos
-                </h1>
-            </div>
-
-            <div class="flex items-center gap-2">
-                <!-- Theme Toggle -->
-                <button
-                    type="button"
-                    class="w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
-                    onclick={cycleTheme}
-                    aria-label={getThemeLabel()}
-                >
-                    <ThemeIcon
-                        class="w-4.5 h-4.5 text-neutral/70"
-                        strokeWidth={2}
-                    />
-                </button>
-
-                <!-- Settings Button -->
-                <button
-                    type="button"
-                    class="w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
-                    onclick={() => (uiStore.view = "settings")}
-                    aria-label="Settings"
-                >
-                    <Settings
-                        class="w-4.5 h-4.5 text-neutral/70"
-                        strokeWidth={2}
-                    />
-                </button>
-
-                <!-- Auth -->
-                {#if isAuthenticated}
-                    <UserMenu
-                        onOpenSettings={() => (uiStore.view = "settings")}
-                    />
-                {:else if !isAuthLoading}
-                    <button
-                        type="button"
-                        class="
-              w-9 h-9 rounded-xl
-              bg-primary text-white
-              flex items-center justify-center
-              active:scale-95
-              transition-all
-            "
-                        onclick={openLogin}
-                        aria-label="Sign in"
+                <div class="flex flex-col">
+                    <h1
+                        class="text-base font-bold font-display text-neutral tracking-tight leading-none"
                     >
-                        <LogIn class="w-4 h-4" strokeWidth={2} />
-                    </button>
-                {/if}
+                        Chronos
+                    </h1>
+                    <p
+                        class="text-[10px] text-neutral/50 font-medium leading-none mt-0.5"
+                    >
+                        {dateInfo.fullDate}
+                    </p>
+                </div>
             </div>
         </div>
 
-        <!-- Bottom Row: Date & Stats -->
-        <div class="flex items-center justify-between px-1">
-            <div>
-                <p class="text-sm font-semibold text-neutral">Today</p>
-                <p class="text-xs text-neutral/50">
-                    {dateInfo.fullDate}
-                </p>
-            </div>
-
+        <!-- Right: Stats & Controls -->
+        <div class="flex items-center gap-2">
+            <!-- Stats (Compact Mobile) -->
             {#if stats.totalTasks > 0}
-                <div class="flex items-center gap-2 text-xs">
-                    <span class="text-neutral/60 font-medium tabular-nums">
-                        {stats.totalTasks}
-                        {stats.totalTasks === 1 ? "task" : "tasks"}
+                <div
+                    class="flex items-center gap-2 px-2 py-1 bg-base-200/50 rounded-lg mr-1"
+                >
+                    <div
+                        class="radial-progress text-primary text-[10px]"
+                        style="--value:{stats.completionRate}; --size:0.875rem; --thickness: 2px;"
+                        role="progressbar"
+                    ></div>
+                    <span
+                        class="text-[10px] font-bold text-neutral/70 tabular-nums"
+                    >
+                        {stats.completedTasks}/{stats.totalTasks}
                     </span>
-                    {#if stats.totalTimeMs > 0}
-                        <span class="text-neutral/40">•</span>
-                        <span
-                            class="font-mono tabular-nums text-primary font-medium"
-                            class:animate-pulse={hasRunningTimer}
-                        >
-                            {totalTimeFormatted}
-                        </span>
-                    {/if}
                 </div>
+            {/if}
+
+            <!-- Theme Toggle -->
+            <button
+                type="button"
+                class="w-8 h-8 rounded-lg hover:bg-base-200 flex items-center justify-center transition-all text-neutral/60"
+                onclick={cycleTheme}
+            >
+                <ThemeIcon class="w-4 h-4" strokeWidth={2} />
+            </button>
+
+            <!-- Auth/User -->
+            {#if isAuthenticated}
+                <div class="scale-75 origin-right">
+                    <UserMenu
+                        onOpenSettings={() => (uiStore.view = "settings")}
+                    />
+                </div>
+            {:else if !isAuthLoading}
+                <button
+                    type="button"
+                    class="w-8 h-8 rounded-lg hover:bg-base-200 flex items-center justify-center transition-all text-neutral/60"
+                    onclick={openLogin}
+                >
+                    <LogIn class="w-4 h-4" strokeWidth={2} />
+                </button>
             {/if}
         </div>
     </div>
