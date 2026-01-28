@@ -25,8 +25,16 @@
         `var(--color-${currentConfig.color})`,
     );
 
+    import { uiStore } from "$lib/stores/ui.svelte";
+
     function handleToggleTimer(): void {
+        const willStart = !todo.isRunning;
         todoList.toggleTimer(todo.id);
+
+        // Trigger Focus Mode if enabled and we just started the timer
+        if (willStart && todoList.preferences.enableFocusMode) {
+            uiStore.isFocusModeActive = true;
+        }
     }
 </script>
 

@@ -28,6 +28,9 @@
 	const todoList = getTodoStore();
 	const authStore = getAuthStore();
 
+	// Derived
+	const preferences = $derived(todoList.preferences);
+
 	// State
 	let activeSection = $state<"general" | "appearance" | "account" | "data">(
 		"general",
@@ -85,6 +88,7 @@
 			for (const item of data) {
 				if (item?.title) {
 					todoList.add({
+						listId: item.listId || "default",
 						title: item.title,
 						description: item.description,
 						priority: item.priority || "low",
@@ -211,6 +215,35 @@
 					"General",
 					"Configure core task behavior",
 				)}
+
+				<!-- Focus Mode Toggle -->
+				<div
+					class="flex items-center justify-between p-4 rounded-xl bg-base-200/50 border border-base-200"
+				>
+					<div class="space-y-0.5">
+						<div class="flex items-center gap-2">
+							<h3 class="font-semibold">Focus Mode</h3>
+							<span
+								class="badge badge-primary badge-outline badge-xs"
+								>New</span
+							>
+						</div>
+						<p class="text-sm text-neutral/50">
+							Automatically enter an immersive view when starting
+							a timer.
+						</p>
+					</div>
+					<input
+						type="checkbox"
+						class="toggle toggle-primary"
+						checked={preferences.enableFocusMode ?? false}
+						onchange={(e) =>
+							todoList.updatePreference(
+								"enableFocusMode",
+								e.currentTarget.checked,
+							)}
+					/>
+				</div>
 			</section>
 		{:else if activeSection === "appearance"}
 			<section class="space-y-6" in:fade={{ duration: 150 }}>
@@ -219,32 +252,79 @@
 					"Customize how Chronos looks",
 				)}
 
-				<div class="grid gap-3 sm:grid-cols-3">
-					{#each THEMES as { id, label, icon: Icon } (id)}
-						{@const isActive = themeManager.theme === id}
-						<button
-							class="group relative flex flex-col items-center gap-3 rounded-2xl border-2 p-5 transition-all
-								{isActive
-								? 'border-primary bg-primary/5'
-								: 'border-base-200 hover:border-base-300'}"
-							onclick={() => themeManager.setTheme(id)}
-						>
+				<div class="space-y-4">
+					<!-- Automatic (System) Toggle -->
+					<div
+						class="flex items-center justify-between p-4 rounded-xl bg-base-200/50 border border-base-200"
+					>
+						<div class="flex items-center gap-4">
 							<div
-								class="flex size-12 items-center justify-center rounded-xl transition-all
-									{isActive
-									? 'bg-primary text-white shadow-lg shadow-primary/25'
-									: 'bg-base-200 text-neutral/50 group-hover:bg-base-300 group-hover:text-neutral'}"
+								class="p-2.5 rounded-xl bg-primary/10 text-primary"
 							>
-								<Icon class="size-6" />
+								<Laptop class="size-5" />
 							</div>
-							<span class="text-sm font-medium">{label}</span>
-							{#if isActive}
-								<Check
-									class="absolute right-3 top-3 size-4 text-primary"
-								/>
-							{/if}
-						</button>
-					{/each}
+							<div>
+								<h3 class="font-semibold">Automatic</h3>
+								<p class="text-sm text-neutral/50">
+									Match system appearance
+								</p>
+							</div>
+						</div>
+						<input
+							type="checkbox"
+							class="toggle toggle-primary"
+							checked={themeManager.theme === "system"}
+							onchange={(e) => {
+								if (e.currentTarget.checked) {
+									themeManager.setSystem();
+								} else {
+									// When turning off auto, stick to current resolved theme
+									themeManager.setTheme(
+										themeManager.resolved,
+									);
+								}
+							}}
+						/>
+					</div>
+
+					<!-- Dark Mode Toggle -->
+					<div
+						class="flex items-center justify-between p-4 rounded-xl bg-base-200/50 border border-base-200 {themeManager.theme ===
+						'system'
+							? 'opacity-50 pointer-events-none'
+							: ''}"
+					>
+						<div class="flex items-center gap-4">
+							<div
+								class="p-2.5 rounded-xl bg-secondary/10 text-secondary"
+							>
+								{#if themeManager.resolved === "dark"}
+									<Moon class="size-5" />
+								{:else}
+									<Sun class="size-5" />
+								{/if}
+							</div>
+							<div>
+								<h3 class="font-semibold">Dark Mode</h3>
+								<p class="text-sm text-neutral/50">
+									Reduce eye strain
+								</p>
+							</div>
+						</div>
+						<input
+							type="checkbox"
+							class="toggle toggle-secondary"
+							checked={themeManager.resolved === "dark"}
+							disabled={themeManager.theme === "system"}
+							onchange={(e) => {
+								if (e.currentTarget.checked) {
+									themeManager.setDark();
+								} else {
+									themeManager.setLight();
+								}
+							}}
+						/>
+					</div>
 				</div>
 			</section>
 		{:else if activeSection === "account"}

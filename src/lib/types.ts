@@ -299,6 +299,7 @@ export interface ModalState {
 export interface UserPreferences {
   // Add future preferences here
   theme?: Theme;
+  enableFocusMode?: boolean;
 }
 
 export const DEFAULT_PREFERENCES: UserPreferences = {};

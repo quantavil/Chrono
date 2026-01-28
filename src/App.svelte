@@ -15,6 +15,7 @@
   import Toast from "$lib/components/ui/Toast.svelte";
   import KeyboardShortcuts from "$lib/components/ui/KeyboardShortcuts.svelte";
   import SettingsPage from "$lib/components/settings/SettingsPage.svelte";
+  import FocusSession from "$lib/components/focus/FocusSession.svelte";
 
   import { themeManager } from "$lib/stores/theme.svelte";
   import { toastManager } from "$lib/stores/toast.svelte";
@@ -274,6 +275,10 @@
   {/if}
 
   <KeyboardShortcuts bind:isOpen={isShortcutsOpen} />
+
+  {#if uiStore.isFocusModeActive}
+    <FocusSession />
+  {/if}
 </div>
 
 <style>

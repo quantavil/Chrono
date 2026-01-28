@@ -9,6 +9,8 @@ export class UIStore {
     isMobile = $state(false);
     isTablet = $state(false);
 
+    isFocusModeActive = $state(false);
+
     focusedTaskId = $state<string | null>(null);
     private _view = $state<'dashboard' | 'settings'>('dashboard');
 
