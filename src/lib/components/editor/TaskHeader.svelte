@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { X, Trash2 } from "lucide-svelte";
+    import { X, Trash2, RotateCcw } from "lucide-svelte";
     import { getTodoStore } from "$lib/context";
     import type { TodoItem } from "$lib/stores/todo.svelte";
 
@@ -23,6 +23,12 @@
         // No confirm dialog, rely on Undo toast
         todoList.remove(task.id);
         onClose();
+    }
+
+    function handleResetTimer(e: Event): void {
+        e.preventDefault();
+        e.stopPropagation();
+        todoList.resetTimer(task.id);
     }
 </script>
 
@@ -60,6 +66,19 @@
         >
             <Trash2 class="w-4 h-4 md:w-5 md:h-5" />
         </button>
+        {#if task.currentTimeMs > 0 && !task.isRunning && !task.isCompleted}
+            <button
+                type="button"
+                class="
+                    p-2 rounded-xl transition-all
+                    text-neutral/40 hover:text-neutral hover:bg-base-200
+                "
+                onclick={handleResetTimer}
+                title="Reset timer"
+            >
+                <RotateCcw class="w-4 h-4 md:w-5 md:h-5" />
+            </button>
+        {/if}
         <button
             type="button"
             class="

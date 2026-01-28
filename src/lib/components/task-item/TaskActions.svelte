@@ -7,7 +7,6 @@
         CheckSquare,
         Pencil,
         ChevronDown,
-        RotateCcw,
         ChevronRight,
     } from "lucide-svelte";
     import type { TodoItem } from "$lib/stores/todo.svelte";
@@ -30,12 +29,6 @@
     const isCompleted = $derived(todo.isCompleted);
     const hasTime = $derived(todo.currentTimeMs > 0);
     const hasSubtasks = $derived(todo.subtasks.length > 0);
-
-    function handleResetTimer(): void {
-        if (confirm("Reset timer to 0:00?")) {
-            todoList.resetTimer(todo.id);
-        }
-    }
 
     function handleDelete(): void {
         todoList.remove(todo.id);
@@ -62,20 +55,6 @@
                     ? 'rotate-180'
                     : ''}"
             />
-        </button>
-    {/if}
-
-    {#if hasTime && !isRunning && !isCompleted}
-        <button
-            type="button"
-            class="p-2 rounded-lg text-neutral-muted hover:text-neutral hover:bg-base-200/80 transition-all"
-            onclick={(e) => {
-                e.stopPropagation();
-                handleResetTimer();
-            }}
-            title="Reset timer"
-        >
-            <RotateCcw class="w-4 h-4" strokeWidth={2} />
         </button>
     {/if}
 
