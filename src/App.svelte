@@ -256,22 +256,27 @@
       >
         <!-- LEFT PANE (List) -->
         {#snippet listPane()}
-          <div class="h-full flex flex-col">
-            {#if uiStore.isMobile}
-              <!-- Mobile Header & List -->
-              <div
-                class="w-full px-4 sm:px-6 pt-6 pb-32 flex-1 overflow-y-auto"
-              >
-                <Header class="mb-6" />
-                <TaskList class="mb-6" onEdit={(id) => handleSelectTask(id)} />
-                <CompletedSection />
+          <div class="h-full flex flex-col relative">
+            <!-- Header (Sticky) -->
+            <Header class="flex-shrink-0" />
+
+            <!-- Scrollable List Area -->
+            <div
+              class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-6 pt-4"
+            >
+              <!-- Inline Add Task (Desktop/Tablet) -->
+              <div class="hidden lg:block mb-6">
+                <AddTaskBar variant="inline" />
               </div>
-              <!-- Mobile Fixed Bottom Add Bar -->
+
+              <TaskList class="mb-6" onEdit={(id) => handleSelectTask(id)} />
+              <CompletedSection />
+            </div>
+
+            <!-- Fixed Add Task (Mobile/Tablet < lg) -->
+            <div class="lg:hidden">
               <AddTaskBar variant="fixed" />
-            {:else}
-              <!-- Desktop Left Pane Wrapper -->
-              <LeftPane {selectedTaskId} onSelectTask={handleSelectTask} />
-            {/if}
+            </div>
           </div>
         {/snippet}
 

@@ -89,9 +89,18 @@
     <div
         class="hidden md:flex items-center justify-between h-14 w-full px-6 xl:px-10"
     >
-        <!-- Page Title (Replaces LeftPane title) -->
-        <!-- Page Title (Removed) -->
-        <div></div>
+        <!-- Left Side: Hamburger (Tablet) & Spacer -->
+        <div class="flex items-center gap-4">
+            <!-- Hamburger for Tablet (< lg) -->
+            <button
+                type="button"
+                class="lg:hidden w-9 h-9 rounded-xl bg-base-200 hover:bg-base-300 flex items-center justify-center transition-all active:scale-95"
+                onclick={() => (uiStore.isMobileSidebarOpen = true)}
+                aria-label="Open menu"
+            >
+                <Menu class="w-5 h-5 text-neutral/70" strokeWidth={2} />
+            </button>
+        </div>
 
         <!-- Right Side Controls (The Ribbon) -->
         <div class="flex items-center gap-2">

@@ -129,7 +129,7 @@
 {#if variant === "fixed"}
   <!-- Mobile Fixed Bottom Bar -->
   <div
-    class="fixed bottom-0 left-0 right-0 z-50 md:hidden {className}"
+    class="fixed bottom-0 left-0 right-0 z-50 lg:hidden {className}"
     in:fly={{ y: 100, duration: 400 }}
   >
     <div class="bg-base-100 border-t border-base-300 shadow-lg">
