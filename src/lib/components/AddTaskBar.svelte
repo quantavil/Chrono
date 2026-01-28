@@ -5,11 +5,13 @@
   import { TODO_TITLE_MAX_LENGTH, PRIORITY_CONFIG } from "$lib/types";
   import { fly, slide } from "svelte/transition";
   import { getDatePreset, formatDuration } from "$lib/utils/formatTime";
+  import { parseTaskInput } from "$lib/utils/smartInput";
+  import TaskInputEditor from "$lib/components/TaskInputEditor.svelte";
 
   // -------------------------------------------------------------------------
   // Constants
   // -------------------------------------------------------------------------
-  const DURATION_OPTIONS = [15, 30, 45, 60, 90] as const;
+
   const PRIORITY_OPTIONS = ["high", "medium", "low"] as const;
   const DUE_DATE_OPTIONS = ["today", "tomorrow", "week"] as const;
 
@@ -35,7 +37,7 @@
   const todoList = getTodoStore();
 
   let inputValue = $state("");
-  let inputRef = $state<HTMLInputElement | null>(null);
+  let inputRef = $state<TaskInputEditor | null>(null);
   let isFocused = $state(false);
   let isSubmitting = $state(false);
   let showQuickActions = $state(false);
@@ -43,14 +45,23 @@
   let selectedPriority = $state<Priority | null>(null);
   let selectedDueDate = $state<DueDatePreset | null>(null);
   let customDueDate = $state<string | null>(null);
-  let selectedDuration = $state<number | null>(
-    todoList.preferences.defaultTaskDurationMs
-      ? Math.round(todoList.preferences.defaultTaskDurationMs / 60000)
-      : null,
-  );
+  let selectedDuration = $state<number | null>(null);
 
   const canSubmit = $derived(inputValue.trim().length > 0);
   const isMobile = $derived(variant === "fixed");
+
+  // Reactive parsing for UI feedback
+  const parsed = $derived(parseTaskInput(inputValue));
+
+  // Logic: Manual selection > Parsed in text > Default preference
+  // We use this for the indicator icons.
+  const effectiveDuration = $derived.by(() => {
+    if (selectedDuration) return selectedDuration * 60 * 1000;
+    if (parsed.estimatedTime) return parsed.estimatedTime;
+    // Note: We don't show the default in the indicator to keep UI clean,
+    // but we apply it on submit if needed.
+    return null;
+  });
 
   // -------------------------------------------------------------------------
   // Helpers
@@ -72,6 +83,7 @@
     selectedDueDate = null;
     customDueDate = null;
     showQuickActions = false;
+    selectedDuration = null;
     inputRef?.focus();
   }
 
@@ -79,34 +91,40 @@
   // Handlers
   // -------------------------------------------------------------------------
   function handleSubmit(event?: Event): void {
+    // Note: event is optional now as it can come from Tiptap custom event
     event?.preventDefault();
     const title = inputValue.trim();
     if (!title || isSubmitting) return;
 
     isSubmitting = true;
     try {
+      // Use the reactive parsed state we already computed
+      const finalTitle = parsed.title;
+      const finalTags = parsed.tags;
+
+      // Determination of duration to save
+      // Manual (selectedDuration) > Parsed (parsed.estimatedTime) > Default
+      let durationToSave = selectedDuration
+        ? selectedDuration * 60 * 1000
+        : parsed.estimatedTime;
+
+      // Prevent adding task if title became empty after parsing (e.g. only tags were typed)
+      if (!finalTitle && finalTags.length > 0) {
+        return;
+      }
+
+      if (!finalTitle) return;
+
       todoList.add({
-        title,
+        title: finalTitle,
         priority: selectedPriority,
         due_at: getResolvedDueDate(),
-        estimated_time: selectedDuration
-          ? selectedDuration * 60 * 1000
-          : undefined,
+        estimated_time: durationToSave ?? undefined,
+        tags: finalTags.length > 0 ? finalTags : undefined,
       });
       resetForm();
     } finally {
       isSubmitting = false;
-    }
-  }
-
-  function handleKeydown(event: KeyboardEvent): void {
-    if (event.key === "Enter" && !event.shiftKey) {
-      event.preventDefault();
-      handleSubmit();
-    }
-    if (event.key === "Escape") {
-      showQuickActions = false;
-      inputRef?.blur();
     }
   }
 
@@ -117,6 +135,9 @@
 
   function handleFormBlur(event: FocusEvent): void {
     const form = (event.target as HTMLElement).closest("form");
+    // blur logic for Tiptap might be slightly different as element is contenteditable div
+    // We can rely on TaskInputEditor onblur prop
+    // But keeping this for form-level focus checks if needed
     if (!form?.contains(event.relatedTarget as Node)) {
       isFocused = false;
       showQuickActions = false;
@@ -133,27 +154,28 @@
 <!-- ======================================================================= -->
 
 {#snippet taskInput()}
-  <input
+  <TaskInputEditor
     bind:this={inputRef}
     bind:value={inputValue}
-    type="text"
     placeholder={isMobile ? "Add a task..." : "Add a new task... (⌘K)"}
-    class="flex-1 bg-transparent outline-none text-sm text-neutral py-2 {!isMobile
+    class="flex-1 min-w-0"
+    inputClass="text-sm text-neutral py-2 {!isMobile
       ? 'sm:text-base sm:py-3'
       : ''}"
-    maxlength={TODO_TITLE_MAX_LENGTH}
-    onkeydown={handleKeydown}
+    onsubmit={() => handleSubmit()}
+    oncancel={() => {
+      showQuickActions = false;
+      inputRef?.blur();
+    }}
     onfocus={handleFocus}
     onblur={isMobile
       ? () => setTimeout(() => (isFocused = false), 200)
       : undefined}
-    autocomplete="off"
-    enterkeyhint="done"
   />
 {/snippet}
 
 {#snippet selectionIndicators()}
-  {#if selectedPriority || selectedDueDate || customDueDate || selectedDuration}
+  {#if selectedPriority || selectedDueDate || customDueDate || effectiveDuration}
     <div class="flex items-center gap-1.5">
       {#if selectedPriority}
         <span
@@ -166,8 +188,11 @@
       {#if selectedDueDate || customDueDate}
         <Calendar class="w-3.5 h-3.5 text-primary" />
       {/if}
-      {#if selectedDuration}
-        <Clock class="w-3.5 h-3.5 text-secondary" />
+      {#if effectiveDuration}
+        <div class="flex items-center gap-1 text-xs text-secondary font-medium">
+          <Clock class="w-3.5 h-3.5" />
+          <span>{formatDuration(effectiveDuration)}</span>
+        </div>
       {/if}
     </div>
   {/if}
@@ -268,30 +293,11 @@
   {/each}
 {/snippet}
 
-{#snippet durationChips(compact = false)}
-  {#each DURATION_OPTIONS as mins (mins)}
-    {@const isActive = selectedDuration === mins}
-    {@render chipBase(
-      isActive,
-      compact,
-      "bg-secondary/10 text-secondary border-secondary/30",
-      () => (selectedDuration = toggle(selectedDuration, mins)),
-      chipContent,
-    )}
-    {#snippet chipContent()}
-      {#if compact}<Clock class="w-3 h-3" />{/if}
-      {formatDuration(mins * 60 * 1000)}
-    {/snippet}
-  {/each}
-{/snippet}
-
 {#snippet quickActionsRow()}
   <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide">
     {@render priorityChips(true)}
     <div class="w-px h-5 bg-base-300 flex-shrink-0"></div>
     {@render dueDateChips(true)}
-    <div class="w-px h-5 bg-base-300 flex-shrink-0"></div>
-    {@render durationChips(true)}
   </div>
 {/snippet}
 
@@ -310,15 +316,6 @@
           >
           <div class="flex flex-wrap gap-2">
             {@render priorityChips(false)}
-          </div>
-        </div>
-        <div class="space-y-3">
-          <span
-            class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
-            >Est. Duration</span
-          >
-          <div class="flex flex-wrap gap-1.5">
-            {@render durationChips(false)}
           </div>
         </div>
       </div>
@@ -347,17 +344,6 @@
       title="Set priority"
     >
       <Flag class="w-4 h-4" />
-    </button>
-
-    <button
-      type="button"
-      class="p-1.5 rounded-lg transition-colors {selectedDuration
-        ? 'text-secondary bg-secondary/10'
-        : 'text-neutral-muted hover:bg-base-200'}"
-      onclick={() => (showQuickActions = !showQuickActions)}
-      title="Set duration"
-    >
-      <Clock class="w-4 h-4" />
     </button>
 
     <CustomDatePicker bind:value={customDueDate} class="!w-auto">

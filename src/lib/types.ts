@@ -251,14 +251,11 @@ export interface ModalState {
 // ============================================================================
 
 export interface UserPreferences {
-  defaultTaskDurationMs: number;
-  customTimePresets: number[]; // Array of minutes
+  // Add future preferences here
+  theme?: Theme;
 }
 
-export const DEFAULT_PREFERENCES: UserPreferences = {
-  defaultTaskDurationMs: 60 * 60 * 1000, // 1 hour
-  customTimePresets: [15, 30, 45, 60, 90, 120],
-};
+export const DEFAULT_PREFERENCES: UserPreferences = {};
 
 // ============================================================================
 // Supabase Response Types

@@ -29,16 +29,13 @@
 	let activeSection = $state<"general" | "appearance" | "account" | "data">(
 		"general",
 	);
-	let selectedDuration = $state(todoList.preferences.defaultTaskDurationMs);
-	let customPresets = $state([...todoList.preferences.customTimePresets]);
-	let newPresetInput = $state("");
+
 	let fileInput = $state<HTMLInputElement>();
 
 	// Derived
 	const user = $derived(authStore.user);
 
 	// Constants
-	const DURATION_OPTIONS = [15, 30, 45, 60, 90, 120] as const;
 
 	const THEMES = [
 		{ id: "light", label: "Light", icon: Sun },
@@ -56,28 +53,6 @@
 	// Handlers
 	function goBack() {
 		uiStore.view = "dashboard";
-	}
-
-	function updateDefaultDuration(mins: number) {
-		const ms = mins * 60 * 1000;
-		selectedDuration = ms;
-		todoList.updatePreference("defaultTaskDurationMs", ms);
-	}
-
-	function updatePresets(presets: number[]) {
-		customPresets = presets;
-		todoList.updatePreference("customTimePresets", presets);
-	}
-
-	function addPreset() {
-		const val = parseInt(newPresetInput);
-		if (isNaN(val) || val <= 0 || customPresets.includes(val)) return;
-		updatePresets([...customPresets, val].sort((a, b) => a - b));
-		newPresetInput = "";
-	}
-
-	function removePreset(val: number) {
-		updatePresets(customPresets.filter((p) => p !== val));
 	}
 
 	function exportData() {
@@ -233,74 +208,6 @@
 					"General",
 					"Configure core task behavior",
 				)}
-
-				{#snippet durationContent()}
-					{@render cardHeader(
-						Clock,
-						"primary",
-						"Default Task Duration",
-						"New tasks start with this estimate",
-					)}
-					<div class="grid grid-cols-3 gap-2 sm:grid-cols-6">
-						{#each DURATION_OPTIONS as mins (mins)}
-							{@const isActive =
-								selectedDuration === mins * 60 * 1000}
-							<button
-								class="rounded-xl py-2.5 text-sm font-medium transition-all
-									{isActive
-									? 'bg-primary text-white shadow-md shadow-primary/25'
-									: 'bg-base-100 text-neutral/70 hover:bg-base-300'}"
-								onclick={() => updateDefaultDuration(mins)}
-							>
-								{mins}m
-							</button>
-						{/each}
-					</div>
-				{/snippet}
-				{@render settingsCard(durationContent)}
-
-				{#snippet presetsContent()}
-					{@render cardHeader(
-						Check,
-						"secondary",
-						"Quick Access Presets",
-						"Customize time buttons in the Add Task bar",
-					)}
-
-					{#if customPresets.length}
-						<div class="mb-4 flex flex-wrap gap-2">
-							{#each customPresets as mins (mins)}
-								<div
-									class="badge badge-lg gap-2 bg-base-100 pr-1"
-								>
-									{mins}m
-									<button
-										class="btn btn-ghost btn-circle btn-xs"
-										onclick={() => removePreset(mins)}
-										aria-label="Remove {mins}m preset"
-									>
-										<X class="size-3" />
-									</button>
-								</div>
-							{/each}
-						</div>
-					{/if}
-
-					<div class="flex gap-2">
-						<input
-							type="number"
-							placeholder="Minutes..."
-							class="input input-bordered input-sm flex-1 bg-base-100"
-							bind:value={newPresetInput}
-							onkeydown={(e) => e.key === "Enter" && addPreset()}
-						/>
-						<button
-							class="btn btn-primary btn-sm"
-							onclick={addPreset}>Add</button
-						>
-					</div>
-				{/snippet}
-				{@render settingsCard(presetsContent)}
 			</section>
 		{:else if activeSection === "appearance"}
 			<section class="space-y-6" in:fade={{ duration: 150 }}>

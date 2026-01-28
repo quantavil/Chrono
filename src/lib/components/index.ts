@@ -7,7 +7,7 @@ export { default as CompletedSection } from './CompletedSection.svelte';
 export { default as Toast } from './Toast.svelte';
 export { default as LoginForm } from './LoginForm.svelte';
 export { default as UserMenu } from './UserMenu.svelte';
-export { default as TaskDetailModal } from './TaskDetailModal.svelte';
+
 export { default as KeyboardShortcuts } from './KeyboardShortcuts.svelte';
 export { default as SettingsPage } from './SettingsPage.svelte';
 export { default as CustomDatePicker } from './CustomDatePicker.svelte';

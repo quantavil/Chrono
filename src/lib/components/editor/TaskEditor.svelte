@@ -30,6 +30,7 @@
     import { uiStore } from "$lib/stores/ui.svelte";
     import TaskHeader from "$lib/components/editor/TaskHeader.svelte";
     import CustomDatePicker from "$lib/components/CustomDatePicker.svelte";
+    import SquigglyDuration from "$lib/components/ui/SquigglyDuration.svelte";
 
     interface Props {
         task: TodoItem;
@@ -437,35 +438,17 @@
                 </div>
             </div>
 
-            <!-- Estimated Duration -->
-            <!-- Estimated Duration -->
             <div>
                 <p
                     class="text-xs font-medium text-neutral/50 mb-2 flex items-center gap-1.5"
                 >
                     <Clock class="w-3.5 h-3.5" /> Estimated Duration
                 </p>
-                <div class="flex flex-wrap gap-2 mb-3">
-                    {#each todoList.preferences.customTimePresets || [15, 30, 45, 60, 90, 120] as mins}
-                        <button
-                            class="
-                                flex-1 min-w-[3.5rem] px-2 py-1.5 rounded-lg text-xs font-semibold
-                                text-center whitespace-nowrap transition-all
-                                {Math.round(
-                                (task.estimatedTime || 0) / 60000,
-                            ) === mins
-                                ? 'bg-primary text-white shadow-sm'
-                                : 'bg-base-200 text-neutral/60 hover:bg-base-300'}
-                            "
-                            onclick={() =>
-                                task.applyUpdate({
-                                    estimatedTime: mins * 60 * 1000,
-                                })}
-                        >
-                            {formatDuration(mins * 60 * 1000)}
-                        </button>
-                    {/each}
-                </div>
+                <SquigglyDuration
+                    value={task.estimatedTime}
+                    onChange={(ms) => task.applyUpdate({ estimatedTime: ms })}
+                    class="mb-3"
+                />
             </div>
 
             <!-- Recurrence -->

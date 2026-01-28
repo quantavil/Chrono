@@ -284,7 +284,7 @@
                             {/if}
 
                             <!-- Meta Row -->
-                            {#if !isCompleted && (todo.tags.length > 0 || todo.dueAt || hasSubtasks || hasNotes)}
+                            {#if !isCompleted && (todo.tags.length > 0 || todo.dueAt || todo.estimatedTime || hasSubtasks || hasNotes)}
                                 <div
                                     class="flex items-center gap-2 mt-2 flex-wrap"
                                 >
@@ -394,7 +394,9 @@
                         </div>
 
                         <!-- Timer Section - RIGHT END -->
-                        <TaskTimer {todo} />
+                        {#if todo.estimatedTime}
+                            <TaskTimer {todo} />
+                        {/if}
                     </div>
                 </div>
 

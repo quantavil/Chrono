@@ -177,7 +177,7 @@ export class TodoList {
       tags: input.tags ?? [],
       recurrence: input.recurrence ?? null,
       due_at: input.due_at ?? null,
-      estimated_time: input.estimated_time ?? this._preferences.defaultTaskDurationMs,
+      estimated_time: input.estimated_time ?? null,
       subtasks: input.subtasks ?? [],
       position: input.position ?? maxPos + 1,
       is_completed: false,
