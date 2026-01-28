@@ -1,7 +1,7 @@
 /**
  * Storage Service: Handles persistence of application data to local storage and coordinates synchronization with Supabase.
  */
-import type { TodoLocal, Todo, TodoCreateInput, FilterState, UserPreferences } from "../types";
+import type { TodoLocal, Todo, TodoCreateInput, FilterState, UserPreferences, List } from "../types";
 import { LOCAL_STORAGE_KEYS, DEFAULT_FILTERS, DEFAULT_PREFERENCES } from "../types";
 import {
     fetchTodos,
@@ -115,6 +115,25 @@ class StorageService {
         }
     }
 
+    loadLists(): List[] {
+        try {
+            const json = localStorage.getItem(LOCAL_STORAGE_KEYS.LISTS);
+            if (!json) return [];
+            return JSON.parse(json);
+        } catch (e) {
+            console.error("Failed to load lists", e);
+            return [];
+        }
+    }
+
+    saveLists(lists: List[]): void {
+        try {
+            localStorage.setItem(LOCAL_STORAGE_KEYS.LISTS, JSON.stringify(lists));
+        } catch (e) {
+            console.error("Failed to save lists", e);
+        }
+    }
+
     // =========================================================================
     // Synchronization
     // =========================================================================
@@ -190,7 +209,8 @@ class StorageService {
                         }
                     }
                 } else if (item._new) {
-                    const { _dirty, _deleted, _new, _syncError, ...insertData } = item;
+                    const { _dirty, _deleted, _new, _syncError, list_id, ...rest } = item;
+                    const insertData = { ...rest, listId: list_id ?? 'default' };
                     const { data, error } = await createTodo(insertData as TodoCreateInput);
 
                     if (error) {

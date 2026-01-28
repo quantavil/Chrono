@@ -23,6 +23,7 @@ import { TODO_TITLE_MAX_LENGTH } from "../types";
  */
 export class TodoModel {
     readonly id: string;
+    listId = $state("default");
 
     // Core Data (Reactive)
     title = $state("");
@@ -62,6 +63,7 @@ export class TodoModel {
 
     constructor(data: TodoLocal) {
         this.id = data.id;
+        this.listId = data.list_id ?? "default"; // Default for migration
         this.title = data.title;
         this.description = data.description;
         this.notes = data.notes;
@@ -212,6 +214,7 @@ export class TodoModel {
         let changed = false;
 
         const keyMap: Record<string, string> = {
+            list_id: "listId",
             due_at: "dueAt",
             estimated_time: "estimatedTime",
             last_start_time: "lastStartTime",
@@ -279,6 +282,7 @@ export class TodoModel {
     toLocal(): TodoLocal {
         return {
             id: this.id,
+            list_id: this.listId,
             user_id: this.userId,
             title: this.title,
             description: this.description,
@@ -321,6 +325,7 @@ export class TodoModel {
         };
 
         return {
+            listId: this.listId,
             title: this.title,
             description: this.description,
             notes: this.notes,

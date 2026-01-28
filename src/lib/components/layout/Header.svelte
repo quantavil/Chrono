@@ -1,5 +1,6 @@
 <script lang="ts">
     import { Menu, ListTodo, Tag } from "lucide-svelte";
+    import * as Icons from "lucide-svelte"; // Import for dynamic icons
     import { uiStore } from "$lib/stores/ui.svelte";
     import { getTodoStore } from "$lib/context";
     import ViewOptions from "$lib/components/tasks/ViewOptions.svelte";
@@ -14,9 +15,29 @@
     const stats = $derived(todoList.stats);
 
     // Dynamic Header Logic
+    // Dynamic Header Logic
     const activeTagName = $derived(todoList.filters.tags[0] || null);
-    const headerTitle = $derived(activeTagName || "My Tasks");
-    const HeaderIcon = $derived(activeTagName ? Tag : ListTodo);
+
+    // Find active list
+    const activeList = $derived(
+        todoList.lists.find((l) => l.id === todoList.filters.listId) || null,
+    );
+
+    const headerTitle = $derived(
+        activeTagName
+            ? activeTagName
+            : activeList
+              ? activeList.title
+              : "My Tasks",
+    );
+
+    const HeaderIcon = $derived(
+        activeTagName
+            ? Tag
+            : activeList?.icon
+              ? (Icons as any)[activeList.icon]
+              : ListTodo,
+    );
 
     const titleFontSize = $derived.by(() => {
         const len = headerTitle.length;

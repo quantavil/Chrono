@@ -56,6 +56,18 @@ export interface RecurrenceConfig {
 }
 
 // ============================================================================
+// List Types
+// ============================================================================
+
+export interface List {
+  id: string;
+  title: string;
+  icon?: string; // Lucide icon name or emoji
+  isDefault?: boolean; // "My Tasks"
+  created_at: string;
+}
+
+// ============================================================================
 // Subtask Types
 // ============================================================================
 
@@ -72,6 +84,7 @@ export interface Subtask {
 
 export interface Todo {
   id: string;
+  list_id: string;
   user_id: string | null;
   title: string;
   description: string | null;
@@ -99,6 +112,7 @@ export interface TodoLocal extends Todo {
 }
 
 export interface TodoCreateInput {
+  listId: string;
   title: string;
   description?: string | null;
   notes?: string | null;
@@ -112,6 +126,7 @@ export interface TodoCreateInput {
 }
 
 export interface TodoUpdateInput {
+  listId?: string;
   title?: string;
   description?: string | null;
   notes?: string | null;
@@ -178,6 +193,7 @@ export type SortOrder = 'asc' | 'desc';
 
 export interface FilterState {
   priority: PriorityOrNone | 'all';
+  listId: string;
   status: 'all' | 'active' | 'completed' | 'overdue';
   tags: string[];
   hasDueDate: boolean | null;
@@ -214,6 +230,7 @@ export interface TaskGroup {
 }
 
 export const DEFAULT_FILTERS: FilterState = {
+  listId: 'default', // Will be replaced by actual default list ID
   priority: 'all',
   status: 'all',
   tags: [],
@@ -317,6 +334,7 @@ export const LOCAL_STORAGE_KEYS = {
   UNDO_STACK: 'chronos_undo',
   PREFERENCES: 'chronos_preferences_v2',
   TAGS: 'chronos_tags_v1',
+  LISTS: 'chronos_lists_v1',
 } as const;
 
 // ============================================================================

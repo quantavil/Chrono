@@ -21,6 +21,8 @@
     import { themeManager } from "$lib/stores/theme.svelte";
     import UserMenu from "../auth/UserMenu.svelte";
     import LoginForm from "../auth/LoginForm.svelte";
+    import ListModal from "./ListModal.svelte";
+    import * as Icons from "lucide-svelte";
 
     interface Props {
         class?: string;
@@ -36,8 +38,6 @@
     // Derived State
     // -------------------------------------------------------------------------
     const stats = $derived(todoList.stats);
-    // const hasRunningTimer = $derived(todoList.hasRunningTimer); // Unused
-    // const totalTimeFormatted = $derived(formatTimeCompact(stats.totalTimeMs)); // Unused
     const dateInfo = $derived(formatDateHeader(new Date()));
 
     // -------------------------------------------------------------------------
@@ -46,6 +46,22 @@
     let newTagInput = $state("");
     let newTagInputEl = $state<HTMLInputElement | null>(null);
     let showLoginModal = $state(false);
+
+    // List Modal State
+    let showListModal = $state(false);
+    let editingListId = $state<string | null>(null);
+
+    function openListModal(listId: string | null = null) {
+        editingListId = listId;
+        showListModal = true;
+    }
+
+    function toggleListFilter(listId: string) {
+        todoList.setListFilter(listId);
+        if (uiStore.isMobile) {
+            uiStore.isMobileSidebarOpen = false;
+        }
+    }
 
     function toggleTagFilter(tag: string) {
         todoList.toggleTagFilter(tag);
@@ -122,18 +138,86 @@
     </div>
 
     <nav class="flex-1 space-y-6 overflow-y-auto scrollbar-hide">
-        <!-- Main Nav -->
+        <!-- Default List (My Tasks) -->
+        <div class="space-y-1 mb-6">
+            {#each todoList.lists.filter((l) => l.isDefault) as list (list.id)}
+                {@const isActive = todoList.filters.listId === list.id}
+                {@const ListIcon =
+                    (Icons as any)[list.icon || "ListTodo"] || ListTodo}
+                <button
+                    class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-colors
+                    {isActive
+                        ? 'bg-primary/10 text-primary'
+                        : 'text-neutral/70 hover:bg-base-200'}"
+                    onclick={() => toggleListFilter(list.id)}
+                >
+                    <ListIcon class="w-4.5 h-4.5" />
+                    <span class="truncate flex-1 text-left">{list.title}</span>
+                    {#if isActive}
+                        <div
+                            class="w-1.5 h-1.5 rounded-full bg-primary/50"
+                        ></div>
+                    {/if}
+                </button>
+            {/each}
+        </div>
+
+        <!-- Custom Lists Section -->
         <div class="space-y-1">
-            <button
-                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-colors
-                {todoList.filters.tags.length === 0
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-neutral/70 hover:bg-base-200'}"
-                onclick={() => todoList.clearFilters()}
-            >
-                <ListTodo class="w-4.5 h-4.5" />
-                <span>My Tasks</span>
-            </button>
+            <div class="px-3 flex items-center justify-between group mb-2">
+                <h3
+                    class="text-xs font-bold text-neutral/40 uppercase tracking-widest"
+                >
+                    Lists
+                </h3>
+                <button
+                    class="p-1 rounded hover:bg-base-200 text-neutral/40 hover:text-primary transition-colors"
+                    onclick={() => openListModal()}
+                    aria-label="Add List"
+                >
+                    <Plus class="w-3.5 h-3.5" />
+                </button>
+            </div>
+
+            {#each todoList.lists.filter((l) => !l.isDefault) as list (list.id)}
+                {@const isActive = todoList.filters.listId === list.id}
+                {@const ListIcon =
+                    (Icons as any)[list.icon || "ListTodo"] || ListTodo}
+
+                <div class="relative group/list">
+                    <button
+                        class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl font-bold text-sm transition-colors
+                        {isActive
+                            ? 'bg-primary/10 text-primary'
+                            : 'text-neutral/70 hover:bg-base-200'}"
+                        onclick={() => toggleListFilter(list.id)}
+                    >
+                        <ListIcon class="w-4.5 h-4.5" />
+                        <span class="truncate flex-1 text-left"
+                            >{list.title}</span
+                        >
+                        {#if isActive}
+                            <div
+                                class="w-1.5 h-1.5 rounded-full bg-primary/50"
+                            ></div>
+                        {/if}
+                    </button>
+
+                    <!-- Edit Action (Hover) -->
+                    {#if !list.isDefault}
+                        <button
+                            class="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-md text-neutral/40 hover:text-primary hover:bg-base-100 opacity-0 group-hover/list:opacity-100 transition-all shadow-sm border border-base-200"
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                openListModal(list.id);
+                            }}
+                            title="Edit List"
+                        >
+                            <Settings class="w-3.5 h-3.5" />
+                        </button>
+                    {/if}
+                </div>
+            {/each}
         </div>
 
         <!-- Tags Section -->
@@ -276,3 +360,8 @@
 </div>
 
 <LoginForm bind:isOpen={showLoginModal} />
+<ListModal
+    isOpen={showListModal}
+    listId={editingListId}
+    onClose={() => (showListModal = false)}
+/>

@@ -8,6 +8,7 @@ import type {
   UserPreferences,
   DisplayConfig,
   TaskGroup,
+  List,
   SortBy,
   GroupBy,
 } from "../types";
@@ -36,6 +37,7 @@ export class TodoList {
   private _undoStack = $state<UndoAction[]>([]);
   private _preferences = $state<UserPreferences>(storageService.loadPreferences());
   private _tags = $state<string[]>(storageService.loadTags());
+  private _lists = $state<List[]>(storageService.loadLists());
   // We'll manage filters in the store to allow deeper integration (e.g. persisted filters)
   private _filters = $state<FilterState>({ ...storageService.loadFilters() });
   // Display Config
@@ -57,6 +59,14 @@ export class TodoList {
   private _init() {
     // Load initial data
     const localTodos = storageService.loadLocalTodos();
+
+    // Migration: If we have tasks but no lists, create default list
+    if (this._lists.length === 0) {
+      this._createDefaultList();
+      // Assign all existing tasks to default list if they don't have one (though TodoModel default handles it)
+      // We should ensure consistency
+    }
+
     this._items = localTodos.map((t) => new TodoModel(t));
     this._syncTagsFromTasks(); // Ensure tags are synced
 
@@ -91,6 +101,9 @@ export class TodoList {
       storageService.saveLocalTodos(data);
     }, 500);
 
+    // Save lists as well if modified (optimization: split save logic)
+    storageService.saveLists(this._lists);
+
     // Persist display config whenever it changes (we'll call this manually in setter)
   }
 
@@ -114,6 +127,14 @@ export class TodoList {
     // Apply Priority Filter
     if (this._filters.priority !== 'all') {
       filtered = filtered.filter(t => t.priority === this._filters.priority);
+    }
+
+    // Apply List Filter (Sidebar logic sets _filters.listId)
+    // If listId is "default", "all", or specific UUID.
+    // Actually, "My Tasks" is now a real list.
+    // If _filters.listId is present, we filter by it.
+    if (this._filters.listId) {
+      filtered = filtered.filter(t => t.listId === this._filters.listId);
     }
 
     return filtered;
@@ -316,6 +337,7 @@ export class TodoList {
 
     const newItem = new TodoModel({
       id: crypto.randomUUID(),
+      list_id: input.listId,
       user_id: this._userId,
       title: input.title,
       description: input.description ?? null,
@@ -580,6 +602,76 @@ export class TodoList {
 
     completed.forEach(t => t.markDeleted());
     this._save();
+  }
+
+
+  // =========================================================================
+  // List Management
+  // =========================================================================
+
+  get lists() {
+    return this._lists;
+  }
+
+  private _createDefaultList() {
+    const defaultList: List = {
+      id: "default",
+      title: "My Tasks",
+      icon: "ListTodo",
+      isDefault: true,
+      created_at: new Date().toISOString()
+    };
+    this._lists = [defaultList];
+    storageService.saveLists(this._lists);
+  }
+
+  addList(title: string, icon?: string) {
+    const list: List = {
+      id: crypto.randomUUID(),
+      title,
+      icon,
+      created_at: new Date().toISOString()
+    };
+    this._lists.push(list);
+    storageService.saveLists(this._lists);
+    return list;
+  }
+
+  removeList(id: string) {
+    const list = this._lists.find(l => l.id === id);
+    if (!list || list.isDefault) return;
+
+    // Move tasks to default list? Or Warning?
+    // Implementation Plan said: "Move to default list before deleting list"
+
+    const tasksInList = this._items.filter(t => t.listId === id);
+    if (tasksInList.length > 0) {
+      tasksInList.forEach(t => {
+        t.listId = "default";
+        t.markDirty();
+      });
+      toastManager.info(`Moved ${tasksInList.length} tasks to My Tasks`);
+    }
+
+    this._lists = this._lists.filter(l => l.id !== id);
+    storageService.saveLists(this._lists);
+
+    // If we were viewing this list, switch to default
+    if (this._filters.listId === id) {
+      this._filters.listId = "default";
+    }
+  }
+
+  updateList(id: string, updates: Partial<List>) {
+    const list = this._lists.find(l => l.id === id);
+    if (!list || list.isDefault) return; // Prevent updating default list
+    Object.assign(list, updates); // Svelte 5 proxy should react
+    storageService.saveLists(this._lists);
+  }
+
+  setListFilter(listId: string) {
+    this._filters.listId = listId;
+    // storageService.saveFilters? 
   }
 
   // Preferences
