@@ -1,8 +1,7 @@
 <script lang="ts">
     import type { TodoItem } from "$lib/stores/todo.svelte";
-    import { PRIORITY_CONFIG } from "$lib/types";
 
-    let { todo }: { todo: TodoItem } = $props();
+    let { todo, colorName }: { todo: TodoItem; colorName: string } = $props();
 
     const isRunning = $derived(todo.isRunning);
     const hasTime = $derived(todo.currentTimeMs > 0);
@@ -17,16 +16,18 @@
         return Math.min((todo.currentTimeMs / maxMs) * 100, 100);
     });
 
-    const currentPriority = $derived(todo.priority || "low");
-    const currentConfig = $derived(PRIORITY_CONFIG[currentPriority]);
-
-    const fillStyle = $derived(`var(--color-${currentConfig.color} / 0.15)`);
-    const waveStyle = $derived(`var(--color-${currentConfig.color} / 0.25)`);
-    const solidStyle = $derived(`var(--color-${currentConfig.color})`);
+    const fillStyle = $derived(
+        `color-mix(in srgb, var(--color-${colorName}) 20%, transparent)`,
+    );
+    const waveStyle = $derived(
+        `color-mix(in srgb, var(--color-${colorName}) 30%, transparent)`,
+    );
+    const solidStyle = $derived(`var(--color-${colorName})`);
 </script>
 
 <!-- Liquid Fill Background -->
 <div
+    class="absolute left-0 top-0 bottom-0 pointer-events-none rounded-xl overflow-hidden transition-all duration-300 ease-in-out"
     style="
         width: {fillPercentage()}%;
         background: linear-gradient(

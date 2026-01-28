@@ -70,7 +70,7 @@
   function handleSelectTask(id: string): void {
     // On desktop: show in right pane
     // On mobile: open modal
-    if (!uiStore.isTablet) {
+    if (!uiStore.isMobile) {
       if (selectedTaskId === id) {
         // Same task -> Close
         selectedTaskId = null;

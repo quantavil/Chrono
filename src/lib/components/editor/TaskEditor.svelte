@@ -212,12 +212,12 @@
                 <!-- Checkbox -->
                 <button
                     class="
-                        mt-1.5 w-6 h-6 rounded-lg border-2
+                        mt-2 w-6 h-6 rounded-lg border-2
                         flex items-center justify-center
-                        transition-all duration-200 shrink-0
+                        transition-all duration-300 shrink-0
                         {isCompleted
-                        ? 'bg-accent border-accent text-white'
-                        : 'border-neutral/30 hover:border-accent hover:bg-accent/10'}
+                        ? 'bg-gradient-to-br from-primary to-secondary border-transparent text-white shadow-md shadow-primary/20 scale-100'
+                        : 'border-neutral/20 hover:border-primary/50 hover:bg-primary/5 scale-95 hover:scale-100'}
                     "
                     onclick={() => todoList.toggleComplete(task.id)}
                 >
@@ -236,11 +236,14 @@
                             (e.target as HTMLElement).blur()}
                         class="
                             w-full bg-transparent
-                            text-xl font-bold
-                            placeholder:text-neutral/30
+                            text-2xl md:text-3xl font-bold tracking-tight font-display
+                            placeholder:text-neutral/20
                             outline-none
                             text-neutral
-                            {isCompleted ? 'line-through text-neutral/50' : ''}
+                            transition-all duration-300
+                            {isCompleted
+                            ? 'line-through text-neutral/40 decoration-neutral/20'
+                            : ''}
                         "
                         placeholder="Task title..."
                         maxlength={TODO_TITLE_MAX_LENGTH}

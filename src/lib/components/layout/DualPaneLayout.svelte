@@ -27,7 +27,7 @@
         <!-- Drawer Overlay -->
         {#if uiStore.isMobileSidebarOpen}
             <div
-                class="fixed inset-0 z-50 flex"
+                class="fixed inset-0 z-[60] flex"
                 transition:fade={{ duration: 200 }}
             >
                 <button

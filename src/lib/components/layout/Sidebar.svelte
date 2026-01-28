@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { Clock, Sparkles, ListTodo, Flame, Zap } from "lucide-svelte";
+    import { Clock, Sparkles, ListTodo, Flame, Zap, X } from "lucide-svelte";
     import { formatTimeCompact, formatDateHeader } from "$lib/utils/formatTime";
     import { getTodoStore, getAuthStore } from "$lib/context";
     import { uiStore } from "$lib/stores/ui.svelte";
@@ -33,17 +33,31 @@
     <!-- Logo -->
     <!-- Logo & Date -->
     <div class="flex flex-col gap-1 px-4 py-3 mb-4">
-        <div class="flex items-center gap-2.5">
-            <div
-                class="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md shadow-primary/20"
-            >
-                <Sparkles class="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+        <div class="flex items-center justify-between gap-2.5">
+            <div class="flex items-center gap-2.5">
+                <div
+                    class="w-6 h-6 rounded-lg bg-gradient-to-br from-primary to-secondary flex items-center justify-center shadow-md shadow-primary/20"
+                >
+                    <Sparkles
+                        class="w-3.5 h-3.5 text-white"
+                        strokeWidth={2.5}
+                    />
+                </div>
+                <h1
+                    class="text-lg font-bold font-display text-neutral tracking-tight leading-none"
+                >
+                    Chronos
+                </h1>
             </div>
-            <h1
-                class="text-lg font-bold font-display text-neutral tracking-tight leading-none"
+
+            <!-- Mobile Close Button -->
+            <button
+                class="lg:hidden p-1 rounded-md hover:bg-base-200 text-neutral/50"
+                onclick={() => (uiStore.isMobileSidebarOpen = false)}
+                aria-label="Close Sidebar"
             >
-                Chronos
-            </h1>
+                <X class="w-5 h-5" />
+            </button>
         </div>
         <div class="px-0.5">
             <p

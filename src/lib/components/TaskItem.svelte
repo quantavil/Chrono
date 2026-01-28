@@ -205,7 +205,7 @@
         "
     >
         <!-- Liquid Fill Background & Animation -->
-        <TaskLiquid {todo} />
+        <TaskLiquid {todo} colorName={currentConfig.color} />
 
         <div
             class="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl z-20"
