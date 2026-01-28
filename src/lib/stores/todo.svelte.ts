@@ -133,7 +133,7 @@ export class TodoList {
     // If listId is "default", "all", or specific UUID.
     // Actually, "My Tasks" is now a real list.
     // If _filters.listId is present, we filter by it.
-    if (this._filters.listId) {
+    if (this._filters.listId && this._filters.listId !== "default") {
       filtered = filtered.filter(t => t.listId === this._filters.listId);
     }
 

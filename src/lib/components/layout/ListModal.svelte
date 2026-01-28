@@ -133,7 +133,7 @@
                         role="radiogroup"
                         aria-labelledby="icon-label"
                     >
-                        {#each AVAILABLE_ICONS as iconName}
+                        {#each AVAILABLE_ICONS as iconName (iconName)}
                             {@const Icon = (Icons as any)[iconName]}
                             {@const isSelected = selectedIcon === iconName}
                             <button

@@ -16,7 +16,10 @@
         X,
         ChevronRight,
         ChevronDown,
+        List as ListIcon,
+        Flag,
     } from "lucide-svelte";
+    import * as Icons from "lucide-svelte";
     import { getTodoStore } from "$lib/context";
     import type { TodoItem } from "$lib/stores/todo.svelte";
     import { PRIORITY_CONFIG, TODO_TITLE_MAX_LENGTH } from "$lib/types";
@@ -381,9 +384,61 @@
                 Settings
             </h3>
 
+            <!-- List -->
+            <div>
+                <p
+                    class="text-xs font-medium text-neutral/50 mb-2 flex items-center gap-1.5"
+                >
+                    <ListIcon class="w-3.5 h-3.5" /> List
+                </p>
+                <div class="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                    <!-- Custom Lists -->
+                    {#each todoList.lists.filter((l) => l.id !== "default") as list (list.id)}
+                        {@const Icon = list.icon
+                            ? (Icons as any)[list.icon]
+                            : ListIcon}
+                        <button
+                            class="
+                                flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border
+                                {task.listId === list.id
+                                ? 'bg-blue-500/10 text-blue-500 border-blue-500 hover:bg-blue-500/20'
+                                : 'border-base-300 text-neutral/40 hover:border-blue-500/30 hover:text-blue-500/60'}
+                            "
+                            onclick={() =>
+                                todoList.updateTask(task.id, {
+                                    listId: list.id,
+                                })}
+                        >
+                            {#if Icon}
+                                <Icon class="w-3.5 h-3.5" />
+                            {/if}
+                            {list.title}
+                        </button>
+                    {/each}
+
+                    <!-- None Option -->
+                    <button
+                        class="
+                            flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all border
+                            {task.listId === 'default'
+                            ? 'bg-neutral/10 text-neutral border-neutral hover:bg-neutral/20'
+                            : 'border-base-300 text-neutral/40 hover:border-neutral/30 hover:text-neutral/60'}
+                        "
+                        onclick={() =>
+                            todoList.updateTask(task.id, { listId: "default" })}
+                    >
+                        None
+                    </button>
+                </div>
+            </div>
+
             <!-- Priority -->
             <div>
-                <p class="text-xs font-medium text-neutral/50 mb-2">Priority</p>
+                <p
+                    class="text-xs font-medium text-neutral/50 mb-2 flex items-center gap-1.5"
+                >
+                    <Flag class="w-3.5 h-3.5" /> Priority
+                </p>
                 <div class="flex gap-2">
                     {#each ["high", "medium", "low", "none"] as const as p}
                         {@const config = PRIORITY_CONFIG[p]}
