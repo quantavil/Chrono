@@ -98,7 +98,6 @@ export class TodoList {
     this._saveTimeout = setTimeout(() => {
       const data = this._items.map((t) => t.toLocal());
       storageService.saveLocalTodos(data);
-      storageService.saveLocalTodos(data);
     }, 500);
 
     // Save lists as well if modified (optimization: split save logic)

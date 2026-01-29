@@ -50,6 +50,9 @@
                 onToggleSubtasks();
             }}
             title="Toggle Subtasks"
+            aria-label={isSubtasksOpen
+                ? "Collapse Subtasks"
+                : "Expand Subtasks"}
         >
             <ChevronDown
                 class="w-4 h-4 transition-transform {isSubtasksOpen
@@ -67,6 +70,7 @@
             onEdit(todo.id);
         }}
         title="Task Details"
+        aria-label="View Task Details"
     >
         <ChevronRight class="w-4 h-4" strokeWidth={2} />
     </button>
@@ -79,6 +83,7 @@
             handleDelete();
         }}
         title="Delete task"
+        aria-label="Delete Task"
     >
         <Trash2 class="w-4 h-4" strokeWidth={2} />
     </button>

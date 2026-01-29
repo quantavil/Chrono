@@ -120,6 +120,7 @@
 
       todoList.add({
         title: finalTitle,
+        listId: todoList.filters.listId || 'default',
         priority: selectedPriority,
         due_at: getResolvedDueDate(),
         estimated_time: durationToSave ?? undefined,

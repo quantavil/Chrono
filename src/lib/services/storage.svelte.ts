@@ -153,6 +153,11 @@ class StorageService {
             return { updatedTodos: networkTodos, error: null };
         }
 
+        // Fix: Concurrency Guard
+        if (this.isSyncing) {
+            return { updatedTodos: networkTodos, error: null };
+        }
+
         this.isSyncing = true;
         this.lastError = null;
 
@@ -198,7 +203,8 @@ class StorageService {
         const errors: string[] = [];
         const dirtyItems = workingList.filter((t) => t._dirty || t._new || t._deleted);
 
-        for (const item of dirtyItems) {
+        // Optimization: Parallelize processing
+        await Promise.all(dirtyItems.map(async (item) => {
             try {
                 if (item._deleted) {
                     if (!item._new) {
@@ -215,7 +221,22 @@ class StorageService {
 
                     if (error) {
                         console.error(`Failed to create todo ${item.title}`, error);
-                        item._syncError = error.message;
+                        // We modify the item in workingList, but we need to find it again?
+                        // Since `item` is a reference to an object in `workingList` (shallow copy of array, but objects are refs if not cloned?)
+                        // Wait, `workingList = [...list]` creates a new array, but elements are shared references?
+                        // `processDirtyItems` takes `list` (from `sync` which did `[...networkTodos]`).
+                        // Objects are references. `item` is a reference.
+                        // Wait, `processDirtyItems` iterates `dirtyItems`.
+                        // IF `item` is a direct reference to an object in `workingList`, modifying `item` modifies `workingList`!
+                        // BUT, earlier code did: `workingList[idx] = { ...workingList[idx], ...data }`
+                        // This implies it replaces the object reference in the array with a new one.
+                        // So I must do the same.
+
+                        // Since we are inside map, finding index is safe.
+                        const idx = workingList.findIndex(t => t.id === item.id);
+                        if (idx !== -1) {
+                            workingList[idx] = { ...workingList[idx], _syncError: error.message };
+                        }
                         errors.push(`Failed to sync newly created "${item.title}"`);
                     } else if (data) {
                         const idx = workingList.findIndex(t => t.id === item.id);
@@ -229,7 +250,10 @@ class StorageService {
 
                     if (error) {
                         console.error(`Failed to update todo ${item.title}`, error);
-                        item._syncError = error.message;
+                        const idx = workingList.findIndex(t => t.id === item.id);
+                        if (idx !== -1) {
+                            workingList[idx] = { ...workingList[idx], _syncError: error.message };
+                        }
                         errors.push(`Failed to save changes for "${item.title}"`);
                     } else if (data) {
                         const idx = workingList.findIndex(t => t.id === item.id);
@@ -242,7 +266,7 @@ class StorageService {
                 console.error(`Unexpected error processing item ${item.id}`, err);
                 errors.push(`Error processing "${item.title}"`);
             }
-        }
+        }));
 
         return { updatedList: workingList, processErrors: errors };
     }
