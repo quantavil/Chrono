@@ -1,8 +1,5 @@
 import type {
   TodoCreateInput,
-  Subtask,
-  Priority,
-  FilterState,
   UndoAction,
   DailyStats,
   UserPreferences,
@@ -13,10 +10,7 @@ import type {
   GroupBy,
 } from "../types";
 import {
-  TIMER_UPDATE_INTERVAL_MS,
   UNDO_STACK_MAX_SIZE,
-  SYNC_DEBOUNCE_MS,
-  LOCAL_STORAGE_VERSION,
   DEFAULT_DISPLAY_CONFIG,
   PRIORITY_CONFIG,
 } from "../types";
@@ -25,9 +19,13 @@ import { storageService } from "../services/storage.svelte";
 import { toastManager } from "./toast.svelte";
 import { isSupabaseConfigured, subscribeTodoChanges } from "../utils/supabase";
 import { isOverdue, isToday, isTomorrow } from "../utils/formatTime";
+import { ListStore } from "./list.svelte";
+import { FilterStore } from "./filter.svelte";
+import { TimerStore } from "./timer.svelte";
 
 /**
  * TodoList Store: Central orchestrator for task state, persistence, sync, and undo/redo.
+ * Delegates specialized logic to ListStore, FilterStore, and TimerStore.
  */
 export class TodoList {
   // State
@@ -37,38 +35,37 @@ export class TodoList {
   private _undoStack = $state<UndoAction[]>([]);
   private _preferences = $state<UserPreferences>(storageService.loadPreferences());
   private _tags = $state<string[]>(storageService.loadTags());
-  private _lists = $state<List[]>(storageService.loadLists());
-  // We'll manage filters in the store to allow deeper integration (e.g. persisted filters)
-  private _filters = $state<FilterState>({ ...storageService.loadFilters() });
+
+  // Persistence Batching
+  private _saveTimeout: any;
+
+  // Sub-Stores
+  readonly listStore: ListStore;
+  readonly filterStore: FilterStore;
+  readonly timerStore: TimerStore;
+
   // Display Config
-  // We can load this from storageService if we add it there, or just manage it here for now.
-  // Using a simple localStorage fallback for now.
   private _displayConfig = $state<DisplayConfig>({ ...DEFAULT_DISPLAY_CONFIG });
 
-  private _tickInterval: any;
   private _unsubscribeRealtime: (() => void) | null = null;
 
-  // derived getters for external consumption
-  // We re-export TodoModel as TodoItem for compatibility if needed, 
-  // or consumer updates.
-
   constructor() {
+    this.listStore = new ListStore();
+    this.filterStore = new FilterStore();
+    // TimerStore needs access to items to find running ones and save callback
+    this.timerStore = new TimerStore(
+      () => this._items,
+      () => this._save()
+    );
+
     this._init();
   }
 
   private _init() {
     // Load initial data
     const localTodos = storageService.loadLocalTodos();
-
-    // Migration: If we have tasks but no lists, create default list
-    if (this._lists.length === 0) {
-      this._createDefaultList();
-      // Assign all existing tasks to default list if they don't have one (though TodoModel default handles it)
-      // We should ensure consistency
-    }
-
     this._items = localTodos.map((t) => new TodoModel(t));
-    this._syncTagsFromTasks(); // Ensure tags are synced
+    this._syncTagsFromTasks();
 
     this._isLoading = false;
 
@@ -82,58 +79,55 @@ export class TodoList {
         console.error("Failed to load display config", e);
       }
     }
+  }
 
+  // Use ListStore's data
+  get lists() {
+    return this.listStore.lists;
+  }
 
-
-    // Start Timer Loop
-    this._startTimerLoop();
+  // Use FilterStore's data
+  get filters() {
+    return this.filterStore.filters;
   }
 
   // Persistence & Reactivity
-  // We use explicit save calls to robustly persist state changes.
-
   private _save() {
-    // We defer this slightly to batch updates
     if (this._saveTimeout) clearTimeout(this._saveTimeout);
     this._saveTimeout = setTimeout(() => {
       const data = this._items.map((t) => t.toLocal());
       storageService.saveLocalTodos(data);
     }, 500);
 
-    // Save lists as well if modified (optimization: split save logic)
-    storageService.saveLists(this._lists);
-
-    // Persist display config whenever it changes (we'll call this manually in setter)
+    // Lists and Filters manage their own persistence
+    // Display Config managed locally
   }
 
   private _saveDisplayConfig() {
     localStorage.setItem('chronos_display_config', JSON.stringify(this._displayConfig));
   }
-  private _saveTimeout: any;
 
   // Getters
 
   private _applyFilters(todos: TodoModel[]): TodoModel[] {
     let filtered = todos;
+    const filters = this.filterStore.filters;
 
     // Apply Tag Filter
-    if (this._filters.tags.length > 0) {
+    if (filters.tags.length > 0) {
       filtered = filtered.filter(t =>
-        this._filters.tags.every(filterTag => t.tags.includes(filterTag))
+        filters.tags.every(filterTag => t.tags.includes(filterTag))
       );
     }
 
     // Apply Priority Filter
-    if (this._filters.priority !== 'all') {
-      filtered = filtered.filter(t => t.priority === this._filters.priority);
+    if (filters.priority !== 'all') {
+      filtered = filtered.filter(t => t.priority === filters.priority);
     }
 
-    // Apply List Filter (Sidebar logic sets _filters.listId)
-    // If listId is "default", "all", or specific UUID.
-    // Actually, "My Tasks" is now a real list.
-    // If _filters.listId is present, we filter by it.
-    if (this._filters.listId && this._filters.listId !== "default") {
-      filtered = filtered.filter(t => t.listId === this._filters.listId);
+    // Apply List Filter
+    if (filters.listId && filters.listId !== "default") {
+      filtered = filtered.filter(t => t.listId === filters.listId);
     }
 
     return filtered;
@@ -170,9 +164,8 @@ export class TodoList {
     this._saveDisplayConfig();
   }
 
-  // Core Display Logic
   get groupedTasks(): TaskGroup[] {
-    const todos = this.activeTodos; // Already filtered by tags/priority filters
+    const todos = this.activeTodos;
     const { groupBy, sortBy, sortOrder } = this._displayConfig;
 
     // 1. Sort Helper
@@ -180,13 +173,11 @@ export class TodoList {
       let diff = 0;
       switch (sortBy) {
         case 'priority':
-          // High (0) < Med (1) < Low (2) < None (3)
           const pA = a.priority ? PRIORITY_CONFIG[a.priority].sortWeight : 3;
           const pB = b.priority ? PRIORITY_CONFIG[b.priority].sortWeight : 3;
           diff = pA - pB;
           break;
         case 'date':
-          // Earliest first
           const dateA = a.dueAt ? new Date(a.dueAt).getTime() : Number.MAX_SAFE_INTEGER;
           const dateB = b.dueAt ? new Date(b.dueAt).getTime() : Number.MAX_SAFE_INTEGER;
           diff = dateA - dateB;
@@ -212,7 +203,6 @@ export class TodoList {
     }
 
     if (groupBy === 'priority') {
-      // We want fixed groups: High, Medium, Low, None
       const groups: Record<string, TaskGroup> = {
         high: { id: 'high', label: 'High Priority', tasks: [] },
         medium: { id: 'medium', label: 'Medium Priority', tasks: [] },
@@ -225,11 +215,6 @@ export class TodoList {
         if (groups[p]) groups[p].tasks.push(t);
       });
 
-      // Filter empty groups or keep them? 
-      // Usually cleaner to show only populated or all? 
-      // Let's show all for drag targets if D&D is enabled, 
-      // but for cleaner view maybe just populated.
-      // Let's return only populated ones to avoid clutter.
       return ['high', 'medium', 'low', 'none']
         .map(k => groups[k])
         .filter(g => g.tasks.length > 0)
@@ -237,7 +222,6 @@ export class TodoList {
     }
 
     if (groupBy === 'date') {
-      // Groups: Overdue, Today, Tomorrow, Upcoming, No Date
       const groups = {
         overdue: { id: 'overdue', label: 'Overdue', tasks: [] as TodoModel[] },
         today: { id: 'today', label: 'Today', tasks: [] as TodoModel[] },
@@ -249,8 +233,7 @@ export class TodoList {
       todos.forEach(t => {
         if (!t.dueAt) {
           groups.noDate.tasks.push(t);
-        } else if (isOverdue(t.dueAt) && !isToday(t.dueAt)) { // isOverdue logic might include today depending on time, but isToday() checks date only. 
-          // Our isOverdue utility checks date < today. So safely strictly overdue.
+        } else if (isOverdue(t.dueAt) && !isToday(t.dueAt)) {
           groups.overdue.tasks.push(t);
         } else if (isToday(t.dueAt)) {
           groups.today.tasks.push(t);
@@ -269,13 +252,15 @@ export class TodoList {
     return [];
   }
 
-  get runningTodo(): TodoModel | null {
-    return this._items.find((t) => t.isRunning && !t._deleted) ?? null;
-  }
+  // Timer Delegation
+  get runningTodo() { return this.timerStore.runningTodo; }
+  get hasRunningTimer() { return this.timerStore.hasRunningTimer; }
 
-  get hasRunningTimer(): boolean {
-    return this.runningTodo !== null;
-  }
+  toggleTimer(id: string) { this.timerStore.toggleTimer(id); }
+  startTimer(id: string) { this.timerStore.startTimer(id); }
+  pauseTimer(id: string) { this.timerStore.pauseTimer(id); }
+  pauseAllTimers() { this.timerStore.pauseAllTimers(); }
+  resetTimer(id: string) { this.timerStore.resetTimer(id); }
 
   get stats(): DailyStats {
     const all = this.all;
@@ -309,17 +294,8 @@ export class TodoList {
     };
   }
 
-  get preferences() {
-    return this._preferences;
-  }
-
-  get availableTags() {
-    return this._tags;
-  }
-
-  get filters() {
-    return this._filters;
-  }
+  get preferences() { return this._preferences; }
+  get availableTags() { return this._tags; }
 
   get loading() { return this._isLoading; }
   get syncing() { return storageService.isSyncing; }
@@ -406,6 +382,10 @@ export class TodoList {
     });
   }
 
+  getById(id: string): TodoModel | undefined {
+    return this._items.find(t => t.id === id && !t._deleted);
+  }
+
   toggleComplete(id: string): void {
     const item = this.getById(id);
     if (!item) return;
@@ -445,134 +425,31 @@ export class TodoList {
   move(draggedId: string, targetId: string) {
     if (draggedId === targetId) return;
 
-    // We operate on the full active list to preserve global order
-    // But conceptually users expect to reorder relative to what they see.
-    // If we just swap global positions, it works for "Custom" sort implicitly.
-
     const active = this.activeTodos;
     const fromIndex = active.findIndex(t => t.id === draggedId);
-    const toIndex = active.findIndex(t => t.id === targetId);
+    let toIndex = active.findIndex(t => t.id === targetId);
 
     if (fromIndex === -1 || toIndex === -1) return;
 
     const itemMoving = active[fromIndex];
     if (!itemMoving) return;
 
-    // Remove from old pos
-    const newOrder = [...active];
-    newOrder.splice(fromIndex, 1);
+    const filtered = active.filter(t => t.id !== draggedId);
+    let newIndex = active.findIndex(t => t.id === targetId);
 
-    // Insert at new pos
-    // If moving down (from < to), we insert AFTER the target? 
-    // Or normally drag drops BEFORE target. 
-    // Let's assume drop BEFORE target as standard standard list behavior
-    // BUT we need to account for index shift if from < to.
-
-    // Actually, `findIndex` gives us the index in the array.
-    // If we splice out `from`, indices shift.
-    // It's safer to just calculate simple move:
-
-    // Re-calculating toIndex after removal if necessary?
-    // Let's use standard move logic.
-    // If we drop ON target, we put it at target's index.
-    let insertIndex = toIndex;
-    if (fromIndex < toIndex) {
-      // If we are moving down, the target's index effectively shifts down by 1?
-      // No, `active` is the snapshot before mutation.
-      // If we remove `from`, `to` index shifts down by 1.
-      insertIndex = toIndex;
-      // Wait, if I drop Item A (idx 0) onto Item C (idx 2). 
-      // I want A to be where C was? Or after?
-      // Standard sortable usually drops *before* item if coming from top? 
-      // Let's assume drop means "place before".
-      // If I move 0 to 2. Remove 0. Arr is [B, C]. C is at 1. Insert at 1 -> [B, A, C].
-      // So A is before C. Correct.
-      // But in `active` list, C was at 2. So we use `toIndex` - 1?
-      // Let's stick to `splice(toIndex, 0, item)`.
-
-      // CORRECTION:
-      // Because of how Svelte animate interactions work, usually we pass the index of the drop target.
-      // If we use ID, we just find that target.
-      insertIndex = toIndex;
-      // If from < to, we remove first. The target index shifts -1.
-      insertIndex -= 1;
-      // BUT, if the user explicitly dropped "after", that logic is UI side.
-      // Let's assume simplistic "swap" or "insert before".
-      // Actually, let's look at `reorder` which worked for index.
-      // It did `splice(from, 1); splice(to, 0, item)`. 
-      // If from < to. e.g. [A, B, C]. Move A(0) to C(2). 
-      // Remove A -> [B, C]. C is at 1. Insert at 2 ([B, C, A])? 
-      // No, toIndex was passed from UI. 
-      // If UI passes target ID, we can just insert *at* that ID's current position.
-      // If I drop A on C. C is at 2. Remove A. C becomes 1. Insert at 2? No.
-
-      // Let's simplify:
-      // We calculate new array.
-      // We filter out dragged.
-      // We find index of target in filtered array.
-      // We insert there.
+    if (fromIndex < newIndex) {
+      newIndex -= 1;
     }
 
-    const filtered = active.filter(t => t.id !== draggedId);
-    let newIndex = filtered.findIndex(t => t.id === targetId);
-
-    // Default to end if not found (shouldn't happen)
     if (newIndex === -1) newIndex = filtered.length;
 
-    // Insert
     filtered.splice(newIndex, 0, itemMoving);
 
-    // Update positions
     filtered.forEach((t, i) => {
       t.position = i;
       t.markDirty();
     });
 
-    this._save();
-  }
-
-  // Deprecated reorder by index (kept for compatibility or if needed)
-  // Deprecated reorder by index (kept for compatibility or if needed)
-  /* reorder(fromIndex: number, toIndex: number) {
-     this.move(this.activeTodos[fromIndex].id, this.activeTodos[toIndex].id);
-  } */
-
-  // Timer
-
-  toggleTimer(id: string): void {
-    const item = this.getById(id);
-    if (!item) return;
-
-    // Enforce one timer at a time
-    if (!item.isRunning) {
-      this.runningTodo?.pause();
-    }
-
-    item.toggleTimer();
-    this._save();
-  }
-
-  startTimer(id: string): void {
-    const item = this.getById(id);
-    if (!item) return;
-
-    this.runningTodo?.pause();
-    item.start();
-    this._save();
-  }
-
-  pauseTimer(id: string): void {
-    this.getById(id)?.pause();
-    this._save();
-  }
-
-  pauseAllTimers(): void {
-    this._items.forEach(t => t.pause());
-    this._save();
-  }
-
-  resetTimer(id: string): void {
-    this.getById(id)?.resetTimer();
     this._save();
   }
 
@@ -603,85 +480,41 @@ export class TodoList {
     this._save();
   }
 
-
-  // =========================================================================
-  // List Management
-  // =========================================================================
-
-  get lists() {
-    return this._lists;
-  }
-
-  private _createDefaultList() {
-    const defaultList: List = {
-      id: "default",
-      title: "My Tasks",
-      icon: "ListTodo",
-      isDefault: true,
-      created_at: new Date().toISOString()
-    };
-    this._lists = [defaultList];
-    storageService.saveLists(this._lists);
-  }
-
-  addList(title: string, icon?: string) {
-    const list: List = {
-      id: crypto.randomUUID(),
-      title,
-      icon,
-      created_at: new Date().toISOString()
-    };
-    this._lists.push(list);
-    storageService.saveLists(this._lists);
-    return list;
-  }
-
+  // Delegation of List Operations
+  addList(title: string, icon?: string) { return this.listStore.addList(title, icon); }
   removeList(id: string) {
-    const list = this._lists.find(l => l.id === id);
-    if (!list || list.isDefault) return;
-
-    // Move tasks to default list? Or Warning?
-    // Implementation Plan said: "Move to default list before deleting list"
-
-    const tasksInList = this._items.filter(t => t.listId === id);
-    if (tasksInList.length > 0) {
-      tasksInList.forEach(t => {
-        t.listId = "default";
-        t.markDirty();
-      });
-      toastManager.info(`Moved ${tasksInList.length} tasks to My Tasks`);
-    }
-
-    this._lists = this._lists.filter(l => l.id !== id);
-    storageService.saveLists(this._lists);
-
-    // If we were viewing this list, switch to default
-    if (this._filters.listId === id) {
-      this._filters.listId = "default";
+    const removed = this.listStore.removeList(id);
+    if (removed) {
+      // Move tasks to default list logic
+      const tasksInList = this._items.filter(t => t.listId === id);
+      if (tasksInList.length > 0) {
+        tasksInList.forEach(t => {
+          t.listId = "default";
+          t.markDirty();
+        });
+        toastManager.info(`Moved ${tasksInList.length} tasks to My Tasks`);
+        this._save();
+      }
+      // Update filter if needed
+      if (this.filterStore.filters.listId === id) {
+        this.filterStore.setListFilter("default");
+      }
     }
   }
+  updateList(id: string, updates: Partial<any>) { this.listStore.updateList(id, updates); }
 
-  updateList(id: string, updates: Partial<List>) {
-    const list = this._lists.find(l => l.id === id);
-    if (!list || list.isDefault) return; // Prevent updating default list
-    Object.assign(list, updates); // Svelte 5 proxy should react
-    storageService.saveLists(this._lists);
-  }
-
-  setListFilter(listId: string) {
-    this._filters.listId = listId;
-    // storageService.saveFilters? 
-  }
+  // Delegation of Filter Operations
+  setListFilter(id: string) { this.filterStore.setListFilter(id); }
+  toggleTagFilter(tag: string) { this.filterStore.toggleTagFilter(tag); }
+  clearFilters() { this.filterStore.clearFilters(); }
 
   // Preferences
-
   updatePreference<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
     this._preferences[key] = value;
     storageService.savePreferences(this._preferences);
   }
 
   // Tags Management
-
   addTag(tag: string) {
     if (!tag.trim()) return;
     if (!this._tags.includes(tag)) {
@@ -692,8 +525,6 @@ export class TodoList {
   }
 
   deleteTag(tag: string) {
-    // 1. Capture snapshot for undo
-    // We need to know which tasks had this tag to restore it accurately
     const affectedTaskIds: string[] = [];
     this._items.forEach(t => {
       if (t.tags.includes(tag)) {
@@ -701,23 +532,20 @@ export class TodoList {
       }
     });
 
-    const wasInFilters = this._filters.tags.includes(tag);
+    const wasInFilters = this.filterStore.filters.tags.includes(tag);
 
-    // Undo Action
     this._pushUndo({
       id: crypto.randomUUID(),
       type: "DELETE_TAG",
       timestamp: Date.now(),
       data: { tag, affectedTaskIds, wasInFilters },
       undo: () => {
-        // Restore to global list
         if (!this._tags.includes(tag)) {
           this._tags.push(tag);
           this._tags.sort();
           storageService.saveTags(this._tags);
         }
 
-        // Restore to tasks
         affectedTaskIds.forEach(id => {
           const t = this.getById(id);
           if (t && !t.tags.includes(tag)) {
@@ -726,9 +554,8 @@ export class TodoList {
           }
         });
 
-        // Restore filter if it was active
-        if (wasInFilters && !this._filters.tags.includes(tag)) {
-          this._filters.tags = [...this._filters.tags, tag];
+        if (wasInFilters && !this.filterStore.filters.tags.includes(tag)) {
+          this.filterStore.toggleTagFilter(tag);
         }
 
         this._save();
@@ -736,14 +563,11 @@ export class TodoList {
       }
     });
 
-    // 2. Perform Deletion
-    // Remove from available tags
     if (this._tags.includes(tag)) {
       this._tags = this._tags.filter(t => t !== tag);
       storageService.saveTags(this._tags);
     }
 
-    // Remove from all todos
     let updated = false;
     this._items.forEach(todo => {
       if (todo.tags.includes(tag)) {
@@ -753,49 +577,18 @@ export class TodoList {
       }
     });
 
-    // Remove from filters if active
-    if (this._filters.tags.includes(tag)) {
-      // Bug fixed: Was calling toggle which might re-add if logic changed
-      this._filters.tags = this._filters.tags.filter(t => t !== tag);
+    if (this.filterStore.filters.tags.includes(tag)) {
+      this.filterStore.toggleTagFilter(tag);
     }
 
     if (updated) this._save();
 
-    // 3. Show Toast
     toastManager.add({
       type: "info",
       message: `Deleted tag "${tag}"`,
       action: { label: "Undo", onClick: () => this.undo() },
     });
   }
-
-  toggleTagFilter(tag: string) {
-    if (this._filters.tags.includes(tag)) {
-      this._filters.tags = this._filters.tags.filter(t => t !== tag);
-    } else {
-      // Decide if multi-select or single-select. 
-      // TickTick often allows single context or multi. 
-      // Let's support adding to filter (AND logic implemented in getter).
-      // But arguably, user might want to switch tags. 
-      // Let's do single select first for sidebar behavior, or toggle.
-      // If clicking a tag in sidebar, usually it selects that ONE tag.
-      // So we clear others unless generic multi-select is requested.
-      // For sidebar "navigation", it's usually 1 tag context.
-      this._filters.tags = [tag];
-    }
-    // We don't necessarily save filters for session persistence unless requested.
-    // storageservice has saveFilters.
-    // storageService.saveFilters(this._filters); 
-  }
-
-  clearFilters() {
-    this._filters.tags = [];
-    // storageService.saveFilters(this._filters);
-  }
-
-  // =========================================================================
-  // Helpers
-  // =========================================================================
 
   private _syncTagsFromTasks() {
     const allTaskTags = new Set<string>();
@@ -819,79 +612,31 @@ export class TodoList {
     }
   }
 
-  getById(id: string): TodoModel | undefined {
-    return this._items.find(t => t.id === id && !t._deleted);
-  }
-
   get allTags(): string[] {
     const tags = new Set<string>();
     this._items.forEach(t => !t._deleted && t.tags.forEach(tag => tags.add(tag)));
     return Array.from(tags).sort();
   }
 
-  private _startTimerLoop() {
-    this._tickInterval = setInterval(() => {
-      const running = this.runningTodo;
-      if (running) running.tick();
-    }, TIMER_UPDATE_INTERVAL_MS);
-  }
+  // _startTimerLoop removed in favor of TimerStore
 
   private async _performSync() {
     if (!this._userId) return;
-    // We pass ALL items, including deleted ones (for now, until cleaned)
     const snapshot = this._items.map(t => t.toLocal());
     const { updatedTodos, error } = await storageService.sync(this._userId, snapshot);
 
     if (updatedTodos) {
-      // Rehydrate models from updated DTOs
-      // We want to preserve object identity if possible to avoid UI flicker?
-      // But we have Svelte 5 runes. Updating properties is better.
-
       const newIds = new Set(updatedTodos.map(t => t.id));
-
-      // 1. Update existing
-      this._items.forEach(model => {
-        const dto = updatedTodos.find(d => d.id === model.id);
-        if (dto) {
-          // Update properties
-          // We can implement a `model.hydrate(dto)` or just `new TodoModel`.
-          // Replacing the object might be safer for deep updates.
-          // But effectively we can just map again?
-        }
-      });
-
-      // Actually, replacing properies is verbose.
-      // Let's just create new models for simplicity, Svelte keyed each block handles arrays well.
-      // BUT if user is editing a field, replacing the model structure might lose cursor focus?
-      // "TaskPanel" binds to `task.title` etc.
-      // If the OBJECT reference changes, the binding might break or reset?
-      // Yes.
-      // SO we must Mutate the existing models if they exist.
 
       updatedTodos.forEach(dto => {
         const existing = this._items.find(t => t.id === dto.id);
         if (existing) {
-          // Updating internal state
-          // We need a method `hydrate` on TodoModel?
-          // Or just careful property assign.
-          existing.title = dto.title;
-          existing.isCompleted = dto.is_completed;
-          existing._dirty = dto._dirty;
-          existing._syncError = dto._syncError;
-          existing._new = dto._new;
-          existing._deleted = dto._deleted;
-          // ... other fields?
-          // If we are syncing regularly, we should update all fields.
-          // If we are syncing regularly, we should update all fields.
           existing.applyUpdate(dto); // Utilizes the update method we made
         } else {
           this._items.push(new TodoModel(dto));
         }
       });
 
-      // Remove items not in updatedTodos? 
-      // `sync` returns the full working set.
-      // If something was removed from working set (handled delete), it won't be in updatedTodos.
       this._items = this._items.filter(t => newIds.has(t.id));
     }
 
@@ -904,19 +649,12 @@ export class TodoList {
   private _handleRealtimeChange(payload: { eventType: string; old: any; new: any }) {
     const { eventType, new: newRec, old: oldRec } = payload;
 
-    // Safety check: ignore updates from ourselves if we could detect it, 
-    // but here we just check if state matches.
-
     if (eventType === 'INSERT' && newRec) {
-      // Check if we already have it (optimistic creation or duplicate event)
       const existing = this.getById(newRec.id);
       if (!existing) {
-        // Incoming from another device
         this._items.push(new TodoModel(newRec));
-        // Need to save to local?
         this._save();
       } else {
-        // We have it. If it was dirty/new, this confirms it's saved?
         if (existing._new) {
           existing._new = false;
           existing._dirty = false;
@@ -927,27 +665,16 @@ export class TodoList {
     } else if (eventType === 'UPDATE' && newRec) {
       const existing = this.getById(newRec.id);
       if (existing) {
-        // We have it.
         if (existing._dirty) {
-          // Conflict: Local changes vs Remote changes. 
-          // Currently we prioritize local changes until next sync push?
-          // Or we warn?
-          // For now, let's NOT overwrite local dirty state to prevent losing user work.
+          // Conflict handling priority local
         } else {
-          // Apply remote update
           existing.applyUpdate(newRec);
           this._save();
         }
       }
     } else if (eventType === 'DELETE' && oldRec) {
-      // Remote delete
       const existing = this.getById(oldRec.id);
       if (existing) {
-        if (existing._dirty) {
-          // Local edit vs Remote delete.
-          // Assume remote delete wins for consistency (or resurrect?)
-          // Let's delete it.
-        }
         this._items = this._items.filter(t => t.id !== oldRec.id);
         this._save();
       }
@@ -962,7 +689,6 @@ export class TodoList {
     if (userId) {
       this._performSync();
 
-      // Setup Realtime
       if (this._unsubscribeRealtime) this._unsubscribeRealtime();
       this._unsubscribeRealtime = subscribeTodoChanges(userId, (p) => this._handleRealtimeChange(p));
     } else {
@@ -983,6 +709,7 @@ export class TodoList {
     if (!action) return;
     this._undoStack = this._undoStack.slice(1);
     action.undo();
+    toastManager.info("Undid last action");
   }
   async forceSync(): Promise<void> {
     if (this._userId && isSupabaseConfigured()) {
@@ -991,7 +718,7 @@ export class TodoList {
   }
 
   destroy(): void {
-    if (this._tickInterval) clearInterval(this._tickInterval);
+    this.timerStore.cleanup();
     if (this._unsubscribeRealtime) this._unsubscribeRealtime();
     if (this._saveTimeout) clearTimeout(this._saveTimeout);
   }
