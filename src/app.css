@@ -31,6 +31,12 @@
   --color-danger: oklch(62% 0.22 25);
   --color-info: oklch(65% 0.18 250);
 
+  /* Content Colors (Foregrounds for backgrounds) */
+  --color-primary-content: white;
+  --color-secondary-content: white;
+  --color-accent-content: oklch(25% 0.02 270);
+  --color-neutral-content: white;
+
   /* Neutral - Cool Slate (Better readability) */
   --color-neutral: oklch(25% 0.02 270);
   --color-neutral-dark: oklch(15% 0.02 270);
@@ -129,6 +135,12 @@
   --color-base-200: oklch(20% 0.02 270);
   --color-base-300: oklch(25% 0.025 270);
   --color-base-400: oklch(30% 0.03 270);
+
+  /* Dark Mode Content Colors */
+  --color-primary-content: oklch(15% 0.02 270);
+  --color-secondary-content: oklch(15% 0.02 270);
+  --color-accent-content: oklch(15% 0.02 270);
+  --color-neutral-content: oklch(15% 0.02 270);
 
   --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.3);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
