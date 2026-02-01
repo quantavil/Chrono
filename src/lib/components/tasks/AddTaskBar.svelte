@@ -120,7 +120,7 @@
 
       todoList.add({
         title: finalTitle,
-        listId: todoList.filters.listId || 'default',
+        listId: todoList.filters.listId || "default",
         priority: selectedPriority,
         due_at: getResolvedDueDate(),
         estimated_time: durationToSave ?? undefined,
@@ -300,7 +300,7 @@
 {#snippet quickActionsRow()}
   <div class="flex items-center gap-2 overflow-x-auto scrollbar-hide">
     {@render priorityChips(true)}
-    <div class="w-px h-5 bg-base-300 flex-shrink-0"></div>
+    <div class="w-px h-5 bg-base-300 shrink-0"></div>
     {@render dueDateChips(true)}
   </div>
 {/snippet}
@@ -315,7 +315,7 @@
       <div class="space-y-6">
         <div class="space-y-3">
           <span
-            class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
+            class="text-[10px] font-bold text-neutral/40 uppercase tracking-widest px-1"
             >Priority Level</span
           >
           <div class="flex flex-wrap gap-2">
@@ -326,7 +326,7 @@
       <!-- Timeline -->
       <div class="space-y-3">
         <span
-          class="text-[10px] font-bold text-neutral/40 uppercase tracking-[0.1em] px-1"
+          class="text-[10px] font-bold text-neutral/40 uppercase tracking-widest px-1"
           >Timeline</span
         >
         <div class="flex flex-wrap gap-2">
@@ -350,7 +350,7 @@
       <Flag class="w-4 h-4" />
     </button>
 
-    <CustomDatePicker bind:value={customDueDate} class="!w-auto" align="right">
+    <CustomDatePicker bind:value={customDueDate} class="w-auto!" align="right">
       {#snippet trigger()}
         <button
           type="button"
