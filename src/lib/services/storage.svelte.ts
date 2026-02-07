@@ -12,6 +12,15 @@ import {
 } from "../utils/supabase";
 
 /**
+ * Result type for individual item processing in sync operations.
+ * Returned by each promise to enable atomic updates after all complete.
+ */
+type ItemProcessResult =
+    | { type: 'delete'; id: string; success: boolean; error?: string }
+    | { type: 'create'; id: string; success: boolean; data?: Partial<TodoLocal>; error?: string }
+    | { type: 'update'; id: string; success: boolean; data?: Partial<TodoLocal>; error?: string };
+
+/**
  * StorageService
  *
  * Handles persistence to LocalStorage and synchronization with Supabase.
@@ -38,100 +47,80 @@ class StorageService {
     }
 
     // =========================================================================
-    // Local Storage
+    // Local Storage Helpers
+    // =========================================================================
+
+    /**
+     * Generic helper to load data from localStorage with error handling.
+     * Eliminates code duplication across load methods.
+     */
+    private _loadFromStorage<T>(key: string, defaultValue: T, merge = false): T {
+        try {
+            const json = localStorage.getItem(key);
+            if (!json) return defaultValue;
+            const parsed = JSON.parse(json);
+            return merge && typeof defaultValue === 'object' && defaultValue !== null
+                ? { ...defaultValue, ...parsed }
+                : parsed;
+        } catch (e) {
+            console.error(`Failed to load ${key} from localStorage`, e);
+            return defaultValue;
+        }
+    }
+
+    /**
+     * Generic helper to save data to localStorage with error handling.
+     */
+    private _saveToStorage(key: string, value: unknown): void {
+        try {
+            localStorage.setItem(key, JSON.stringify(value));
+        } catch (e) {
+            console.error(`Failed to save ${key} to localStorage`, e);
+        }
+    }
+
+    // =========================================================================
+    // Local Storage Public API
     // =========================================================================
 
     loadLocalTodos(): TodoLocal[] {
-        try {
-            const json = localStorage.getItem(LOCAL_STORAGE_KEYS.TODOS);
-            if (!json) return [];
-            return JSON.parse(json);
-        } catch (e) {
-            console.error("Failed to load todos from local storage", e);
-            return [];
-        }
+        return this._loadFromStorage<TodoLocal[]>(LOCAL_STORAGE_KEYS.TODOS, []);
     }
 
     saveLocalTodos(todos: TodoLocal[]): void {
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEYS.TODOS, JSON.stringify(todos));
-        } catch (e) {
-            console.error("Failed to save todos to local storage", e);
-        }
+        this._saveToStorage(LOCAL_STORAGE_KEYS.TODOS, todos);
     }
 
     loadFilters(): FilterState {
-        try {
-            const json = localStorage.getItem(LOCAL_STORAGE_KEYS.FILTERS);
-            if (!json) return { ...DEFAULT_FILTERS };
-            return { ...DEFAULT_FILTERS, ...JSON.parse(json) };
-        } catch (e) {
-            return { ...DEFAULT_FILTERS };
-        }
+        return this._loadFromStorage<FilterState>(LOCAL_STORAGE_KEYS.FILTERS, { ...DEFAULT_FILTERS }, true);
     }
 
     saveFilters(filters: FilterState): void {
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEYS.FILTERS, JSON.stringify(filters));
-        } catch (e) {
-            console.error("Failed to save filters", e);
-        }
+        this._saveToStorage(LOCAL_STORAGE_KEYS.FILTERS, filters);
     }
 
     loadPreferences(): UserPreferences {
-        try {
-            const json = localStorage.getItem(LOCAL_STORAGE_KEYS.PREFERENCES);
-            if (!json) return { ...DEFAULT_PREFERENCES };
-            return { ...DEFAULT_PREFERENCES, ...JSON.parse(json) };
-        } catch (e) {
-            return { ...DEFAULT_PREFERENCES };
-        }
+        return this._loadFromStorage<UserPreferences>(LOCAL_STORAGE_KEYS.PREFERENCES, { ...DEFAULT_PREFERENCES }, true);
     }
 
     savePreferences(prefs: UserPreferences): void {
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEYS.PREFERENCES, JSON.stringify(prefs));
-        } catch (e) {
-            console.error("Failed to save preferences", e);
-        }
+        this._saveToStorage(LOCAL_STORAGE_KEYS.PREFERENCES, prefs);
     }
 
     loadTags(): string[] {
-        try {
-            const json = localStorage.getItem(LOCAL_STORAGE_KEYS.TAGS);
-            if (!json) return [];
-            return JSON.parse(json);
-        } catch (e) {
-            console.error("Failed to load tags", e);
-            return [];
-        }
+        return this._loadFromStorage<string[]>(LOCAL_STORAGE_KEYS.TAGS, []);
     }
 
     saveTags(tags: string[]): void {
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEYS.TAGS, JSON.stringify(tags));
-        } catch (e) {
-            console.error("Failed to save tags", e);
-        }
+        this._saveToStorage(LOCAL_STORAGE_KEYS.TAGS, tags);
     }
 
     loadLists(): List[] {
-        try {
-            const json = localStorage.getItem(LOCAL_STORAGE_KEYS.LISTS);
-            if (!json) return [];
-            return JSON.parse(json);
-        } catch (e) {
-            console.error("Failed to load lists", e);
-            return [];
-        }
+        return this._loadFromStorage<List[]>(LOCAL_STORAGE_KEYS.LISTS, []);
     }
 
     saveLists(lists: List[]): void {
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEYS.LISTS, JSON.stringify(lists));
-        } catch (e) {
-            console.error("Failed to save lists", e);
-        }
+        this._saveToStorage(LOCAL_STORAGE_KEYS.LISTS, lists);
     }
 
     // =========================================================================
@@ -198,22 +187,29 @@ class StorageService {
         };
     }
 
-    private async processDirtyItems(list: TodoLocal[]): Promise<{ updatedList: TodoLocal[], processErrors: string[] }> {
-        const workingList = [...list];
-        const errors: string[] = [];
-        const dirtyItems = workingList.filter((t) => t._dirty || t._new || t._deleted);
 
-        // Optimization: Parallelize processing
-        await Promise.all(dirtyItems.map(async (item) => {
-            try {
+
+    /**
+     * Process dirty items using immutable pattern.
+     * Each promise returns an ItemProcessResult, and updates are applied atomically after completion.
+     * This prevents race conditions from concurrent array mutations.
+     */
+    private async processDirtyItems(list: TodoLocal[]): Promise<{ updatedList: TodoLocal[], processErrors: string[] }> {
+        const errors: string[] = [];
+        const dirtyItems = list.filter((t) => t._dirty || t._new || t._deleted);
+
+        // Each promise returns a result object instead of mutating shared state
+        const results = await Promise.allSettled(
+            dirtyItems.map(async (item): Promise<ItemProcessResult> => {
                 if (item._deleted) {
                     if (!item._new) {
                         const { error } = await deleteTodo(item.id);
                         if (error) {
                             console.error(`Failed to delete todo ${item.id}`, error);
-                            errors.push(`Failed to delete "${item.title}"`);
+                            return { type: 'delete', id: item.id, success: false, error: `Failed to delete "${item.title}"` };
                         }
                     }
+                    return { type: 'delete', id: item.id, success: true };
                 } else if (item._new) {
                     const { _dirty, _deleted, _new, _syncError, list_id, ...rest } = item;
                     const insertData = { ...rest, listId: list_id ?? 'default' };
@@ -221,54 +217,53 @@ class StorageService {
 
                     if (error) {
                         console.error(`Failed to create todo ${item.title}`, error);
-                        // We modify the item in workingList, but we need to find it again?
-                        // Since `item` is a reference to an object in `workingList` (shallow copy of array, but objects are refs if not cloned?)
-                        // Wait, `workingList = [...list]` creates a new array, but elements are shared references?
-                        // `processDirtyItems` takes `list` (from `sync` which did `[...networkTodos]`).
-                        // Objects are references. `item` is a reference.
-                        // Wait, `processDirtyItems` iterates `dirtyItems`.
-                        // IF `item` is a direct reference to an object in `workingList`, modifying `item` modifies `workingList`!
-                        // BUT, earlier code did: `workingList[idx] = { ...workingList[idx], ...data }`
-                        // This implies it replaces the object reference in the array with a new one.
-                        // So I must do the same.
-
-                        // Since we are inside map, finding index is safe.
-                        const idx = workingList.findIndex(t => t.id === item.id);
-                        if (idx !== -1) {
-                            workingList[idx] = { ...workingList[idx], _syncError: error.message };
-                        }
-                        errors.push(`Failed to sync newly created "${item.title}"`);
-                    } else if (data) {
-                        const idx = workingList.findIndex(t => t.id === item.id);
-                        if (idx !== -1) {
-                            workingList[idx] = { ...workingList[idx], ...data, _dirty: false, _new: false, _syncError: null };
-                        }
+                        return { type: 'create', id: item.id, success: false, error: `Failed to sync newly created "${item.title}"`, data: { _syncError: error.message } };
                     }
+                    return { type: 'create', id: item.id, success: true, data: { ...data, _dirty: false, _new: false, _syncError: null } };
                 } else if (item._dirty) {
                     const { _dirty, _deleted, _new, _syncError, ...updateData } = item;
                     const { data, error } = await updateTodo(item.id, updateData);
 
                     if (error) {
                         console.error(`Failed to update todo ${item.title}`, error);
-                        const idx = workingList.findIndex(t => t.id === item.id);
-                        if (idx !== -1) {
-                            workingList[idx] = { ...workingList[idx], _syncError: error.message };
-                        }
-                        errors.push(`Failed to save changes for "${item.title}"`);
-                    } else if (data) {
-                        const idx = workingList.findIndex(t => t.id === item.id);
-                        if (idx !== -1) {
-                            workingList[idx] = { ...workingList[idx], ...data, _dirty: false, _syncError: null };
-                        }
+                        return { type: 'update', id: item.id, success: false, error: `Failed to save changes for "${item.title}"`, data: { _syncError: error.message } };
                     }
+                    return { type: 'update', id: item.id, success: true, data: { ...data, _dirty: false, _syncError: null } };
                 }
-            } catch (err) {
-                console.error(`Unexpected error processing item ${item.id}`, err);
-                errors.push(`Error processing "${item.title}"`);
-            }
-        }));
+                // Fallback (shouldn't happen since we filtered for dirty items)
+                return { type: 'update', id: item.id, success: true };
+            })
+        );
 
-        return { updatedList: workingList, processErrors: errors };
+        // Build update map from results (immutable - no concurrent mutation)
+        const updateMap = new Map<string, Partial<TodoLocal>>();
+        const deleteSet = new Set<string>();
+
+        for (const result of results) {
+            if (result.status === 'rejected') {
+                errors.push(`Unexpected error: ${result.reason}`);
+                continue;
+            }
+            const value = result.value;
+            if (!value.success && value.error) {
+                errors.push(value.error);
+            }
+            if (value.type === 'delete' && value.success) {
+                deleteSet.add(value.id);
+            } else if (value.type !== 'delete' && value.data) {
+                updateMap.set(value.id, value.data);
+            }
+        }
+
+        // Apply all updates atomically in a single pass
+        const updatedList = list
+            .filter((t) => !deleteSet.has(t.id))
+            .map((t) => {
+                const update = updateMap.get(t.id);
+                return update ? { ...t, ...update } : t;
+            });
+
+        return { updatedList, processErrors: errors };
     }
 
     private mergeWithServer(localTodos: TodoLocal[], serverTodos: Todo[]): TodoLocal[] {
