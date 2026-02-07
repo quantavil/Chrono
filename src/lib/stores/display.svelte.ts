@@ -42,7 +42,7 @@ export class DisplayEngine {
     /**
      * Generate grouped and sorted task list.
      */
-    groupTasks(todos: TodoModel[]): TaskGroup[] {
+    groupTasks(todos: TodoModel[]): TaskGroup<TodoModel>[] {
         const { groupBy, sortBy, sortOrder } = this._config;
 
         // Sort function
@@ -95,8 +95,8 @@ export class DisplayEngine {
     private _groupByPriority(
         todos: TodoModel[],
         sortFn: (a: TodoModel, b: TodoModel) => number
-    ): TaskGroup[] {
-        const groups: Record<string, TaskGroup> = {
+    ): TaskGroup<TodoModel>[] {
+        const groups: Record<string, TaskGroup<TodoModel>> = {
             high: { id: "high", label: "High Priority", tasks: [] },
             medium: { id: "medium", label: "Medium Priority", tasks: [] },
             low: { id: "low", label: "Low Priority", tasks: [] },
@@ -117,7 +117,7 @@ export class DisplayEngine {
     private _groupByDate(
         todos: TodoModel[],
         sortFn: (a: TodoModel, b: TodoModel) => number
-    ): TaskGroup[] {
+    ): TaskGroup<TodoModel>[] {
         const groups = {
             overdue: { id: "overdue", label: "Overdue", tasks: [] as TodoModel[] },
             today: { id: "today", label: "Today", tasks: [] as TodoModel[] },

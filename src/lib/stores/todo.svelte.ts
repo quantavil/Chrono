@@ -118,7 +118,7 @@ export class TodoList {
     );
   }
 
-  get groupedTasks(): TaskGroup[] {
+  get groupedTasks(): TaskGroup<TodoModel>[] {
     return this.displayEngine.groupTasks(this.activeTodos);
   }
 

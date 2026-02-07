@@ -216,17 +216,10 @@ export const DEFAULT_DISPLAY_CONFIG: DisplayConfig = {
   sortOrder: 'asc',
 };
 
-export interface TaskGroup {
+export interface TaskGroup<T = unknown> {
   id: string;
   label: string;
-  tasks: any[]; // TodoModel eventually, but circular dependency issue if I import TodoModel here? 
-  // actually types.ts doesn't import TodoModel. It imports Todo schema.
-  // The store uses TodoModel. 
-  // Let's make it generic or use Todo[] for now in types, but the store returns TodoModels.
-  // Let's just define it as generic T or leave tasks as any[] in types and cast in store, 
-  // OR define it in the store file to avoid circular deps if TodoModel is needed.
-  // Actually, let's just NOT put TaskGroup in types.ts if it depends on the class.
-  // Wait, I can use the interface Todo from types.
+  tasks: T[];
 }
 
 export const DEFAULT_FILTERS: FilterState = {
@@ -274,23 +267,6 @@ export interface UndoAction {
   undo: () => void;
 }
 
-// ============================================================================
-// UI State Types
-// ============================================================================
-
-export interface DragState {
-  isDragging: boolean;
-  draggedId: string | null;
-  dropTargetId: string | null;
-  dropPosition: 'before' | 'after' | null;
-}
-
-export interface ModalState {
-  taskDetail: { isOpen: boolean; todoId: string | null };
-  login: { isOpen: boolean };
-  shortcuts: { isOpen: boolean };
-  settings: { isOpen: boolean };
-}
 
 // ============================================================================
 // User Preferences
