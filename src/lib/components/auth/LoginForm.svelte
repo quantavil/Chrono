@@ -1,5 +1,5 @@
 <!--
-  Authentication form with Magic Link and GitHub OAuth options.
+  Authentication form with Email and Password options.
 -->
 <script lang="ts">
     import { fade, scale } from "svelte/transition";
@@ -7,10 +7,8 @@
     import {
         X,
         Mail,
-        Github,
         Sparkles,
         ArrowRight,
-        CheckCircle,
         AlertCircle,
         Loader2,
     } from "lucide-svelte";
@@ -39,10 +37,10 @@
     // -------------------------------------------------------------------------
 
     let email = $state("");
-    let emailSent = $state(false);
+    let password = $state("");
+    let isSignUp = $state(false);
     let error = $state("");
     let isLoading = $state(false);
-    let mode = $state<"email" | "oauth">("email");
     let inputRef = $state<HTMLInputElement | null>(null);
 
     // -------------------------------------------------------------------------
@@ -52,7 +50,8 @@
     const isValidEmail = $derived(
         /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim()),
     );
-    const canSubmit = $derived(isValidEmail && !isLoading);
+    const isValidPassword = $derived(password.length >= 6);
+    const canSubmit = $derived(isValidEmail && isValidPassword && !isLoading);
     const isConfigured = $derived(authManager.isConfigured);
 
     // -------------------------------------------------------------------------
@@ -76,9 +75,9 @@
     }
 
     function reset() {
-        emailSent = false;
         error = "";
         email = "";
+        password = "";
     }
 
     function handleKeydown(e: KeyboardEvent) {
@@ -93,27 +92,18 @@
         isLoading = true;
 
         try {
-            const result = await authManager.signInWithEmail(email.trim());
-            emailSent = result.success;
+            const result = isSignUp
+                ? await authManager.signUpWithEmail(email.trim(), password)
+                : await authManager.signInWithEmail(email.trim(), password);
+
             if (!result.success) {
-                error = result.error || "Failed to send magic link";
+                error = result.error || "Authentication failed";
+            } else {
+                close();
             }
         } catch (err) {
             error = err instanceof Error ? err.message : "An error occurred";
         } finally {
-            isLoading = false;
-        }
-    }
-
-    async function signInWithGitHub() {
-        error = "";
-        isLoading = true;
-
-        try {
-            await authManager.signInWithGitHub();
-        } catch (err) {
-            error =
-                err instanceof Error ? err.message : "GitHub sign in failed";
             isLoading = false;
         }
     }
@@ -161,7 +151,7 @@
                     <Sparkles class="w-6 h-6" />
                 </div>
                 <h2 id="login-title" class="text-lg font-semibold">
-                    Sign in to Chronos
+                    {isSignUp ? "Create an account" : "Sign in to Chronos"}
                 </h2>
                 <p class="mt-1 text-sm text-neutral/60">
                     Sync your tasks across devices
@@ -173,7 +163,7 @@
                 {#if !isConfigured}
                     <!-- Unconfigured Warning -->
                     <div
-                        class="p-4 rounded-xl bg-warning/10 border border-warning/20"
+                        class="p-4 rounded-xl bg-warning/10 border border-warning/20 mb-4"
                     >
                         <div class="flex gap-3">
                             <AlertCircle
@@ -184,166 +174,94 @@
                                     Not configured
                                 </p>
                                 <p class="mt-0.5 text-warning/70">
-                                    Add Supabase credentials to enable cloud
-                                    sync.
+                                    Add Cloudflare database credentials to
+                                    enable cloud sync.
                                 </p>
                             </div>
                         </div>
                     </div>
-                {:else}
-                    <!-- Tab Switcher -->
-                    <div
-                        class="flex gap-1 p-1 mb-4 bg-base-200 rounded-xl"
-                        role="tablist"
-                    >
-                        {#each [{ id: "email", icon: Mail, label: "Email" }, { id: "oauth", icon: Github, label: "GitHub" }] as const as tab (tab.id)}
-                            <button
-                                type="button"
-                                role="tab"
-                                aria-selected={mode === tab.id}
-                                class="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg
-                                       text-sm font-medium transition-all
-                                       {mode === tab.id
-                                    ? 'bg-base-100 text-neutral shadow-sm'
-                                    : 'text-neutral/50 hover:text-neutral'}"
-                                onclick={() => {
-                                    mode = tab.id;
-                                    error = "";
-                                }}
-                            >
-                                <tab.icon class="w-4 h-4" />
-                                {tab.label}
-                            </button>
-                        {/each}
+                {/if}
+
+                <!-- Email Form -->
+                <form onsubmit={submitEmail} class="space-y-3">
+                    <div class="relative">
+                        <Mail
+                            class="absolute left-3 top-1/2 -translate-y-1/2
+                                   w-5 h-5 text-neutral/30 pointer-events-none"
+                        />
+                        <input
+                            bind:this={inputRef}
+                            bind:value={email}
+                            type="email"
+                            placeholder="you@example.com"
+                            autocomplete="username"
+                            disabled={isLoading}
+                            class="w-full pl-11 pr-4 py-3 bg-base-200 rounded-xl
+                                   placeholder:text-neutral/40 disabled:opacity-50
+                                   focus:outline-none focus:ring-2 focus:ring-primary/50
+                                   transition-shadow"
+                        />
                     </div>
 
-                    <!-- Tab Panels -->
-                    {#if mode === "email"}
-                        <div
-                            role="tabpanel"
-                            transition:fade={{ duration: 100 }}
-                        >
-                            {#if emailSent}
-                                <!-- Success State -->
-                                <div
-                                    class="py-6 text-center"
-                                    in:scale={{ duration: 200, start: 0.95 }}
-                                >
-                                    <div
-                                        class="inline-grid place-items-center w-12 h-12 mb-3
-                                               rounded-full bg-success/10"
-                                    >
-                                        <CheckCircle
-                                            class="w-6 h-6 text-success"
-                                        />
-                                    </div>
-                                    <p class="font-medium">Check your inbox</p>
-                                    <p class="mt-1 text-sm text-neutral/60">
-                                        Sent to <span
-                                            class="text-neutral font-medium"
-                                            >{email}</span
-                                        >
-                                    </p>
-                                    <button
-                                        type="button"
-                                        class="mt-4 text-sm text-primary hover:underline"
-                                        onclick={() => {
-                                            reset();
-                                            inputRef?.focus();
-                                        }}
-                                    >
-                                        Use different email
-                                    </button>
-                                </div>
-                            {:else}
-                                <!-- Email Form -->
-                                <form onsubmit={submitEmail} class="space-y-3">
-                                    <div class="relative">
-                                        <Mail
-                                            class="absolute left-3 top-1/2 -translate-y-1/2
-                                                   w-5 h-5 text-neutral/30 pointer-events-none"
-                                        />
-                                        <input
-                                            bind:this={inputRef}
-                                            bind:value={email}
-                                            type="email"
-                                            placeholder="you@example.com"
-                                            autocomplete="email"
-                                            disabled={isLoading}
-                                            class="w-full pl-11 pr-4 py-3 bg-base-200 rounded-xl
-                                                   placeholder:text-neutral/40 disabled:opacity-50
-                                                   focus:outline-none focus:ring-2 focus:ring-primary/50
-                                                   transition-shadow"
-                                        />
-                                    </div>
+                    <div class="relative">
+                        <input
+                            bind:value={password}
+                            type="password"
+                            placeholder="Password (min 6 chars)"
+                            autocomplete={isSignUp
+                                ? "new-password"
+                                : "current-password"}
+                            disabled={isLoading}
+                            class="w-full px-4 py-3 bg-base-200 rounded-xl
+                                   placeholder:text-neutral/40 disabled:opacity-50
+                                   focus:outline-none focus:ring-2 focus:ring-primary/50
+                                   transition-shadow"
+                        />
+                    </div>
 
-                                    {#if error}
-                                        <p
-                                            class="flex items-center gap-2 text-sm text-error"
-                                        >
-                                            <AlertCircle
-                                                class="w-4 h-4 shrink-0"
-                                            />
-                                            {error}
-                                        </p>
-                                    {/if}
-
-                                    <button
-                                        type="submit"
-                                        disabled={!canSubmit}
-                                        class="w-full flex items-center justify-center gap-2 py-3
-                                               rounded-xl bg-primary text-primary-content font-medium
-                                               hover:brightness-95 disabled:opacity-50
-                                               disabled:cursor-not-allowed transition"
-                                    >
-                                        {#if isLoading}
-                                            <Loader2
-                                                class="w-5 h-5 animate-spin"
-                                            />
-                                            <span>Sending...</span>
-                                        {:else}
-                                            <span>Send magic link</span>
-                                            <ArrowRight class="w-4 h-4" />
-                                        {/if}
-                                    </button>
-                                </form>
-                            {/if}
-                        </div>
-                    {:else}
-                        <!-- OAuth Panel -->
-                        <div
-                            role="tabpanel"
-                            class="space-y-3"
-                            transition:fade={{ duration: 100 }}
-                        >
-                            <button
-                                type="button"
-                                disabled={isLoading}
-                                onclick={signInWithGitHub}
-                                class="w-full flex items-center justify-center gap-2 py-3
-                                       rounded-xl bg-neutral text-neutral-content font-medium
-                                       hover:brightness-95 disabled:opacity-50
-                                       disabled:cursor-not-allowed transition"
-                            >
-                                {#if isLoading}
-                                    <Loader2 class="w-5 h-5 animate-spin" />
-                                {:else}
-                                    <Github class="w-5 h-5" />
-                                {/if}
-                                <span>Continue with GitHub</span>
-                            </button>
-
-                            {#if error}
-                                <p
-                                    class="flex items-center gap-2 text-sm text-error"
-                                >
-                                    <AlertCircle class="w-4 h-4 shrink-0" />
-                                    {error}
-                                </p>
-                            {/if}
-                        </div>
+                    {#if error}
+                        <p class="flex items-center gap-2 text-sm text-error">
+                            <AlertCircle class="w-4 h-4 shrink-0" />
+                            {error}
+                        </p>
                     {/if}
-                {/if}
+
+                    <button
+                        type="submit"
+                        disabled={!canSubmit}
+                        class="w-full flex items-center justify-center gap-2 py-3
+                               rounded-xl bg-primary text-primary-content font-medium
+                               hover:brightness-95 disabled:opacity-50
+                               disabled:cursor-not-allowed transition"
+                    >
+                        {#if isLoading}
+                            <Loader2 class="w-5 h-5 animate-spin" />
+                            <span
+                                >{isSignUp
+                                    ? "Creating account..."
+                                    : "Signing in..."}</span
+                            >
+                        {:else}
+                            <span>{isSignUp ? "Sign Up" : "Sign In"}</span>
+                            <ArrowRight class="w-4 h-4" />
+                        {/if}
+                    </button>
+
+                    <div class="mt-4 text-center">
+                        <button
+                            type="button"
+                            class="text-sm text-neutral/60 hover:text-primary transition-colors"
+                            onclick={() => {
+                                isSignUp = !isSignUp;
+                                error = "";
+                            }}
+                        >
+                            {isSignUp
+                                ? "Already have an account? Sign in"
+                                : "Don't have an account? Sign up"}
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

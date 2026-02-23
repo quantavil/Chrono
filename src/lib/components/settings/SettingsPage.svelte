@@ -352,7 +352,7 @@
 									{user.email}
 								</p>
 								<p class="text-sm text-neutral/50">
-									Synced with Supabase
+									Synced with Cloudflare D1
 								</p>
 							</div>
 							<button

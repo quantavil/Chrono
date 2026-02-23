@@ -43,3 +43,7 @@ pnpm-debug.log*
 !README.md
 !plan.md
 aggregate_ui.py
+
+# Cloudflare Wrangler
+.wrangler
+.wrangler/

@@ -281,22 +281,6 @@ export interface UserPreferences {
 export const DEFAULT_PREFERENCES: UserPreferences = {};
 
 // ============================================================================
-// Supabase Response Types
-// ============================================================================
-
-export interface SupabaseResponse<T> {
-  data: T | null;
-  error: SupabaseError | null;
-}
-
-export interface SupabaseError {
-  message: string;
-  code: string;
-  details: string | null;
-  hint: string | null;
-}
-
-// ============================================================================
 // Local Storage
 // ============================================================================
 

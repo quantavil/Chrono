@@ -8,8 +8,6 @@ import type {
 import { TodoModel } from "../models/Todo.svelte";
 import { storageService } from "../services/storage.svelte";
 import { toastManager } from "./toast.svelte";
-import { isSupabaseConfigured } from "../utils/supabase";
-
 // Extracted focused classes
 import { ListStore } from "./list.svelte";
 import { FilterStore } from "./filter.svelte";
@@ -25,7 +23,7 @@ import { DisplayEngine } from "./display.svelte";
  * - FilterStore: Filter state
  * - TimerStore: Timer operations
  * - UndoManager: Undo/redo operations
- * - SyncCoordinator: Supabase sync
+ * - SyncCoordinator: Backend API sync
  * - DisplayEngine: Grouping and sorting
  */
 export class TodoList {

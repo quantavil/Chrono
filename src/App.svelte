@@ -20,7 +20,6 @@
   import { themeManager } from "$lib/stores/theme.svelte";
   import { toastManager } from "$lib/stores/toast.svelte";
   import { uiStore } from "$lib/stores/ui.svelte";
-  import { isSupabaseConfigured } from "$lib/utils/supabase";
   import { initStores } from "$lib/context";
 
   import { WifiOff } from "lucide-svelte";
@@ -29,7 +28,6 @@
   // State
   // -------------------------------------------------------------------------
   const { todoStore: todoList, authStore: authManager } = initStores();
-  const isSupabaseEnabled = isSupabaseConfigured();
 
   let isOnline = $state(true);
   let isInitialized = $state(false);
@@ -93,7 +91,7 @@
     isOnline = online;
     if (online) {
       toastManager.success("Back online");
-      if (isSupabaseEnabled && isAuthenticated) todoList.forceSync();
+      if (isAuthenticated) todoList.forceSync();
     } else {
       toastManager.warning(
         "You're offline. Changes will sync when reconnected.",
@@ -216,7 +214,7 @@
       >
         {#snippet listPane()}
           <div class="h-full flex flex-col">
-            <Header class="flex-shrink-0" />
+            <Header class="shrink-0" />
             <div
               class="flex-1 overflow-y-auto px-4 sm:px-6 lg:px-8 pb-32 lg:pb-6 pt-4"
             >
@@ -237,7 +235,7 @@
     <div class="min-h-screen bg-base-200 flex items-center justify-center">
       <div class="flex flex-col items-center gap-4">
         <div
-          class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary animate-pulse"
+          class="w-12 h-12 rounded-2xl bg-linear-to-br from-primary to-secondary animate-pulse"
         ></div>
         <p class="text-sm text-neutral/50 font-medium">Loading Chronos...</p>
       </div>
@@ -266,10 +264,10 @@
       aria-hidden="true"
     >
       <div
-        class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-gradient-to-br from-primary/30 to-secondary/30 blur-3xl"
+        class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-linear-to-br from-primary/30 to-secondary/30 blur-3xl"
       ></div>
       <div
-        class="absolute -bottom-48 -left-48 w-[500px] h-[500px] rounded-full bg-gradient-to-tr from-accent/20 to-primary/20 blur-3xl"
+        class="absolute -bottom-48 -left-48 w-[500px] h-[500px] rounded-full bg-linear-to-tr from-accent/20 to-primary/20 blur-3xl"
       ></div>
     </div>
   {/if}

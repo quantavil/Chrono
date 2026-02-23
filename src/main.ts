@@ -53,7 +53,6 @@ function initializeApp(): ReturnType<typeof mount> {
 
   if (import.meta.env.DEV) {
     console.log('[Chronos] Application mounted in development mode');
-    console.log('[Chronos] Supabase configured:', Boolean(import.meta.env.VITE_SUPABASE_URL));
   }
 
   return app;

@@ -1,5 +1,5 @@
 /**
- * Storage Service: Handles persistence of application data to local storage and coordinates synchronization with Supabase.
+ * Storage Service: Handles persistence of application data to local storage and coordinates synchronization with our backend.
  */
 import type { TodoLocal, Todo, TodoCreateInput, FilterState, UserPreferences, List } from "../types";
 import { LOCAL_STORAGE_KEYS, DEFAULT_FILTERS, DEFAULT_PREFERENCES } from "../types";
@@ -8,8 +8,7 @@ import {
     createTodo,
     updateTodo,
     deleteTodo,
-    isSupabaseConfigured,
-} from "../utils/supabase";
+} from "../utils/api";
 
 /**
  * Result type for individual item processing in sync operations.
@@ -23,7 +22,7 @@ type ItemProcessResult =
 /**
  * StorageService
  *
- * Handles persistence to LocalStorage and synchronization with Supabase.
+ * Handles persistence to LocalStorage and synchronization with Backend.
  * Isolates all input/output side effects.
  */
 class StorageService {
@@ -138,11 +137,7 @@ class StorageService {
         updatedTodos: TodoLocal[];
         error: string | null;
     }> {
-        if (!isSupabaseConfigured()) {
-            return { updatedTodos: networkTodos, error: null };
-        }
-
-        // Fix: Concurrency Guard
+        // Concurrency Guard
         if (this.isSyncing) {
             return { updatedTodos: networkTodos, error: null };
         }
@@ -160,7 +155,7 @@ class StorageService {
             errors = [...errors, ...processErrors];
 
             // 2. Fetch latest from Server
-            const { data: serverTodos, error: fetchError } = await fetchTodos(userId);
+            const { data: serverTodos, error: fetchError } = await fetchTodos();
             if (fetchError) {
                 throw new Error(fetchError.message);
             }
