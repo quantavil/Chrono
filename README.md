@@ -21,7 +21,7 @@ A high-performance, responsive Todo & Timer Web App with a soft, cozy pastel des
 - **Local First**: Full offline support using indexedDB/localStorage. Changes sync automatically when reconnected.
 - **Svelte 5 Runes**: Leveraging the latest reactivity system for maximum performance and code clarity.
 - **Tailwind CSS 4**: Modern utility-first styling with high customization.
-- **Supabase Integration**: Secure authentication (Magic Link, GitHub) and real-time database synchronization.
+- **Cloudflare D1 & Better Auth**: Secure authentication (Email & Password) and real-time database synchronization.
 
 ## 🚀 Quick Start
 
@@ -40,7 +40,7 @@ npm run dev
 ## 🏗️ Architecture
 
 - **Context & Stores**: Using Svelte 5 Runes for global state management (`todoList`, `authManager`, `themeManager`, `uiStore`).
-- **Persistence Layer**: Custom `storageService` with support for both local storage and Supabase backend.
+- **Persistence Layer**: Custom `storageService` with support for both local storage and Cloudflare D1 backend.
 - **Layout System**: Dual-pane layout on desktop with a contextual right panel for task details.
 - **Sidebar Organization**: Dedicated section for **Completed Tasks** now located in the sidebar for a cleaner workspace.
 

@@ -34,10 +34,7 @@ vi.mock('../../src/lib/stores/toast.svelte', () => ({
     }
 }));
 
-// Mock supabase utils
-vi.mock('../../src/lib/utils/supabase', () => ({
-    isSupabaseConfigured: vi.fn(() => false),
-}));
+
 
 // Helper to access mocked methods
 const mockedStorage = vi.mocked(storageService);
