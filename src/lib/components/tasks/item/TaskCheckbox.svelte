@@ -5,7 +5,7 @@
     import { Check } from "lucide-svelte";
     import type { TodoItem } from "$lib/stores/todo.svelte";
     import { getTodoStore } from "$lib/context";
-    import { PRIORITY_CONFIG } from "$lib/types";
+    import { PRIORITY_CONFIG } from "$lib/config/theme";
 
     interface Props {
         todo: TodoItem;

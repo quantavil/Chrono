@@ -22,7 +22,8 @@
     import * as Icons from "lucide-svelte";
     import { getTodoStore } from "$lib/context";
     import type { TodoItem } from "$lib/stores/todo.svelte";
-    import { PRIORITY_CONFIG, TODO_TITLE_MAX_LENGTH } from "$lib/types";
+    import { TODO_TITLE_MAX_LENGTH } from "$lib/types";
+    import { PRIORITY_CONFIG } from "$lib/config/theme";
     import {
         getDatePresetISO,
         formatRelativeDate,

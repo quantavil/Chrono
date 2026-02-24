@@ -16,7 +16,8 @@
     import { getTodoStore } from "$lib/context";
     import { uiStore } from "$lib/stores/ui.svelte";
     import { formatRelativeDate } from "$lib/utils/formatTime";
-    import { PRIORITY_CONFIG, TODO_TITLE_MAX_LENGTH } from "$lib/types";
+    import { TODO_TITLE_MAX_LENGTH } from "$lib/types";
+    import { PRIORITY_CONFIG } from "$lib/config/theme";
 
     // Sub-components
     import TaskLiquid from "./item/TaskLiquid.svelte";

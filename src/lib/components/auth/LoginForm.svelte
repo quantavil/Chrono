@@ -52,7 +52,6 @@
     );
     const isValidPassword = $derived(password.length >= 6);
     const canSubmit = $derived(isValidEmail && isValidPassword && !isLoading);
-    const isConfigured = $derived(authManager.isConfigured);
 
     // -------------------------------------------------------------------------
     // Effects
@@ -160,28 +159,6 @@
 
             <!-- Body -->
             <div class="px-6 pb-6">
-                {#if !isConfigured}
-                    <!-- Unconfigured Warning -->
-                    <div
-                        class="p-4 rounded-xl bg-warning/10 border border-warning/20 mb-4"
-                    >
-                        <div class="flex gap-3">
-                            <AlertCircle
-                                class="w-5 h-5 text-warning shrink-0 mt-0.5"
-                            />
-                            <div class="text-sm">
-                                <p class="font-medium text-warning">
-                                    Not configured
-                                </p>
-                                <p class="mt-0.5 text-warning/70">
-                                    Add Cloudflare database credentials to
-                                    enable cloud sync.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                {/if}
-
                 <!-- Email Form -->
                 <form onsubmit={submitEmail} class="space-y-3">
                     <div class="relative">

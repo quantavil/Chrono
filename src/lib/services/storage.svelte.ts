@@ -207,7 +207,7 @@ class StorageService {
                     return { type: 'delete', id: item.id, success: true };
                 } else if (item._new) {
                     const { _dirty, _deleted, _new, _syncError, list_id, ...rest } = item;
-                    const insertData = { ...rest, listId: list_id ?? 'default' };
+                    const insertData = { ...rest, listId: list_id };
                     const { data, error } = await createTodo(insertData as TodoCreateInput);
 
                     if (error) {

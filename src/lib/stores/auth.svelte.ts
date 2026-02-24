@@ -44,9 +44,6 @@ export class AuthManager {
     return this.initialized;
   }
 
-  get isConfigured(): boolean {
-    return true; // We always assume configured via custom backend now
-  }
 
   get error(): string | null {
     return this.authError;

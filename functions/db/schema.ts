@@ -55,16 +55,16 @@ export const todos = sqliteTable('todos', {
     priority: text('priority'),
     is_completed: integer('is_completed', { mode: 'boolean' }).default(false).notNull(),
     accumulated_time: integer('accumulated_time').default(0).notNull(),
-    last_start_time: text('last_start_time'), // stored as ISO string to avoid timestamp mode timezone issues
+    last_start_time: integer('last_start_time', { mode: 'timestamp' }),
     position: integer('position').default(0).notNull(),
-    due_at: text('due_at'),
+    due_at: integer('due_at', { mode: 'timestamp' }),
     estimated_time: integer('estimated_time'),
-    completed_at: text('completed_at'),
+    completed_at: integer('completed_at', { mode: 'timestamp' }),
     recurrence: text('recurrence'), // JSON string
-    start_at: text('start_at'),
-    end_at: text('end_at'),
+    start_at: integer('start_at', { mode: 'timestamp' }),
+    end_at: integer('end_at', { mode: 'timestamp' }),
     tags: text('tags', { mode: 'json' }).$type<string[]>(), // Array stored as JSON
     subtasks: text('subtasks', { mode: 'json' }), // Array stored as JSON
-    created_at: text('created_at').notNull(),
-    updated_at: text('updated_at').notNull()
+    created_at: integer('created_at', { mode: 'timestamp' }).notNull(),
+    updated_at: integer('updated_at', { mode: 'timestamp' }).notNull()
 });

@@ -2,7 +2,8 @@
  * DisplayEngine: Handles task grouping, sorting, and display configuration.
  */
 import type { DisplayConfig, TaskGroup, GroupBy, SortBy, SortOrder } from "../types";
-import { DEFAULT_DISPLAY_CONFIG, PRIORITY_CONFIG } from "../types";
+import { DEFAULT_DISPLAY_CONFIG } from "../types";
+import { PRIORITY_CONFIG } from "../config/theme";
 import { isOverdue, isToday, isTomorrow } from "../utils/formatTime";
 import type { TodoModel } from "../models/Todo.svelte";
 

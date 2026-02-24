@@ -14,7 +14,7 @@
     } from "lucide-svelte";
     import { toastManager } from "$lib/stores/toast.svelte";
     import type { Toast, ToastType } from "$lib/types";
-    import { TOAST_CONFIG } from "$lib/types";
+    import { TOAST_CONFIG } from "$lib/config/theme";
 
     const POSITION_CLASSES: Record<string, string> = {
         "top-right": "top-4 right-4 items-end",

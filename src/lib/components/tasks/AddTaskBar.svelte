@@ -5,7 +5,8 @@
   import { Plus, Calendar, Clock, Flag } from "lucide-svelte";
   import CustomDatePicker from "$lib/components/ui/CustomDatePicker.svelte";
   import { getTodoStore } from "$lib/context";
-  import { TODO_TITLE_MAX_LENGTH, PRIORITY_CONFIG } from "$lib/types";
+  import { TODO_TITLE_MAX_LENGTH } from "$lib/types";
+  import { PRIORITY_CONFIG } from "$lib/config/theme";
   import { fly, slide } from "svelte/transition";
   import { getDatePreset, formatDuration } from "$lib/utils/formatTime";
   import { parseTaskInput } from "$lib/utils/smartInput";

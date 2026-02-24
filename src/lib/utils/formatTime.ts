@@ -199,3 +199,15 @@ export function formatDuration(ms: number): string {
   if (minutes > 0) return `${minutes}m`;
   return '< 1m';
 }
+
+export function shiftDate(isoStr: string | null, nextDate: Date): string | null {
+  if (!isoStr) return null;
+  const original = new Date(isoStr);
+  const shifted = new Date(nextDate);
+  shifted.setHours(
+    original.getHours(),
+    original.getMinutes(),
+    original.getSeconds()
+  );
+  return shifted.toISOString();
+}

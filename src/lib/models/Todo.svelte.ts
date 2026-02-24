@@ -11,7 +11,7 @@ import type {
     PriorityOrNone,
     TimerDisplayData,
 } from "../types";
-import { formatTime, calculateCurrentTime, nowTimestamp, isOverdue } from "../utils/formatTime";
+import { formatTime, calculateCurrentTime, nowTimestamp, isOverdue, shiftDate } from "../utils/formatTime";
 import { calculateNextOccurrence } from "../utils/recurrence";
 import { TODO_TITLE_MAX_LENGTH } from "../types";
 
@@ -312,17 +312,6 @@ export class TodoModel {
     }
 
     private _createRecurrenceInput(nextDate: Date): TodoCreateInput {
-        const shiftDate = (isoStr: string | null): string | null => {
-            if (!isoStr) return null;
-            const original = new Date(isoStr);
-            const shifted = new Date(nextDate);
-            shifted.setHours(
-                original.getHours(),
-                original.getMinutes(),
-                original.getSeconds()
-            );
-            return shifted.toISOString();
-        };
 
         return {
             listId: this.listId,
@@ -332,7 +321,7 @@ export class TodoModel {
             priority: this.priority,
             recurrence: $state.snapshot(this.recurrence),
             tags: [...this.tags],
-            due_at: shiftDate(this.dueAt),
+            due_at: shiftDate(this.dueAt, nextDate),
             estimated_time: this.estimatedTime,
             subtasks: this.subtasks.map((s) => ({
                 ...s,

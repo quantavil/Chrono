@@ -70,7 +70,13 @@ export const onRequestPatch: PagesFunction<Env> = async (context) => {
     const db = drizzle(context.env.DB, { schema });
 
     try {
-        const updates = await context.request.json() as Array<{ id: string; updates: any }>;
+        const body = await context.request.json();
+
+        if (!Array.isArray(body)) {
+            return Response.json({ error: 'Invalid payload: expected an array of updates' }, { status: 400 }) as any;
+        }
+
+        const updates = body as Array<{ id: string; updates: any }>;
 
         await db.batch(
             updates.map((update) =>
