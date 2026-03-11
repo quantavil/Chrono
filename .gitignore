@@ -41,9 +41,11 @@ pnpm-debug.log*
 *.txt
 *.md
 !README.md
-!plan.md
 aggregate_ui.py
 
 # Cloudflare Wrangler
 .wrangler
 .wrangler/
+
+# Cloudflare local secrets (never commit)
+.dev.vars
