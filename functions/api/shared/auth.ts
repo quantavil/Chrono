@@ -3,9 +3,10 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { drizzle } from 'drizzle-orm/d1';
 import * as schema from '../../db/schema';
 
-// This env interface corresponds to wrangler.toml definitions
 export interface Env {
     DB: D1Database;
+    BETTER_AUTH_SECRET: string;
+    BETTER_AUTH_URL: string;
 }
 
 // Cached instances per worker isolate
@@ -25,6 +26,8 @@ export function getAuth(env: Env) {
     const db = getDb(env);
 
     cachedAuth = betterAuth({
+        secret: env.BETTER_AUTH_SECRET,
+        baseURL: env.BETTER_AUTH_URL,
         database: drizzleAdapter(db, {
             provider: 'sqlite'
         }),
