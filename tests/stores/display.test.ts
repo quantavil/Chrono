@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, beforeEach } from 'vitest';
 import type { Priority, SortBy, SortOrder, GroupBy } from '../../src/lib/types';
-import { PRIORITY_CONFIG } from '../../src/lib/types';
+import { PRIORITY_CONFIG } from '../../src/lib/config/theme';
 
 // Mock TodoModel for testing
 interface MockTodo {

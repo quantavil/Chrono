@@ -82,16 +82,8 @@ export class AuthManager {
   private async initialize(): Promise<void> {
     try {
       const { data: session } = await authClient.getSession();
-
       if (session?.user) {
-        this.currentUser = {
-          id: session.user.id,
-          email: session.user.email,
-          avatar_url: session.user.image || null,
-          full_name: session.user.name || null,
-          created_at: session.user.createdAt.toISOString(),
-          updated_at: session.user.updatedAt.toISOString(),
-        };
+        this._applySession(session);
         await this.todoList.setUser(session.user.id);
       }
     } catch (error) {
@@ -209,18 +201,22 @@ export class AuthManager {
     try {
       const { data: session } = await authClient.getSession();
       if (session?.user) {
-        this.currentUser = {
-          id: session.user.id,
-          email: session.user.email,
-          avatar_url: session.user.image || null,
-          full_name: session.user.name || null,
-          created_at: session.user.createdAt.toISOString(),
-          updated_at: session.user.updatedAt.toISOString(),
-        };
+        this._applySession(session);
       }
     } catch (error) {
       console.error('[Chronos] Failed to refresh user:', error);
     }
+  }
+
+  private _applySession(session: { user: { id: string; email: string; image?: string | null; name?: string | null; createdAt: Date; updatedAt: Date } }): void {
+    this.currentUser = {
+      id: session.user.id,
+      email: session.user.email,
+      avatar_url: session.user.image || null,
+      full_name: session.user.name || null,
+      created_at: session.user.createdAt.toISOString(),
+      updated_at: session.user.updatedAt.toISOString(),
+    };
   }
 
   // -------------------------------------------------------------------------

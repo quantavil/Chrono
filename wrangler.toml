@@ -5,4 +5,4 @@ compatibility_flags = ["nodejs_compat"]
 [[d1_databases]]
 binding = "DB"
 database_name = "chronos"
-database_id = "chronos-db" # Update this with the real ID later
+database_id = "3e24a008-8e4f-415b-bf7d-f86a90f3f4b6"

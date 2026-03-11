@@ -148,11 +148,6 @@ export class TodoList {
     };
   }
 
-  get allTags(): string[] {
-    const tags = new Set<string>();
-    this._items.forEach(t => !t._deleted && t.tags.forEach(tag => tags.add(tag)));
-    return Array.from(tags).sort();
-  }
 
   // ==========================================================================
   // Private Helpers
@@ -195,9 +190,10 @@ export class TodoList {
       }
     });
 
+    const existingTags = new Set(this._tags);
     let changed = false;
     allTaskTags.forEach(tag => {
-      if (!this._tags.includes(tag)) {
+      if (!existingTags.has(tag)) {
         this._tags.push(tag);
         changed = true;
       }

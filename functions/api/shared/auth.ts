@@ -8,11 +8,23 @@ export interface Env {
     DB: D1Database;
 }
 
-// Function to construct the auth instance using the exact request environment
-export function getAuth(env: Env) {
-    const db = drizzle(env.DB, { schema });
+// Cached instances per worker isolate
+let cachedEnv: Env | null = null;
+let cachedAuth: ReturnType<typeof betterAuth> | null = null;
+let cachedDb: ReturnType<typeof drizzle> | null = null;
 
-    return betterAuth({
+export function getDb(env: Env) {
+    if (cachedDb && cachedEnv === env) return cachedDb;
+    cachedEnv = env;
+    cachedDb = drizzle(env.DB, { schema });
+    return cachedDb;
+}
+
+export function getAuth(env: Env) {
+    if (cachedAuth && cachedEnv === env) return cachedAuth;
+    const db = getDb(env);
+
+    cachedAuth = betterAuth({
         database: drizzleAdapter(db, {
             provider: 'sqlite'
         }),
@@ -20,4 +32,6 @@ export function getAuth(env: Env) {
             enabled: true
         }
     });
+
+    return cachedAuth;
 }

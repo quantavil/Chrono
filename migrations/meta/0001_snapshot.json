@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "b1525c5e-5fd7-4c12-8f89-24f524121751",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "ecf8fb4e-d70a-4305-bb8a-51741f5f3356",
+  "prevId": "b1525c5e-5fd7-4c12-8f89-24f524121751",
   "tables": {
     "account": {
       "name": "account",
@@ -224,6 +224,13 @@
           "notNull": false,
           "autoincrement": false
         },
+        "list_id": {
+          "name": "list_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "title": {
           "name": "title",
           "type": "text",
@@ -306,20 +313,6 @@
         },
         "recurrence": {
           "name": "recurrence",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "start_at": {
-          "name": "start_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "end_at": {
-          "name": "end_at",
           "type": "text",
           "primaryKey": false,
           "notNull": false,

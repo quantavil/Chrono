@@ -2,7 +2,7 @@
  * UndoManager: Manages undo stack for task operations with type-safe action handling.
  */
 import type { UndoAction } from "../types";
-import { UNDO_STACK_MAX_SIZE } from "../types";
+import { UNDO_STACK_MAX_SIZE, UNDO_EXPIRY_MS } from "../types";
 import { toastManager } from "./toast.svelte";
 
 export class UndoManager {
@@ -25,6 +25,7 @@ export class UndoManager {
      * Automatically trims the stack to max size.
      */
     push(action: UndoAction): void {
+        this._pruneExpired();
         this._stack = [action, ...this._stack.slice(0, UNDO_STACK_MAX_SIZE - 1)];
     }
 
@@ -33,6 +34,7 @@ export class UndoManager {
      * Returns true if an action was undone, false if stack was empty.
      */
     undo(): boolean {
+        this._pruneExpired();
         const action = this._stack[0];
         if (!action) return false;
 
@@ -47,6 +49,11 @@ export class UndoManager {
      */
     clear(): void {
         this._stack = [];
+    }
+
+    private _pruneExpired(): void {
+        const now = Date.now();
+        this._stack = this._stack.filter(a => now - a.timestamp < UNDO_EXPIRY_MS);
     }
 
     /**

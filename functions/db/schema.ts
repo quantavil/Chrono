@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer, blob } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
 
 export const user = sqliteTable("user", {
     id: text("id").primaryKey(),
@@ -47,24 +47,23 @@ export const verification = sqliteTable("verification", {
 });
 
 export const todos = sqliteTable('todos', {
-    id: text('id').primaryKey(), // using random UUID manually or ulid
+    id: text('id').primaryKey(),
     user_id: text('user_id').references(() => user.id, { onDelete: 'cascade' }),
+    list_id: text('list_id'),
     title: text('title').notNull(),
     description: text('description'),
     notes: text('notes'),
     priority: text('priority'),
     is_completed: integer('is_completed', { mode: 'boolean' }).default(false).notNull(),
     accumulated_time: integer('accumulated_time').default(0).notNull(),
-    last_start_time: integer('last_start_time', { mode: 'timestamp' }),
+    last_start_time: text('last_start_time'),
     position: integer('position').default(0).notNull(),
-    due_at: integer('due_at', { mode: 'timestamp' }),
+    due_at: text('due_at'),
     estimated_time: integer('estimated_time'),
-    completed_at: integer('completed_at', { mode: 'timestamp' }),
-    recurrence: text('recurrence'), // JSON string
-    start_at: integer('start_at', { mode: 'timestamp' }),
-    end_at: integer('end_at', { mode: 'timestamp' }),
-    tags: text('tags', { mode: 'json' }).$type<string[]>(), // Array stored as JSON
-    subtasks: text('subtasks', { mode: 'json' }), // Array stored as JSON
-    created_at: integer('created_at', { mode: 'timestamp' }).notNull(),
-    updated_at: integer('updated_at', { mode: 'timestamp' }).notNull()
+    completed_at: text('completed_at'),
+    recurrence: text('recurrence'),
+    tags: text('tags', { mode: 'json' }).$type<string[]>(),
+    subtasks: text('subtasks', { mode: 'json' }),
+    created_at: text('created_at').notNull(),
+    updated_at: text('updated_at').notNull()
 });

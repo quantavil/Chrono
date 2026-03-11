@@ -2,7 +2,7 @@
  * API client for interacting with the local Cloudflare Pages Functions backend.
  */
 
-import type { Todo, User, RecurrenceConfig, Subtask } from '../types';
+import type { Todo, TodoCreateInput } from '../types';
 
 export async function fetchTodos(): Promise<{ data: Todo[] | null; error: Error | null }> {
     try {
@@ -31,7 +31,7 @@ export async function fetchTodos(): Promise<{ data: Todo[] | null; error: Error 
 }
 
 export async function createTodo(
-    todo: Partial<Todo>
+    todo: TodoCreateInput
 ): Promise<{ data: Todo | null; error: Error | null }> {
     try {
         const res = await fetch('/api/todos', {

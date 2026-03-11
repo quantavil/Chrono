@@ -48,7 +48,10 @@ export class SyncCoordinator {
 
         // Update all items with the new userId
         const items = this._getItems();
-        items.forEach(t => (t.userId = userId));
+        items.forEach(t => {
+            t.userId = userId;
+            t.markDirty();
+        });
         this._save();
 
         if (userId) {

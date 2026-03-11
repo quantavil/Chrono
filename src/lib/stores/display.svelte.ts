@@ -2,12 +2,10 @@
  * DisplayEngine: Handles task grouping, sorting, and display configuration.
  */
 import type { DisplayConfig, TaskGroup, GroupBy, SortBy, SortOrder } from "../types";
-import { DEFAULT_DISPLAY_CONFIG } from "../types";
+import { DEFAULT_DISPLAY_CONFIG, LOCAL_STORAGE_KEYS } from "../types";
 import { PRIORITY_CONFIG } from "../config/theme";
 import { isOverdue, isToday, isTomorrow } from "../utils/formatTime";
 import type { TodoModel } from "../models/Todo.svelte";
-
-const DISPLAY_CONFIG_KEY = "chronos_display_config";
 
 export class DisplayEngine {
     private _config = $state<DisplayConfig>({ ...DEFAULT_DISPLAY_CONFIG });
@@ -150,7 +148,7 @@ export class DisplayEngine {
         if (typeof localStorage === "undefined") return;
 
         try {
-            const stored = localStorage.getItem(DISPLAY_CONFIG_KEY);
+            const stored = localStorage.getItem(LOCAL_STORAGE_KEYS.DISPLAY_CONFIG);
             if (stored) {
                 const parsed = JSON.parse(stored);
                 this._config = { ...DEFAULT_DISPLAY_CONFIG, ...parsed };
@@ -164,7 +162,7 @@ export class DisplayEngine {
         if (typeof localStorage === "undefined") return;
 
         try {
-            localStorage.setItem(DISPLAY_CONFIG_KEY, JSON.stringify(this._config));
+            localStorage.setItem(LOCAL_STORAGE_KEYS.DISPLAY_CONFIG, JSON.stringify(this._config));
         } catch (e) {
             console.error("Failed to save display config", e);
         }

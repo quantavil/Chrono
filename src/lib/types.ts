@@ -38,7 +38,6 @@ export interface AuthState {
 // ============================================================================
 
 export type Priority = 'high' | 'medium' | 'low' | 'none';
-export type PriorityOrNone = Priority | null;
 
 export type TaskStatus = 'active' | 'completed' | 'overdue';
 
@@ -90,7 +89,7 @@ export interface Todo {
   description: string | null;
   notes: string | null;
   is_completed: boolean;
-  priority: PriorityOrNone;
+  priority: Priority;
   due_at: string | null; // ISO timestamp
   accumulated_time: number; // milliseconds
   estimated_time: number | null; // milliseconds - for time estimates
@@ -116,7 +115,7 @@ export interface TodoCreateInput {
   title: string;
   description?: string | null;
   notes?: string | null;
-  priority?: PriorityOrNone;
+  priority?: Priority;
   due_at?: string | null;
   estimated_time?: number | null;
   recurrence?: RecurrenceConfig | null;
@@ -131,7 +130,7 @@ export interface TodoUpdateInput {
   description?: string | null;
   notes?: string | null;
   is_completed?: boolean;
-  priority?: PriorityOrNone;
+  priority?: Priority;
   due_at?: string | null;
   accumulated_time?: number;
   estimated_time?: number | null;
@@ -188,17 +187,14 @@ export interface ToastInput {
 // Filter & Search Types
 // ============================================================================
 
-export type SortField = 'created' | 'due' | 'priority' | 'title' | 'position';
 export type SortOrder = 'asc' | 'desc';
 
 export interface FilterState {
-  priority: PriorityOrNone | 'all';
+  priority: Priority | 'all';
   listId: string;
   status: 'all' | 'active' | 'completed' | 'overdue';
   tags: string[];
   hasDueDate: boolean | null;
-  sortBy: SortField;
-  sortOrder: SortOrder;
 }
 
 export type GroupBy = 'none' | 'priority' | 'date';
@@ -223,13 +219,11 @@ export interface TaskGroup<T = unknown> {
 }
 
 export const DEFAULT_FILTERS: FilterState = {
-  listId: 'default', // Will be replaced by actual default list ID
+  listId: 'default',
   priority: 'all',
   status: 'all',
   tags: [],
   hasDueDate: null,
-  sortBy: 'position',
-  sortOrder: 'asc',
 };
 
 // ============================================================================
@@ -273,7 +267,6 @@ export interface UndoAction {
 // ============================================================================
 
 export interface UserPreferences {
-  // Add future preferences here
   theme?: Theme;
   enableFocusMode?: boolean;
 }
@@ -284,18 +277,16 @@ export const DEFAULT_PREFERENCES: UserPreferences = {};
 // Local Storage
 // ============================================================================
 
-export const LOCAL_STORAGE_VERSION = 2; // Bumped for new fields
-
 export const LOCAL_STORAGE_KEYS = {
   TODOS: 'chronos_todos_v2',
   THEME: 'chronos_theme',
   FILTERS: 'chronos_filters',
   LAST_SYNC: 'chronos_last_sync',
-  VERSION: 'chronos_version',
   UNDO_STACK: 'chronos_undo',
   PREFERENCES: 'chronos_preferences_v2',
   TAGS: 'chronos_tags_v1',
   LISTS: 'chronos_lists_v1',
+  DISPLAY_CONFIG: 'chronos_display_config',
 } as const;
 
 // ============================================================================

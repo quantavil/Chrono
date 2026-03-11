@@ -166,7 +166,7 @@ class StorageService {
             }
 
             this.lastSyncTime = Date.now();
-            localStorage.setItem(LOCAL_STORAGE_KEYS.LAST_SYNC, String(this.lastSyncTime));
+            this._saveToStorage(LOCAL_STORAGE_KEYS.LAST_SYNC, String(this.lastSyncTime));
 
         } catch (err: any) {
             console.error("Sync failed", err);
