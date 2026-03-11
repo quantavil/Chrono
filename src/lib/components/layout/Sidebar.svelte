@@ -345,7 +345,7 @@
         <!-- Auth -->
         {#if authManager.isAuthenticated}
             <div class="pt-2 mt-1 border-t border-base-200/50">
-                <UserMenu onOpenSettings={() => (uiStore.view = "settings")} />
+                <UserMenu />
             </div>
         {:else}
             <button

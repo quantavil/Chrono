@@ -336,51 +336,44 @@
 
 				{#snippet accountContent()}
 					{#if user}
-						<div class="flex items-center gap-5">
-							<div class="avatar placeholder">
-								<div
-									class="size-14 rounded-full bg-primary/10 text-primary"
-								>
-									<span class="text-xl font-bold"
-										>{user.email?.[0].toUpperCase() ??
-											"U"}</span
-									>
-								</div>
+						<!-- User info row -->
+						<div class="flex items-center gap-4">
+							<!-- Avatar -->
+							<div class="size-14 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center text-white text-xl font-bold flex-shrink-0 shadow-md shadow-primary/20">
+								{user.email?.[0].toUpperCase() ?? "U"}
 							</div>
 							<div class="min-w-0 flex-1">
-								<p class="truncate font-semibold">
-									{user.email}
-								</p>
-								<p class="text-sm text-neutral/50">
-									Synced with Cloudflare D1
-								</p>
+								<p class="font-semibold truncate">{user.email}</p>
+								<span class="inline-flex items-center gap-1.5 mt-1 text-xs font-medium text-accent bg-accent/10 px-2 py-0.5 rounded-full">
+									<Check class="size-3" strokeWidth={2.5} />
+									Synced
+								</span>
 							</div>
-							<button
-								class="btn btn-error btn-outline btn-sm"
-								onclick={() => authStore.signOut()}
-							>
-								<LogOut class="size-4" />
-								<span class="hidden sm:inline">Sign Out</span>
-							</button>
 						</div>
+
+						<!-- Divider -->
+						<div class="my-4 border-t border-base-300/50"></div>
+
+						<!-- Sign out -->
+						<button
+							class="flex items-center gap-3 w-full px-4 py-3 rounded-xl bg-error/5 text-error hover:bg-error/10 transition-colors font-medium text-sm"
+							onclick={() => authStore.signOut()}
+						>
+							<LogOut class="size-4" />
+							Sign Out
+						</button>
 					{:else}
 						<div class="py-6 text-center">
-							<div
-								class="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-base-200"
-							>
+							<div class="mx-auto mb-4 flex size-16 items-center justify-center rounded-2xl bg-base-200">
 								<User class="size-8 text-neutral/40" />
 							</div>
 							<h3 class="mb-1 font-semibold">Not Signed In</h3>
-							<p
-								class="mx-auto mb-4 max-w-xs text-sm text-neutral/50"
-							>
-								Sign in to sync tasks across devices and keep
-								your data safe.
+							<p class="mx-auto mb-4 max-w-xs text-sm text-neutral/50">
+								Sign in to sync tasks across devices and keep your data safe.
 							</p>
-							<button
-								class="btn btn-primary btn-sm"
-								onclick={goBack}>Go to Dashboard</button
-							>
+							<button class="btn btn-primary btn-sm" onclick={goBack}>
+								Go to Dashboard
+							</button>
 						</div>
 					{/if}
 				{/snippet}
