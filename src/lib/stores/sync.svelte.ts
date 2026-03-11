@@ -46,12 +46,13 @@ export class SyncCoordinator {
     async setUser(userId: string | null): Promise<void> {
         this._userId = userId;
 
-        // Update all items with the new userId
+        // Keep only items that belong to the target userId
+        // This prevents local (guest) tasks from automatically merging into an account,
+        // and also prevents account tasks from leaking into the local guest session on logout.
         const items = this._getItems();
-        items.forEach(t => {
-            t.userId = userId;
-            t.markDirty();
-        });
+        const itemsToKeep = items.filter(t => t.userId === userId);
+        
+        this._setItems(() => itemsToKeep);
         this._save();
 
         if (userId) {
