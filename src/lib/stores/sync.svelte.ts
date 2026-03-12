@@ -83,14 +83,14 @@ export class SyncCoordinator {
             const newIds = new Set(updatedTodos.map(t => t.id));
 
             this._setItems((currentItems) => {
-                // Build updated list immutably
+                const dtoMap = new Map(updatedTodos.map(t => [t.id, t]));
                 const result: TodoModel[] = [];
 
-                // Add existing items that were updated
+                // Update existing items
                 currentItems.forEach(item => {
-                    if (!newIds.has(item.id)) return; // Skip items no longer on server
+                    if (!newIds.has(item.id)) return;
 
-                    const dto = updatedTodos.find(t => t.id === item.id);
+                    const dto = dtoMap.get(item.id);
                     if (dto) {
                         item.applyUpdate(dto);
                     }
@@ -98,8 +98,9 @@ export class SyncCoordinator {
                 });
 
                 // Add new items from server
+                const existingIds = new Set(currentItems.map(t => t.id));
                 updatedTodos.forEach(dto => {
-                    if (!currentItems.some(t => t.id === dto.id)) {
+                    if (!existingIds.has(dto.id)) {
                         result.push(this._createModel(dto));
                     }
                 });

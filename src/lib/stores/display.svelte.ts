@@ -2,17 +2,13 @@
  * DisplayEngine: Handles task grouping, sorting, and display configuration.
  */
 import type { DisplayConfig, TaskGroup, GroupBy, SortBy, SortOrder } from "../types";
-import { DEFAULT_DISPLAY_CONFIG, LOCAL_STORAGE_KEYS } from "../types";
 import { PRIORITY_CONFIG } from "../config/theme";
 import { isOverdue, isToday, isTomorrow } from "../utils/formatTime";
 import type { TodoModel } from "../models/Todo.svelte";
+import { storageService } from "../services/storage.svelte";
 
 export class DisplayEngine {
-    private _config = $state<DisplayConfig>({ ...DEFAULT_DISPLAY_CONFIG });
-
-    constructor() {
-        this._loadConfig();
-    }
+    private _config = $state<DisplayConfig>(storageService.loadDisplayConfig());
 
     get config(): DisplayConfig {
         return this._config;
@@ -35,7 +31,7 @@ export class DisplayEngine {
      */
     setConfig(updates: Partial<DisplayConfig>): void {
         this._config = { ...this._config, ...updates };
-        this._saveConfig();
+        storageService.saveDisplayConfig(this._config);
     }
 
     /**
@@ -48,16 +44,18 @@ export class DisplayEngine {
         const sortFn = (a: TodoModel, b: TodoModel): number => {
             let diff = 0;
             switch (sortBy) {
-                case "priority":
+                case "priority": {
                     const pA = a.priority ? PRIORITY_CONFIG[a.priority].sortWeight : 3;
                     const pB = b.priority ? PRIORITY_CONFIG[b.priority].sortWeight : 3;
                     diff = pA - pB;
                     break;
-                case "date":
+                }
+                case "date": {
                     const dateA = a.dueAt ? new Date(a.dueAt).getTime() : Number.MAX_SAFE_INTEGER;
                     const dateB = b.dueAt ? new Date(b.dueAt).getTime() : Number.MAX_SAFE_INTEGER;
                     diff = dateA - dateB;
                     break;
+                }
                 case "alphabetical":
                     diff = a.title.localeCompare(b.title);
                     break;
@@ -142,29 +140,5 @@ export class DisplayEngine {
         return [groups.overdue, groups.today, groups.tomorrow, groups.upcoming, groups.noDate]
             .filter(g => g.tasks.length > 0)
             .map(g => ({ ...g, tasks: g.tasks.sort(sortFn) }));
-    }
-
-    private _loadConfig(): void {
-        if (typeof localStorage === "undefined") return;
-
-        try {
-            const stored = localStorage.getItem(LOCAL_STORAGE_KEYS.DISPLAY_CONFIG);
-            if (stored) {
-                const parsed = JSON.parse(stored);
-                this._config = { ...DEFAULT_DISPLAY_CONFIG, ...parsed };
-            }
-        } catch (e) {
-            console.error("Failed to load display config", e);
-        }
-    }
-
-    private _saveConfig(): void {
-        if (typeof localStorage === "undefined") return;
-
-        try {
-            localStorage.setItem(LOCAL_STORAGE_KEYS.DISPLAY_CONFIG, JSON.stringify(this._config));
-        } catch (e) {
-            console.error("Failed to save display config", e);
-        }
     }
 }

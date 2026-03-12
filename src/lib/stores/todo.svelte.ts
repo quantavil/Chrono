@@ -4,6 +4,7 @@ import type {
   UserPreferences,
   TaskGroup,
   TodoLocal,
+  List,
 } from "../types";
 import { TodoModel } from "../models/Todo.svelte";
 import { storageService } from "../services/storage.svelte";
@@ -34,7 +35,7 @@ export class TodoList {
   private _tags = $state<string[]>(storageService.loadTags());
 
   // Persistence batching
-  private _saveTimeout: any;
+  private _saveTimeout: ReturnType<typeof setTimeout> | undefined;
 
   // Sub-stores (composition over inheritance)
   readonly listStore: ListStore;
@@ -415,7 +416,7 @@ export class TodoList {
     }
   }
 
-  updateList(id: string, updates: Partial<any>) { this.listStore.updateList(id, updates); }
+  updateList(id: string, updates: Partial<Pick<List, 'title' | 'icon'>>) { this.listStore.updateList(id, updates); }
 
   // Filters
   setListFilter(id: string) { this.filterStore.setListFilter(id); }

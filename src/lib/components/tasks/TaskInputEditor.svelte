@@ -9,6 +9,7 @@
     import { SmartHighlight } from "$lib/utils/tiptapExtensions";
 
     interface Props {
+        id?: string;
         value?: string;
         placeholder?: string;
         class?: string;
@@ -21,6 +22,7 @@
     }
 
     let {
+        id,
         value = $bindable(""),
         placeholder = "Add a task...",
         class: className = "",
@@ -110,7 +112,7 @@
     }
 </script>
 
-<div bind:this={element} class={className}></div>
+<div {id} bind:this={element} class={className}></div>
 
 <style>
     /* Scoped styles (though Tiptap classes are global essentially) */

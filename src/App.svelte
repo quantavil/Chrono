@@ -113,7 +113,8 @@
     if (mod && key === "k") {
       event.preventDefault();
       document
-        .querySelector<HTMLInputElement>('input[placeholder*="task"]')
+        .getElementById("add-task-input")
+        ?.querySelector<HTMLElement>("[contenteditable]")
         ?.focus();
       return;
     }
@@ -174,16 +175,11 @@
     window.addEventListener("popstate", onPopState);
     window.addEventListener("keydown", handleKeydown);
 
-    // Init timeout
-    const initTimeout = setTimeout(() => (isInitialized = true), 500);
-    if (isAuthInitialized && !isLoading) isInitialized = true;
-
     return () => {
       window.removeEventListener("online", onOnline);
       window.removeEventListener("offline", onOffline);
       window.removeEventListener("popstate", onPopState);
       window.removeEventListener("keydown", handleKeydown);
-      clearTimeout(initTimeout);
       todoList.destroy();
       toastManager.destroy();
       authManager.destroy();
@@ -200,7 +196,7 @@
 </script>
 
 <svelte:head>
-  <title>Chronos - Todo & Timer</title>
+  <title>{uiStore.view === "settings" ? "Settings — Chronos" : "Chronos — Todo & Timer"}</title>
 </svelte:head>
 
 <div data-theme={themeManager.resolved}>

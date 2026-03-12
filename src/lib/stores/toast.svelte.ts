@@ -151,11 +151,3 @@ class ToastManager {
 
 
 export const toastManager = new ToastManager();
-
-export function showToast(input: ToastInput) { return toastManager.add(input); }
-export function showSuccess(message: string, duration?: number) { return toastManager.success(message, duration); }
-export function showError(message: string, duration?: number) { return toastManager.error(message, duration); }
-export function showInfo(message: string, duration?: number) { return toastManager.info(message, duration); }
-export function showWarning(message: string, duration?: number) { return toastManager.warning(message, duration); }
-export function dismissToast(id: string) { return toastManager.remove(id); }
-export function clearAllToasts() { return toastManager.clear(); }

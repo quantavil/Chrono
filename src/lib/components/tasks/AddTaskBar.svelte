@@ -122,7 +122,7 @@
       todoList.add({
         title: finalTitle,
         listId: todoList.filters.listId || "default",
-        priority: selectedPriority,
+        priority: selectedPriority ?? undefined,
         due_at: getResolvedDueDate(),
         estimated_time: durationToSave ?? undefined,
         tags: finalTags.length > 0 ? finalTags : undefined,
@@ -160,6 +160,7 @@
 
 {#snippet taskInput()}
   <TaskInputEditor
+    id="add-task-input"
     bind:this={inputRef}
     bind:value={inputValue}
     placeholder={isMobile ? "Add a task..." : "Add a new task... (⌘K)"}

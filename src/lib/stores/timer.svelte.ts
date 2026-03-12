@@ -5,7 +5,7 @@ import type { TodoModel } from "../models/Todo.svelte";
  * Manages the timer interval and enforces "one timer at a time".
  */
 export class TimerStore {
-    private _tickInterval: any;
+    private _tickInterval: ReturnType<typeof setInterval> | undefined;
     private _getItems: () => TodoModel[];
     private _save: () => void;
 

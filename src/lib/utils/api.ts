@@ -92,23 +92,4 @@ export async function deleteTodo(id: string): Promise<{ error: Error | null }> {
     }
 }
 
-export async function batchUpdateTodos(
-    updates: Array<{ id: string; updates: Partial<Todo> }>
-): Promise<{ error: Error | null }> {
-    try {
-        const res = await fetch('/api/todos', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(updates)
-        });
 
-        if (!res.ok) {
-            const body = await res.json();
-            throw new Error(body.error || 'Failed to batch update todos');
-        }
-
-        return { error: null };
-    } catch (err) {
-        return { error: err instanceof Error ? err : new Error('Unknown error') };
-    }
-}

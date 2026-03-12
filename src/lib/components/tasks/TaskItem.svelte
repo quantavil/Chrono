@@ -58,9 +58,7 @@
     const hasSubtasks = $derived(todo.subtasks.length > 0);
     const subtaskProgress = $derived(todo.subtaskProgress);
 
-    const isOverdue = $derived(
-        todo.dueAt && new Date(todo.dueAt) < new Date() && !isCompleted,
-    );
+    const isOverdue = $derived(todo.isOverdue);
 
     const currentPriority = $derived(todo.priority || "none");
     const currentConfig = $derived(PRIORITY_CONFIG[currentPriority]);
@@ -182,6 +180,7 @@
 
     <!-- Swipeable Card Content -->
     <div
+        role="presentation"
         class="
             relative z-10 flex flex-col
             bg-base-100 rounded-xl

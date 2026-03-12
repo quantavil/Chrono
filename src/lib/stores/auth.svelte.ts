@@ -99,69 +99,48 @@ export class AuthManager {
   // Auth Methods
   // -------------------------------------------------------------------------
 
-  async signInWithEmail(email: string, password?: string): Promise<{ success: boolean; error?: string }> {
+  private async _withAuthLoading(
+    operation: () => Promise<{ error?: { message?: string } | null }>
+  ): Promise<{ success: boolean; error?: string }> {
     this.loading = true;
     this.authError = null;
 
     try {
-      const { error } = await authClient.signIn.email({
-        email,
-        password: password || '', // Use the provided password
-      });
+      const { error } = await operation();
 
       if (error) {
-        this.authError = error.message || 'Unknown error';
-        toastManager.error(error.message || 'Unknown error');
-        return { success: false, error: this.authError };
+        const message = error.message || 'Unknown error';
+        this.authError = message;
+        toastManager.error(message);
+        return { success: false, error: message };
       }
 
-      toastManager.success('Signed in successfully!');
       await this.refreshUser();
-
       return { success: true };
-
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Sign in failed';
+      const message = error instanceof Error ? error.message : 'Operation failed';
       this.authError = message;
       toastManager.error(message);
       return { success: false, error: message };
-
     } finally {
       this.loading = false;
     }
   }
 
+  async signInWithEmail(email: string, password?: string): Promise<{ success: boolean; error?: string }> {
+    const result = await this._withAuthLoading(() =>
+      authClient.signIn.email({ email, password: password || '' })
+    );
+    if (result.success) toastManager.success('Signed in successfully!');
+    return result;
+  }
+
   async signUpWithEmail(email: string, password?: string): Promise<{ success: boolean; error?: string }> {
-    this.loading = true;
-    this.authError = null;
-
-    try {
-      const { error } = await authClient.signUp.email({
-        email,
-        password: password || '',
-        name: email.split('@')[0], // Give a default name
-      });
-
-      if (error) {
-        this.authError = error.message || 'Unknown error';
-        toastManager.error(error.message || 'Unknown error');
-        return { success: false, error: this.authError };
-      }
-
-      toastManager.success('Account created successfully!');
-      await this.refreshUser();
-
-      return { success: true };
-
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Sign up failed';
-      this.authError = message;
-      toastManager.error(message);
-      return { success: false, error: message };
-
-    } finally {
-      this.loading = false;
-    }
+    const result = await this._withAuthLoading(() =>
+      authClient.signUp.email({ email, password: password || '', name: email.split('@')[0] })
+    );
+    if (result.success) toastManager.success('Account created successfully!');
+    return result;
   }
 
 

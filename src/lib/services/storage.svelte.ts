@@ -1,8 +1,8 @@
 /**
  * Storage Service: Handles persistence of application data to local storage and coordinates synchronization with our backend.
  */
-import type { TodoLocal, Todo, TodoCreateInput, FilterState, UserPreferences, List } from "../types";
-import { LOCAL_STORAGE_KEYS, DEFAULT_FILTERS, DEFAULT_PREFERENCES } from "../types";
+import type { TodoLocal, Todo, TodoCreateInput, FilterState, UserPreferences, List, DisplayConfig } from "../types";
+import { LOCAL_STORAGE_KEYS, DEFAULT_FILTERS, DEFAULT_PREFERENCES, DEFAULT_DISPLAY_CONFIG } from "../types";
 import {
     fetchTodos,
     createTodo,
@@ -120,6 +120,14 @@ class StorageService {
 
     saveLists(lists: List[]): void {
         this._saveToStorage(LOCAL_STORAGE_KEYS.LISTS, lists);
+    }
+
+    loadDisplayConfig(): DisplayConfig {
+        return this._loadFromStorage<DisplayConfig>(LOCAL_STORAGE_KEYS.DISPLAY_CONFIG, { ...DEFAULT_DISPLAY_CONFIG }, true);
+    }
+
+    saveDisplayConfig(config: DisplayConfig): void {
+        this._saveToStorage(LOCAL_STORAGE_KEYS.DISPLAY_CONFIG, config);
     }
 
     // =========================================================================
