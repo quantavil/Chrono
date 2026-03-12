@@ -82,52 +82,26 @@ class StorageService {
     // Local Storage Public API
     // =========================================================================
 
-    loadLocalTodos(): TodoLocal[] {
-        return this._loadFromStorage<TodoLocal[]>(LOCAL_STORAGE_KEYS.TODOS, []);
+    /**
+     * Unified data accessor leveraging predefined storage keys and default data types.
+     */
+    load<T>(key: 'TODOS' | 'FILTERS' | 'PREFERENCES' | 'TAGS' | 'LISTS' | 'DISPLAY_CONFIG'): T {
+        switch (key) {
+            case 'TODOS': return this._loadFromStorage<TodoLocal[]>(LOCAL_STORAGE_KEYS.TODOS, []) as T;
+            case 'FILTERS': return this._loadFromStorage<FilterState>(LOCAL_STORAGE_KEYS.FILTERS, { ...DEFAULT_FILTERS }, true) as T;
+            case 'PREFERENCES': return this._loadFromStorage<UserPreferences>(LOCAL_STORAGE_KEYS.PREFERENCES, { ...DEFAULT_PREFERENCES }, true) as T;
+            case 'TAGS': return this._loadFromStorage<string[]>(LOCAL_STORAGE_KEYS.TAGS, []) as T;
+            case 'LISTS': return this._loadFromStorage<List[]>(LOCAL_STORAGE_KEYS.LISTS, []) as T;
+            case 'DISPLAY_CONFIG': return this._loadFromStorage<DisplayConfig>(LOCAL_STORAGE_KEYS.DISPLAY_CONFIG, { ...DEFAULT_DISPLAY_CONFIG }, true) as T;
+            default: throw new Error(`Unknown storage key requested: ${key}`);
+        }
     }
 
-    saveLocalTodos(todos: TodoLocal[]): void {
-        this._saveToStorage(LOCAL_STORAGE_KEYS.TODOS, todos);
-    }
-
-    loadFilters(): FilterState {
-        return this._loadFromStorage<FilterState>(LOCAL_STORAGE_KEYS.FILTERS, { ...DEFAULT_FILTERS }, true);
-    }
-
-    saveFilters(filters: FilterState): void {
-        this._saveToStorage(LOCAL_STORAGE_KEYS.FILTERS, filters);
-    }
-
-    loadPreferences(): UserPreferences {
-        return this._loadFromStorage<UserPreferences>(LOCAL_STORAGE_KEYS.PREFERENCES, { ...DEFAULT_PREFERENCES }, true);
-    }
-
-    savePreferences(prefs: UserPreferences): void {
-        this._saveToStorage(LOCAL_STORAGE_KEYS.PREFERENCES, prefs);
-    }
-
-    loadTags(): string[] {
-        return this._loadFromStorage<string[]>(LOCAL_STORAGE_KEYS.TAGS, []);
-    }
-
-    saveTags(tags: string[]): void {
-        this._saveToStorage(LOCAL_STORAGE_KEYS.TAGS, tags);
-    }
-
-    loadLists(): List[] {
-        return this._loadFromStorage<List[]>(LOCAL_STORAGE_KEYS.LISTS, []);
-    }
-
-    saveLists(lists: List[]): void {
-        this._saveToStorage(LOCAL_STORAGE_KEYS.LISTS, lists);
-    }
-
-    loadDisplayConfig(): DisplayConfig {
-        return this._loadFromStorage<DisplayConfig>(LOCAL_STORAGE_KEYS.DISPLAY_CONFIG, { ...DEFAULT_DISPLAY_CONFIG }, true);
-    }
-
-    saveDisplayConfig(config: DisplayConfig): void {
-        this._saveToStorage(LOCAL_STORAGE_KEYS.DISPLAY_CONFIG, config);
+    /**
+     * Unified data setter referencing explicit storage keys.
+     */
+    save<T>(key: 'TODOS' | 'FILTERS' | 'PREFERENCES' | 'TAGS' | 'LISTS' | 'DISPLAY_CONFIG', data: T): void {
+        this._saveToStorage(LOCAL_STORAGE_KEYS[key], data);
     }
 
     // =========================================================================

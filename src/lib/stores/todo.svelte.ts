@@ -31,8 +31,8 @@ export class TodoList {
   // Core state
   private _items = $state<TodoModel[]>([]);
   private _isLoading = $state(true);
-  private _preferences = $state<UserPreferences>(storageService.loadPreferences());
-  private _tags = $state<string[]>(storageService.loadTags());
+  private _preferences = $state<UserPreferences>(storageService.load('PREFERENCES'));
+  private _tags = $state<string[]>(storageService.load('TAGS'));
 
   // Persistence batching
   private _saveTimeout: ReturnType<typeof setTimeout> | undefined;
@@ -67,7 +67,7 @@ export class TodoList {
   }
 
   private _init() {
-    const localTodos = storageService.loadLocalTodos();
+    const localTodos = storageService.load<TodoLocal[]>('TODOS');
     this._items = localTodos.map((t) => new TodoModel(t));
     this._syncTagsFromTasks();
     this._isLoading = false;
@@ -158,7 +158,7 @@ export class TodoList {
     if (this._saveTimeout) clearTimeout(this._saveTimeout);
     this._saveTimeout = setTimeout(() => {
       const data = this._items.map((t) => t.toLocal());
-      storageService.saveLocalTodos(data);
+      storageService.save('TODOS', data);
     }, 500);
   }
 
@@ -202,7 +202,7 @@ export class TodoList {
 
     if (changed) {
       this._tags.sort();
-      storageService.saveTags(this._tags);
+      storageService.save('TAGS', this._tags);
     }
   }
 
@@ -426,7 +426,7 @@ export class TodoList {
   // Preferences
   updatePreference<K extends keyof UserPreferences>(key: K, value: UserPreferences[K]) {
     this._preferences[key] = value;
-    storageService.savePreferences(this._preferences);
+    storageService.save('PREFERENCES', this._preferences);
   }
 
   // Tags
@@ -435,7 +435,7 @@ export class TodoList {
     if (!this._tags.includes(tag)) {
       this._tags.push(tag);
       this._tags.sort();
-      storageService.saveTags(this._tags);
+      storageService.save('TAGS', this._tags);
     }
   }
 
@@ -455,7 +455,7 @@ export class TodoList {
         if (!this._tags.includes(data.tag)) {
           this._tags.push(data.tag);
           this._tags.sort();
-          storageService.saveTags(this._tags);
+          storageService.save('TAGS', this._tags);
         }
 
         data.affectedTaskIds.forEach((id: string) => {
@@ -478,7 +478,7 @@ export class TodoList {
 
     if (this._tags.includes(tag)) {
       this._tags = this._tags.filter(t => t !== tag);
-      storageService.saveTags(this._tags);
+      storageService.save('TAGS', this._tags);
     }
 
     let updated = false;

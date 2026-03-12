@@ -8,7 +8,7 @@ import type { TodoModel } from "../models/Todo.svelte";
 import { storageService } from "../services/storage.svelte";
 
 export class DisplayEngine {
-    private _config = $state<DisplayConfig>(storageService.loadDisplayConfig());
+    private _config = $state<DisplayConfig>(storageService.load('DISPLAY_CONFIG'));
 
     get config(): DisplayConfig {
         return this._config;
@@ -31,7 +31,7 @@ export class DisplayEngine {
      */
     setConfig(updates: Partial<DisplayConfig>): void {
         this._config = { ...this._config, ...updates };
-        storageService.saveDisplayConfig(this._config);
+        storageService.save('DISPLAY_CONFIG', this._config);
     }
 
     /**

@@ -6,14 +6,7 @@
 export { TodoItem, TodoList } from './todo.svelte';
 export { themeManager, getTheme, setTheme, toggleTheme, toggleLightDark } from './theme.svelte';
 export {
-  toastManager,
-  showToast,
-  showSuccess,
-  showError,
-  showInfo,
-  showWarning,
-  dismissToast,
-  clearAllToasts
+  toastManager
 } from './toast.svelte';
 export {
   AuthManager

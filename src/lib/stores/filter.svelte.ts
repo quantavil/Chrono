@@ -4,7 +4,7 @@ import type { FilterState } from "../types";
 export class FilterStore {
     // We initialize with what's storageService, knowing TodoList managed it inside too.
     // TodoList logic: private _filters = $state<FilterState>({ ...storageService.loadFilters() });
-    private _filters = $state<FilterState>({ ...storageService.loadFilters() });
+    private _filters = $state<FilterState>({ ...storageService.load('FILTERS') });
 
     constructor() {
         // No specific initialization needed beyond property init
@@ -22,7 +22,7 @@ export class FilterStore {
 
     setListFilter(listId: string) {
         this._filters.listId = listId;
-        storageService.saveFilters(this._filters);
+        storageService.save('FILTERS', this._filters);
     }
 
     toggleTagFilter(tag: string) {
@@ -35,16 +35,16 @@ export class FilterStore {
         // Note: storageService.saveFilters was commented out in original code for this method, 
         // implying session-only persistence? Or maybe we should persist it.
         // Let's persist to be safe.
-        storageService.saveFilters(this._filters);
+        storageService.save('FILTERS', this._filters);
     }
 
     clearFilters() {
         this._filters.tags = [];
-        storageService.saveFilters(this._filters);
+        storageService.save('FILTERS', this._filters);
     }
 
     setPriorityFilter(priority: FilterState['priority']) {
         this._filters.priority = priority;
-        storageService.saveFilters(this._filters);
+        storageService.save('FILTERS', this._filters);
     }
 }

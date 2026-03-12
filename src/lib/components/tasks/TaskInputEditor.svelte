@@ -110,6 +110,8 @@
     export function blur() {
         editor?.commands.blur();
     }
+
+    export const isFocused = () => editor?.isFocused ?? false;
 </script>
 
 <div {id} bind:this={element} class={className}></div>

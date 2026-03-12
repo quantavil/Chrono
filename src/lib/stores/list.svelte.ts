@@ -6,7 +6,7 @@ export class ListStore {
     private _lists = $state<List[]>([]);
 
     constructor() {
-        this._lists = storageService.loadLists();
+        this._lists = storageService.load('LISTS');
 
         // Migration: ensure default list exists
         if (this._lists.length === 0) {
@@ -27,7 +27,7 @@ export class ListStore {
             created_at: new Date().toISOString()
         };
         this._lists = [defaultList];
-        storageService.saveLists(this._lists);
+        storageService.save('LISTS', this._lists);
     }
 
     addList(title: string, icon?: string) {
@@ -38,7 +38,7 @@ export class ListStore {
             created_at: new Date().toISOString()
         };
         this._lists.push(list);
-        storageService.saveLists(this._lists);
+        storageService.save('LISTS', this._lists);
         return list;
     }
 
@@ -47,7 +47,7 @@ export class ListStore {
         if (!list || list.isDefault) return false;
 
         this._lists = this._lists.filter(l => l.id !== id);
-        storageService.saveLists(this._lists);
+        storageService.save('LISTS', this._lists);
         return true;
     }
 
@@ -55,6 +55,6 @@ export class ListStore {
         const list = this._lists.find(l => l.id === id);
         if (!list || list.isDefault) return; // Prevent updating default list
         Object.assign(list, updates);
-        storageService.saveLists(this._lists);
+        storageService.save('LISTS', this._lists);
     }
 }

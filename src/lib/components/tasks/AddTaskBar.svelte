@@ -139,14 +139,14 @@
   }
 
   function handleFormBlur(event: FocusEvent): void {
-    const form = (event.target as HTMLElement).closest("form");
-    // blur logic for Tiptap might be slightly different as element is contenteditable div
-    // We can rely on TaskInputEditor onblur prop
-    // But keeping this for form-level focus checks if needed
-    if (!form?.contains(event.relatedTarget as Node)) {
-      isFocused = false;
-      showQuickActions = false;
-    }
+    // A simpler logic utilizing requestAnimationFrame or short timeout
+    // ensures the relatedTarget has settled.
+    setTimeout(() => {
+        if (!inputRef?.isFocused()) {
+            isFocused = false;
+            showQuickActions = false;
+        }
+    }, 50);
   }
 
   $effect(() => {
